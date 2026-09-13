@@ -47,7 +47,7 @@ window.MCN_ARTICLES_HTML = `
     <p>Diverse partijen, waaronder de SP, D66, SGP en VVD, merkten op dat de vrijwilligers in de sector Mobiel Erfgoed weliswaar schouderklopjes krijgen van de minister maar dat hij vervolgens de financiering stopzet. De positie van het mobiele erfgoed moet wettelijk verankerd worden en er moet in de sector worden geïnvesteerd.</p>
     <p>De minister vindt dat wettelijke bescherming van mobiel erfgoed niet nodig is, gebaseerd op het onderzoek van de Universiteit Leiden. Hij heeft de mogelijkheid om objecten aan te wijzen bij verkoop naar het buitenland en acht dat voldoende. Hij wil in overleg blijven met de sector ten aanzien van duurzaamheid.</p>
     <p><strong>MCN en FEHAC hebben door hun inzet bereikt dat de Tweede Kamer vindt dat de minister in gesprek moet blijven met de sector. Daardoor blijven zij betrokken bij toekomstige wet- en regelgeving.</strong></p>
-    <p>De brief van MCN aan de vaste Kamercommissie OCW is te vinden via: <a href="https://www.mobiel-erfgoed.nl/docs/1749572314_MCN_brief_leden_vaste_kamercommissie_OCW_10_juni_2025.pdf" target="_blank">Download brief MCN (PDF)</a></p>
+    <p>De brief van MCN aan de vaste Kamercommissie OCW is te vinden via: <a href="documenten/MCN-brief-Kamercommissie-OCW-2025-06-10.pdf" target="_blank">Download brief MCN (PDF)</a></p>
   </div>
   <button class="article-back" onclick="showPage('home')">Terug naar nieuws</button>
 </div>
@@ -115,7 +115,7 @@ window.MCN_ARTICLES_HTML = `
   <div class="article-body">
     <p>De Tweede Kamer ging op donderdag 12 juni in gesprek met de (demissionair) minister van OCW, Eppo Bruins, over onder andere een belangrijke Kamerbrief van de regering: de op 2 juni verzonden brief over de aanpak grote rijksmonumenten en religieus erfgoed.</p>
     <p>Hoewel de titel van deze brief anders doet vermoeden, gaat de Kamerbrief ook over mobiel erfgoed. Dat was aanleiding voor de Stichting Mobiele Collectie Nederland om een reactie te sturen naar de leden van de Vaste Kamercommissie OCW.</p>
-    <p>De reactie van MCN is te lezen via: <a href="https://www.mobiel-erfgoed.nl/docs/1749572314_MCN_brief_leden_vaste_kamercommissie_OCW_10_juni_2025.pdf" target="_blank">Download brief MCN (PDF)</a></p>
+    <p>De reactie van MCN is te lezen via: <a href="documenten/MCN-brief-Kamercommissie-OCW-2025-06-10.pdf" target="_blank">Download brief MCN (PDF)</a></p>
   </div>
   <button class="article-back" onclick="showPage('home')">Terug naar nieuws</button>
 </div>
@@ -139,7 +139,7 @@ window.MCN_ARTICLES_HTML = `
       <li>De rol van verduurzaming</li>
     </ul>
     <p><strong>Colofon:</strong> Auteur: Maurits van der Graaf &mdash; &copy; Pleiade Management &amp; Consultancy, 2025</p>
-    <p>Het volledige rapport is te lezen via: <a href="https://www.mobiel-erfgoed.nl/docs/1749448745_mobile_heritage_in_europe_results_of_a_survey.pdf" target="_blank">Download rapport (PDF) ↗</a></p>
+    <p>Het volledige rapport is te lezen via: <a href="documenten/Mobile-heritage-in-Europe-survey-results.pdf" target="_blank">Download rapport (PDF) ↗</a></p>
   </div>
   <button class="article-back" onclick="showPage('home')">Terug naar nieuws</button>
 </div>

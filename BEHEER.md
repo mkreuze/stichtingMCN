@@ -1,12 +1,12 @@
 # Beheerhandleiding website Stichting Mobiele Collectie Nederland
 
-Overdrachtsdocument voor de website **www.stichtingmcn.nl**. Stand van zaken: 13 september 2026 (laatste wijziging live: 2 juli 2026, commit `a8a4f56`).
+Overdrachtsdocument voor de website **www.stichtingmcn.nl**. Stand van zaken: 13 september 2026. Wie de site overneemt en nog niets geïnstalleerd heeft, begint bij **§4.1**.
 
 ---
 
 ## 1. In één oogopslag
 
-- De site is een **statische website**: twee bestanden (`index.html` en `nieuws.js`) plus een map `fotos/`. Er is geen CMS, geen database, geen build-stap en geen serverlogica.
+- De site is een **statische website**: twee bestanden (`index.html` en `nieuws.js`) plus de mappen `fotos/` en `documenten/`. Er is geen CMS, geen database, geen build-stap en geen serverlogica.
 - De broncode staat op **GitHub** in de openbare repository [`mkreuze/stichtingMCN`](https://github.com/mkreuze/stichtingMCN).
 - De site draait bij **TransIP** (webhosting, domeinnaam, DNS en e-mail).
 - **Een wijziging live zetten = een commit op de branch `main` pushen.** Een GitHub Action kopieert de bestanden dan automatisch via SFTP naar TransIP. Binnen een minuut staat de wijziging online.
@@ -33,7 +33,7 @@ Overdrachtsdocument voor de website **www.stichtingmcn.nl**. Stand van zaken: 13
 | **TransIP** – e-mail | MX van `stichtingmcn.nl` | `mx.transip.email` | Zelfde TransIP-account. |
 | **Google Fonts** | Lettertypen Nunito en Nunito Sans | Extern ingeladen vanaf `fonts.googleapis.com`. Geen account nodig. | – |
 | **mobielecollectie.nl** | Het collectieplatform (apart systeem, ander IP) | Alleen gelinkt vanuit de site. Het contactadres op de site is `secretaris@mobielecollectie.nl` – dat valt onder dít domein, niet onder TransIP-hosting van de website. | Apart overdragen / navragen wie dit beheert. |
-| **Lokale werkmap** | Bewerken op de computer | Nu: `OneDrive\Bureaublad\MCN\mobiel-erfgoed-site` (git-checkout). | Nieuwe beheerder doet zelf `git clone https://github.com/mkreuze/stichtingMCN.git`. |
+| **Lokale werkmap** | Bewerken op de computer | Nu: `OneDrive\Bureaublad\MCN\mobiel-erfgoed-site` (git-checkout). | Nieuwe beheerder zet een eigen werkmap op volgens §4.1. |
 
 Er zijn **geen** analytics, cookies, formulieren of andere externe diensten.
 
@@ -48,10 +48,12 @@ Er zijn **geen** analytics, cookies, formulieren of andere externe diensten.
 | `index.html` | De hele site: alle CSS (in `<style>`), navigatie, alle vaste pagina's, footer en het JavaScript voor de navigatie. Het logo (boven en in de footer) zit als ingebakken afbeelding (base64) in het bestand; alle andere afbeeldingen komen uit `fotos/`. | Ja |
 | `nieuws.js` | De volledige tekst van alle nieuwsartikelen, als één HTML-tekst in `window.MCN_ARTICLES_HTML`. | Ja |
 | `fotos/` | Foto's bij nieuwsberichten; `fotos/partners/` bevat de partnerlogo's. | Ja |
+| `documenten/` | PDF's waar artikelen naar linken (brief aan de Kamercommissie OCW, rapport *Mobile heritage in Europe*). | Ja |
+| `BEHEER.md` | Deze handleiding. | Nee |
 | `.github/workflows/deploy.yml` | De automatische deploy. | Nee |
 | `.gitignore` | Sluit `.claude/`, `.tmp_*`, editor- en OS-bestanden uit. | Nee |
 
-> Let op: de workflow kopieert **alleen** `index.html`, `nieuws.js` en `fotos/`. Voeg je een nieuw bestand of nieuwe map toe op het hoogste niveau (bijv. `favicon.ico`, `documenten/`), dan moet je die ook in `deploy.yml` bij de stap *Voorbereiden upload-map* toevoegen.
+> Let op: de workflow kopieert **alleen** `index.html`, `nieuws.js`, `fotos/` en `documenten/`. Voeg je een nieuw bestand of nieuwe map toe op het hoogste niveau (bijv. `favicon.ico`), dan moet je die ook in `deploy.yml` bij de stap *Voorbereiden upload-map* toevoegen.
 
 ### 3.2 Paginasysteem (één pagina, meerdere "schermen")
 
@@ -88,30 +90,71 @@ De site is technisch één HTML-pagina. Elke "pagina" is een blok `<div id="page
 
 ## 4. Hoe een wijziging (mutatie) werkt
 
-### 4.1 Eenmalige voorbereiding
+### 4.1 Starten vanaf nul: nieuwe beheerder zonder software
 
-1. GitHub-account met schrijfrechten op de repo.
-2. Git geïnstalleerd (Windows: *Git for Windows*; of GitHub Desktop als je liever niet met de opdrachtregel werkt).
-3. Repo ophalen:
-   ```bash
-   git clone https://github.com/mkreuze/stichtingMCN.git
-   ```
-4. Een teksteditor, bij voorkeur VS Code.
+Voor wie nog niets geïnstalleerd heeft. Reken op ongeveer een uur. Alles is gratis en werkt op Windows en Mac. Je hoeft niet te kunnen programmeren: de werkwijze hieronder gebruikt knoppen in plaats van opdrachtregels. Wel helpt het als je een beetje HTML kunt lezen (tags als `<p>` en `<a>`).
+
+**Stap 1 – Accounts regelen (nog niets installeren)**
+
+1. Maak een gratis account aan op [github.com](https://github.com/signup), bij voorkeur met een MCN-mailadres. GitHub vraagt je tweestapsverificatie aan te zetten; doe dat.
+2. Geef je GitHub-gebruikersnaam door aan de huidige beheerder. Die nodigt je uit via de repo → *Settings* → *Collaborators* → *Add people*.
+3. Accepteer de uitnodiging uit de e-mail van GitHub. Je ziet de repo nu op [github.com/mkreuze/stichtingMCN](https://github.com/mkreuze/stichtingMCN).
+4. Alleen als je ook hosting, domeinen of e-mail gaat beheren: vraag toegang tot het TransIP-account. Voor het bijwerken van de site is dat niet nodig.
+
+> **Alleen een tikfout herstellen?** Dat kan zonder installatie. Open het bestand op github.com (bijv. `index.html`), klik op het potlood-icoon (*Edit this file*), pas de tekst aan en klik op *Commit changes*. Let op: de wijziging staat dan binnen een minuut live, zónder dat je hem eerst hebt kunnen bekijken. Voor alles wat groter is dan een woord: volg de stappen hieronder.
+
+**Stap 2 – Software installeren**
+
+| Programma | Waarvoor | Downloaden |
+|---|---|---|
+| **GitHub Desktop** | De site ophalen, wijzigingen vastleggen en publiceren, met knoppen. Bevat zelf Git; dat hoef je niet apart te installeren. | [desktop.github.com](https://desktop.github.com) |
+| **Visual Studio Code** | De bestanden bewerken (overzichtelijke kleuren, zoeken en vervangen). | [code.visualstudio.com](https://code.visualstudio.com) |
+| Een webbrowser | De site controleren. | Meestal al aanwezig |
+
+Alleen nodig in bijzondere gevallen:
+
+| Programma | Wanneer | Downloaden |
+|---|---|---|
+| WinSCP (Windows) of Cyberduck (Mac) | Handmatig bestanden op de TransIP-server bekijken of verwijderen (zie §4.4). | [winscp.net](https://winscp.net) · [cyberduck.io](https://cyberduck.io) |
+| Git for Windows | Als je liever met de opdrachtregel werkt. | [git-scm.com](https://git-scm.com) |
+
+**Stap 3 – Eenmalig instellen**
+
+1. Open **GitHub Desktop** en kies *Sign in to GitHub.com*. Je browser opent; log in en geef toestemming.
+2. Vul bij *Configure Git* je naam en e-mailadres in. Die komen bij elke wijziging te staan, zodat later te zien is wie wat heeft gedaan.
+3. Kies *File* → *Clone repository* → tabblad *GitHub.com* → `mkreuze/stichtingMCN`.
+4. Kies bij *Local path* een map die **niet** door OneDrive, Dropbox of iCloud wordt gesynchroniseerd, bijvoorbeeld `C:\Websites\stichtingMCN`. Synchronisatieprogramma's kunnen Git-mappen verstoren. Klik op *Clone*.
+5. Stel de editor in: *File* → *Options* (Mac: *GitHub Desktop* → *Settings*) → *Integrations* → *External editor*: **Visual Studio Code**.
+
+**Stap 4 – Proefwijziging (controleert of alles werkt)**
+
+1. Klik in GitHub Desktop bovenin op *Fetch origin* (en daarna *Pull origin* als die knop verschijnt). Controleer dat *Current branch* op **main** staat.
+2. Klik op *Open in Visual Studio Code*. Open `BEHEER.md` en voeg onderaan bij §7 *Beheerlog* een regel toe met de datum en je naam. Sla op (Ctrl+S / Cmd+S).
+3. Ga terug naar GitHub Desktop. Links zie je `BEHEER.md` met je wijziging.
+4. Typ linksonder bij *Summary* een korte omschrijving, bijvoorbeeld `Beheerlog: nieuwe beheerder`, en klik op **Commit to main**.
+5. Klik bovenin op **Push origin**.
+6. Ga op github.com naar de repo → tabblad *Actions*. De bovenste run *Deploy naar TransIP* wordt binnen een minuut groen. Is hij groen, dan werkt alles.
+
+`BEHEER.md` komt zelf niet op de website, dus deze proef verandert niets voor bezoekers.
 
 ### 4.2 Standaardwerkwijze
 
-1. **Bijwerken:** `git pull` (zodat je met de laatste versie begint).
-2. **Bewerken** van `index.html` en/of `nieuws.js`.
-3. **Lokaal controleren:** dubbelklik op `index.html`; de site werkt direct in de browser, zonder webserver. Controleer ook op mobiel formaat (browser smal maken).
-4. **Vastleggen en publiceren:**
-   ```bash
-   git add -A
-   git commit -m "Korte beschrijving van de wijziging"
-   git push origin main
-   ```
-5. **Controleren:** op GitHub → tabblad *Actions* moet de run *Deploy naar TransIP* groen worden (duurt < 1 minuut). Ververs daarna www.stichtingmcn.nl (eventueel met Ctrl+F5).
+1. **Bijwerken:** GitHub Desktop → *Fetch origin* / *Pull origin*. Zo begin je altijd met de nieuwste versie.
+2. **Bewerken:** *Open in Visual Studio Code* en pas `index.html` en/of `nieuws.js` aan. Sla op.
+3. **Lokaal controleren:** dubbelklik in de Verkenner (Mac: Finder) op `index.html`. De site opent in je browser, zonder webserver. Bekijk ook het mobiele formaat door het browservenster smal te maken.
+4. **Vastleggen en publiceren:** GitHub Desktop → *Summary* invullen → **Commit to main** → **Push origin**.
+5. **Controleren:** github.com → *Actions*: run *Deploy naar TransIP* moet groen worden (< 1 minuut). Ververs daarna www.stichtingmcn.nl, eventueel met Ctrl+F5.
 
-Wie grotere wijzigingen eerst wil laten beoordelen, werkt op een aparte branch en maakt een pull request; pas bij samenvoegen in `main` gaat het live.
+Werk je liever met de opdrachtregel (Git for Windows), dan zijn stap 1 en 4:
+
+```bash
+git pull
+git add -A
+git commit -m "Korte beschrijving van de wijziging"
+git push origin main
+```
+
+Wie grotere wijzigingen eerst wil laten beoordelen, werkt op een aparte branch (GitHub Desktop: *Current branch* → *New branch*) en maakt een pull request; pas bij samenvoegen in `main` gaat het live.
 
 ### 4.3 Veelvoorkomende mutaties
 
@@ -129,6 +172,9 @@ Zoek in `index.html` naar de tekst (Ctrl+F) en pas die aan. Speciale tekens moge
 **Foto toevoegen**
 Zet de foto in `fotos/`. Gebruik bij voorkeur een bestandsnaam zonder spaties (anders `%20` in de code), JPG, maximaal ca. 1600px breed en liefst onder 300 KB. Verwijs ernaar met `src="fotos/bestandsnaam.jpg"` en vul altijd een `alt`-tekst in.
 
+**Document (PDF) toevoegen**
+Zet de PDF in `documenten/`, met een bestandsnaam zonder spaties (bijv. `Jaarverslag-MCN-2025.pdf`). Link ernaar met `<a href="documenten/Jaarverslag-MCN-2025.pdf" target="_blank">Download jaarverslag (PDF)</a>`.
+
 **Partner toevoegen of verwijderen**
 In `index.html` onder `<div id="page-partners">`: kopieer of verwijder een `<a … class="news-card">`-blok. Logo in `fotos/partners/` (SVG of PNG met transparante achtergrond werkt het best).
 
@@ -136,6 +182,7 @@ In `index.html` onder `<div id="page-partners">`: kopieer of verwijder een `<a �
 Nieuwe pagina als `<div id="page-NAAM" class="page">` toevoegen, en in `<ul class="nav-links">` én in de footer een link met `onclick="showPage('NAAM')"` zetten.
 
 **Wijziging terugdraaien**
+GitHub Desktop → tabblad *History* → rechtsklik op de wijziging → *Revert changes in commit* → **Push origin**. Via de opdrachtregel:
 ```bash
 git log --oneline
 git revert <commit-code>
@@ -149,7 +196,7 @@ GitHub → *Actions* → *Deploy naar TransIP* → *Run workflow*.
 ### 4.4 Wat de deploy wél en níet doet
 
 - `lftp mirror -R` uploadt nieuwe en gewijzigde bestanden naar TransIP.
-- **Verwijderde bestanden blijven op de server staan** (er wordt zonder `--delete` gespiegeld). Een foto die je uit de repo haalt, is dus nog steeds via de directe URL bereikbaar; verwijder die zo nodig handmatig via SFTP of de TransIP-bestandsbeheerder.
+- **Verwijderde bestanden blijven op de server staan** (er wordt zonder `--delete` gespiegeld). Een foto die je uit de repo haalt, is dus nog steeds via de directe URL bereikbaar. Verwijder die zo nodig handmatig via SFTP (WinSCP/Cyberduck), of voeg in `deploy.yml` na de `mirror`-regel eenmalig `cd $SFTP_TARGET_DIR` en `rm -f bestandsnaam` toe, publiceer, en haal die regels daarna weer weg (zo is in september 2026 `nieuws.html` opgeruimd).
 - Mislukt de deploy (rood in *Actions*), dan blijft de vorige versie gewoon online. Meest voorkomende oorzaak: gewijzigd SFTP-wachtwoord of verlopen hostingpakket.
 
 ---
@@ -160,7 +207,7 @@ GitHub → *Actions* → *Deploy naar TransIP* → *Run workflow*.
 - [ ] Nieuwe beheerder heeft toegang tot het TransIP-account (hosting, domeinen `stichtingmcn.nl` en `mobiel-erfgoed.nl`, e-mail).
 - [ ] Duidelijk bij wie `mobielecollectienederland.nl` geregistreerd is (niet bij TransIP).
 - [ ] SFTP-gegevens staan in de wachtwoordkluis van MCN; wachtwoord gewijzigd en GitHub-secret `SFTP_PASSWORD` bijgewerkt.
-- [ ] Testwijziging gedaan door de nieuwe beheerder (bijv. een spatie in een tekst), deploy groen, live gecontroleerd.
+- [ ] Nieuwe beheerder heeft §4.1 doorlopen: software geïnstalleerd, repo gekloond, proefwijziging gepusht en de deploy was groen.
 - [ ] Afgesproken wie het domein en de mailbox van `mobielecollectie.nl` beheert (contactadres op de site).
 - [ ] Verlengdatums domeinen en hostingcontract genoteerd.
 - [ ] Oud beheerder verwijderd als collaborator / uit TransIP, zodra de overdracht rond is.
@@ -173,7 +220,14 @@ In volgorde van belang. Geen van deze punten verhindert het dagelijks beheer.
 
 1. **ANBI-publicatieplicht nagaan.** Als (culturele) ANBI moet MCN op internet o.a. bestuurssamenstelling, beleidsplan, beloningsbeleid, een actueel activiteitenverslag en de financiële verantwoording publiceren. De site noemt RSIN, beloningsbeleid en ANBI-status, maar bijvoorbeeld geen bestuursleden, beleidsplan of jaarcijfers.
 2. **Nieuws staat op twee à drie plekken** (artikel, overzicht, homepagekaart) die met de hand gelijk moeten blijven. Makkelijk om er één te vergeten.
-3. **Kapotte links naar de oude website.** In de artikelen `kamer`, `inbreng` en `europe` staan links naar twee PDF's (Kamerbrief OCW 10 juni 2025 en de Europese enquête) op `www.mobiel-erfgoed.nl/docs/…`. Dat domein stuurt alles door naar de homepage, dus die documenten zijn niet meer te openen. Advies: PDF's (als ze nog bestaan) in een map `documenten/` in de repo zetten, die map aan `deploy.yml` toevoegen en de links aanpassen.
-4. **Vindbaarheid (SEO) en details:** geen `meta description`, geen favicon, artikelen hebben geen eigen URL die zoekmachines indexeren (alleen `#…`), nieuwsberichten tonen geen datum, jaartal in de footer (`© 2026`) staat vast in de code, en de knop "Terug naar nieuws" gaat naar Home.
-5. **Deploy-beveiliging:** SFTP met wachtwoord, en de controle van de server-sleutel is uitgeschakeld (`StrictHostKeyChecking=no`). Werkt, maar een SSH-sleutel en een vaste host key zijn veiliger.
-6. **Commitbericht `b0b3938`** noemt "standpunten & lobby, agenda, datums op nieuwskaarten", maar bevat alleen de wijziging "platform" → "platforms" (die daarna weer is teruggedraaid). Die onderdelen zijn dus níet gebouwd.
+3. **Vindbaarheid (SEO) en details:** geen `meta description`, geen favicon, artikelen hebben geen eigen URL die zoekmachines indexeren (alleen `#…`), nieuwsberichten tonen geen datum, jaartal in de footer (`© 2026`) staat vast in de code, en de knop "Terug naar nieuws" gaat naar Home.
+4. **Deploy-beveiliging:** SFTP met wachtwoord, en de controle van de server-sleutel is uitgeschakeld (`StrictHostKeyChecking=no`). Werkt, maar een SSH-sleutel en een vaste host key zijn veiliger.
+5. **Commitbericht `b0b3938`** noemt "standpunten & lobby, agenda, datums op nieuwskaarten", maar bevat alleen de wijziging "platform" → "platforms" (die daarna weer is teruggedraaid). Die onderdelen zijn dus níet gebouwd.
+
+---
+
+## 7. Beheerlog
+
+| Datum | Wie | Wat |
+|---|---|---|
+| 13-09-2026 | Marinus Kreuze | Handleiding opgesteld; opruimronde (dubbele bestanden, GitHub Pages uit, PDF's teruggezet in `documenten/`). |
