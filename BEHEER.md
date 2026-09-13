@@ -6,7 +6,7 @@ Overdrachtsdocument voor de website **www.stichtingmcn.nl**. Stand van zaken: 13
 
 ## 1. In één oogopslag
 
-- De site is een **statische website**: drie bestanden (`index.html`, `nieuws.js`, `nieuws.html`) plus een map `fotos/`. Er is geen CMS, geen database, geen build-stap en geen serverlogica.
+- De site is een **statische website**: twee bestanden (`index.html` en `nieuws.js`) plus een map `fotos/`. Er is geen CMS, geen database, geen build-stap en geen serverlogica.
 - De broncode staat op **GitHub** in de openbare repository [`mkreuze/stichtingMCN`](https://github.com/mkreuze/stichtingMCN).
 - De site draait bij **TransIP** (webhosting, domeinnaam, DNS en e-mail).
 - **Een wijziging live zetten = een commit op de branch `main` pushen.** Een GitHub Action kopieert de bestanden dan automatisch via SFTP naar TransIP. Binnen een minuut staat de wijziging online.
@@ -45,15 +45,13 @@ Er zijn **geen** analytics, cookies, formulieren of andere externe diensten.
 
 | Bestand / map | Inhoud | Wordt gedeployd? |
 |---|---|---|
-| `index.html` | De hele site: alle CSS (in `<style>`), navigatie, alle vaste pagina's, footer en het JavaScript voor de navigatie. Bevat 3 ingebakken afbeeldingen (base64): logo boven, logo footer en de grote foto bij "Uitgelicht". | Ja |
+| `index.html` | De hele site: alle CSS (in `<style>`), navigatie, alle vaste pagina's, footer en het JavaScript voor de navigatie. Het logo (boven en in de footer) zit als ingebakken afbeelding (base64) in het bestand; alle andere afbeeldingen komen uit `fotos/`. | Ja |
 | `nieuws.js` | De volledige tekst van alle nieuwsartikelen, als één HTML-tekst in `window.MCN_ARTICLES_HTML`. | Ja |
-| `nieuws.html` | **Oude kopie** van dezelfde artikelen. Wordt door de site niet meer gebruikt. | Ja (onnodig) |
 | `fotos/` | Foto's bij nieuwsberichten; `fotos/partners/` bevat de partnerlogo's. | Ja |
 | `.github/workflows/deploy.yml` | De automatische deploy. | Nee |
-| `CNAME` | Restant van een eerdere poging met GitHub Pages (zie §6). | Nee |
 | `.gitignore` | Sluit `.claude/`, `.tmp_*`, editor- en OS-bestanden uit. | Nee |
 
-> Let op: de workflow kopieert **alleen** `index.html`, `nieuws.html`, `nieuws.js` en `fotos/`. Voeg je een nieuw bestand of nieuwe map toe op het hoogste niveau (bijv. `favicon.ico`, `documenten/`), dan moet je die ook in `deploy.yml` bij de stap *Voorbereiden upload-map* toevoegen.
+> Let op: de workflow kopieert **alleen** `index.html`, `nieuws.js` en `fotos/`. Voeg je een nieuw bestand of nieuwe map toe op het hoogste niveau (bijv. `favicon.ico`, `documenten/`), dan moet je die ook in `deploy.yml` bij de stap *Voorbereiden upload-map* toevoegen.
 
 ### 3.2 Paginasysteem (één pagina, meerdere "schermen")
 
@@ -127,7 +125,6 @@ Zoek in `index.html` naar de tekst (Ctrl+F) en pas die aan. Speciale tekens moge
 3. **De homepage** (optioneel) in `index.html`, onder `<div class="news-grid">`: kopieer een `news-card` en verwijder eventueel de oudste kaart. Wil je het bericht als *Uitgelicht* tonen, pas dan het blok `featured-grid` aan.
 4. Foto in `fotos/` zetten (zie hieronder).
 
-`nieuws.html` hoeft niet meer bijgewerkt te worden (zie §6).
 
 **Foto toevoegen**
 Zet de foto in `fotos/`. Gebruik bij voorkeur een bestandsnaam zonder spaties (anders `%20` in de code), JPG, maximaal ca. 1600px breed en liefst onder 300 KB. Verwijs ernaar met `src="fotos/bestandsnaam.jpg"` en vul altijd een `alt`-tekst in.
@@ -175,12 +172,11 @@ GitHub → *Actions* → *Deploy naar TransIP* → *Run workflow*.
 In volgorde van belang. Geen van deze punten verhindert het dagelijks beheer.
 
 1. **ANBI-publicatieplicht nagaan.** Als (culturele) ANBI moet MCN op internet o.a. bestuurssamenstelling, beleidsplan, beloningsbeleid, een actueel activiteitenverslag en de financiële verantwoording publiceren. De site noemt RSIN, beloningsbeleid en ANBI-status, maar bijvoorbeeld geen bestuursleden, beleidsplan of jaarcijfers.
-2. **GitHub Pages staat nog aan** en stuurt `mkreuze.github.io/stichtingMCN` door naar het niet-bestaande domein `stichtingmobielecollectie.nl` (uit het bestand `CNAME`). Advies: GitHub Pages uitzetten (Settings → Pages) en `CNAME` verwijderen. Bij elke push draait daardoor nu ook een overbodige run *pages build and deployment*.
-3. **`nieuws.html` is een verouderde dubbele kopie** van `nieuws.js`; de site gebruikt alleen `nieuws.js`. Een opmerking in `index.html` verwijst nog naar `nieuws.html`. Advies: bestand verwijderen (ook uit `deploy.yml` en daarna van de server).
+2. **GitHub Pages uitzetten.** Het bestand `CNAME` (dat doorstuurde naar het niet-bestaande domein `stichtingmobielecollectie.nl`) is verwijderd, maar GitHub Pages zelf staat nog aan en draait bij elke push een overbodige run *pages build and deployment*. Uitzetten via GitHub → Settings → Pages.
+3. **Oud bestand `nieuws.html` nog op de server.** Het is uit de repo en uit `deploy.yml` gehaald (september 2026), maar omdat de deploy niets verwijdert staat het nog op TransIP. Eenmalig handmatig weghalen via SFTP of de TransIP-bestandsbeheerder.
 4. **Nieuws staat op twee à drie plekken** (artikel, overzicht, homepagekaart) die met de hand gelijk moeten blijven. Makkelijk om er één te vergeten.
 5. **Kapotte links naar de oude website.** In de artikelen `kamer`, `inbreng` en `europe` staan links naar twee PDF's (Kamerbrief OCW 10 juni 2025 en de Europese enquête) op `www.mobiel-erfgoed.nl/docs/…`. Dat domein stuurt alles door naar de homepage, dus die documenten zijn niet meer te openen. Advies: PDF's (als ze nog bestaan) in een map `documenten/` in de repo zetten, die map aan `deploy.yml` toevoegen en de links aanpassen.
-6. **Ingebakken afbeeldingen.** De foto bij *Uitgelicht* staat als base64-tekst van ca. 440 KB in `index.html` én nog eens in `nieuws.js`. Het is exact hetzelfde beeld als `fotos/MNC Nieuws 2.jpg`. Dat maakt de bestanden zwaar en lastig te bewerken. Advies: vervangen door `src="fotos/MNC%20Nieuws%202.jpg"`.
-7. **Artikel `subsidieregister`** bestaat in `nieuws.js`, maar er is geen kaart of link naartoe; alleen bereikbaar via `#subsidieregister`. Het linkt naar de oude NRME-pagina op `mobielecollectienederland.nl/nrme/`.
-8. **Vindbaarheid (SEO) en details:** geen `meta description`, geen favicon, artikelen hebben geen eigen URL die zoekmachines indexeren (alleen `#…`), nieuwsberichten tonen geen datum, jaartal in de footer (`© 2026`) staat vast in de code, en de knop "Terug naar nieuws" gaat naar Home.
-9. **Deploy-beveiliging:** SFTP met wachtwoord, en de controle van de server-sleutel is uitgeschakeld (`StrictHostKeyChecking=no`). Werkt, maar een SSH-sleutel en een vaste host key zijn veiliger.
-10. **Commitbericht `b0b3938`** noemt "standpunten & lobby, agenda, datums op nieuwskaarten", maar bevat alleen de wijziging "platform" → "platforms" (die daarna weer is teruggedraaid). Die onderdelen zijn dus níet gebouwd.
+6. **Artikel `subsidieregister`** bestaat in `nieuws.js`, maar er is geen kaart of link naartoe; alleen bereikbaar via `#subsidieregister`. Het linkt naar de oude NRME-pagina op `mobielecollectienederland.nl/nrme/`.
+7. **Vindbaarheid (SEO) en details:** geen `meta description`, geen favicon, artikelen hebben geen eigen URL die zoekmachines indexeren (alleen `#…`), nieuwsberichten tonen geen datum, jaartal in de footer (`© 2026`) staat vast in de code, en de knop "Terug naar nieuws" gaat naar Home.
+8. **Deploy-beveiliging:** SFTP met wachtwoord, en de controle van de server-sleutel is uitgeschakeld (`StrictHostKeyChecking=no`). Werkt, maar een SSH-sleutel en een vaste host key zijn veiliger.
+9. **Commitbericht `b0b3938`** noemt "standpunten & lobby, agenda, datums op nieuwskaarten", maar bevat alleen de wijziging "platform" → "platforms" (die daarna weer is teruggedraaid). Die onderdelen zijn dus níet gebouwd.

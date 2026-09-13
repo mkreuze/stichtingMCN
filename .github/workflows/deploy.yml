@@ -15,7 +15,7 @@ jobs:
       - name: Voorbereiden upload-map
         run: |
           mkdir -p _deploy
-          cp index.html nieuws.html nieuws.js _deploy/
+          cp index.html nieuws.js _deploy/
           cp -r fotos _deploy/
 
       - name: Install lftp
