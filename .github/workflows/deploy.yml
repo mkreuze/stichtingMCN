@@ -33,7 +33,5 @@ jobs:
           set sftp:connect-program 'ssh -a -x -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
           open -u $SFTP_USERNAME,$SFTP_PASSWORD sftp://$SFTP_HOST
           mirror -R --verbose --no-perms ./_deploy/ $SFTP_TARGET_DIR
-          cd $SFTP_TARGET_DIR
-          rm -f nieuws.html
           bye
           "
