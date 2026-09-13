@@ -211,29 +211,6 @@ window.MCN_ARTICLES_HTML = `
 </div>
 </div>
 
-<!-- Subsidie register -->
-<div id="page-subsidieregister" class="page">
-<div class="article-page">
-  <div class="article-breadcrumb"><span onclick="showPage('home')">Home</span> › Register</div>
-  <span class="article-tag tag-g">Register</span>
-  <h1>Subsidie voor ontwikkeling Nationaal Register Mobiel Erfgoed</h1>
-  <img class="hero-img" src="fotos/img_8125.jpg" alt="Nationaal Register">
-  <div class="article-body">
-    <p>De Stichting Mobiele Collectie Nederland heeft een plan ontwikkeld voor de modernisering van het Nationaal Register Mobiel Erfgoed, waar het Nationaal Register Railerfgoed van HRN deel van uitmaakt.</p>
-    <p>Het huidige register moet zichtbaarder worden en makkelijker toegankelijk voor zowel het publiek als voor eigenaren en beheerders die objecten in het Register opgenomen willen zien. Andere belangrijke uitgangspunten zijn:</p>
-    <ul>
-      <li>Een compleet overzicht van het Nederlandse mobiele erfgoed (treinen en trams, schepen, wegvoertuigen en vliegtuigen)</li>
-      <li>Een aantrekkelijke en inspirerende publieksingang</li>
-      <li>Hoge kwaliteit van de inhoud &mdash; een nieuwe standaard voor mobiel erfgoed</li>
-      <li>Aansluiten bij Linked Open Data &mdash; de nieuwe standaard in de erfgoedwereld waarmee gegevens onderling kunnen worden gekoppeld</li>
-    </ul>
-    <p>Bekijk het vernieuwde register: <a href="https://mobielecollectienederland.nl/nrme/" target="_blank">Nationaal Register Mobiel Erfgoed ↗</a></p>
-  </div>
-  <button class="article-back" onclick="showPage('home')">Terug naar nieuws</button>
-</div>
-</div>
-
-
 <!-- Nieuw platform -->
 <div id="page-nieuwplatform" class="page">
 <div class="article-page">

@@ -75,7 +75,7 @@ De site is technisch één HTML-pagina. Elke "pagina" is een blok `<div id="page
 
 **Nieuwsartikelen (in `nieuws.js`)**
 
-`nieuwplatform`, `kamer`, `jubileum`, `erfgoedbeoefening`, `varend`, `restauratie`, `inbreng`, `europe`, `platform`, `klimaat`, `jaarverslag`, `halveeeeuw`, `subsidieregister`.
+`nieuwplatform`, `kamer`, `jubileum`, `erfgoedbeoefening`, `varend`, `restauratie`, `inbreng`, `europe`, `platform`, `klimaat`, `jaarverslag`, `halveeeeuw`.
 
 ### 3.3 Opmaak
 
@@ -176,7 +176,6 @@ In volgorde van belang. Geen van deze punten verhindert het dagelijks beheer.
 3. **Oud bestand `nieuws.html` nog op de server.** Het is uit de repo en uit `deploy.yml` gehaald (september 2026), maar omdat de deploy niets verwijdert staat het nog op TransIP. Eenmalig handmatig weghalen via SFTP of de TransIP-bestandsbeheerder.
 4. **Nieuws staat op twee à drie plekken** (artikel, overzicht, homepagekaart) die met de hand gelijk moeten blijven. Makkelijk om er één te vergeten.
 5. **Kapotte links naar de oude website.** In de artikelen `kamer`, `inbreng` en `europe` staan links naar twee PDF's (Kamerbrief OCW 10 juni 2025 en de Europese enquête) op `www.mobiel-erfgoed.nl/docs/…`. Dat domein stuurt alles door naar de homepage, dus die documenten zijn niet meer te openen. Advies: PDF's (als ze nog bestaan) in een map `documenten/` in de repo zetten, die map aan `deploy.yml` toevoegen en de links aanpassen.
-6. **Artikel `subsidieregister`** bestaat in `nieuws.js`, maar er is geen kaart of link naartoe; alleen bereikbaar via `#subsidieregister`. Het linkt naar de oude NRME-pagina op `mobielecollectienederland.nl/nrme/`.
-7. **Vindbaarheid (SEO) en details:** geen `meta description`, geen favicon, artikelen hebben geen eigen URL die zoekmachines indexeren (alleen `#…`), nieuwsberichten tonen geen datum, jaartal in de footer (`© 2026`) staat vast in de code, en de knop "Terug naar nieuws" gaat naar Home.
-8. **Deploy-beveiliging:** SFTP met wachtwoord, en de controle van de server-sleutel is uitgeschakeld (`StrictHostKeyChecking=no`). Werkt, maar een SSH-sleutel en een vaste host key zijn veiliger.
-9. **Commitbericht `b0b3938`** noemt "standpunten & lobby, agenda, datums op nieuwskaarten", maar bevat alleen de wijziging "platform" → "platforms" (die daarna weer is teruggedraaid). Die onderdelen zijn dus níet gebouwd.
+6. **Vindbaarheid (SEO) en details:** geen `meta description`, geen favicon, artikelen hebben geen eigen URL die zoekmachines indexeren (alleen `#…`), nieuwsberichten tonen geen datum, jaartal in de footer (`© 2026`) staat vast in de code, en de knop "Terug naar nieuws" gaat naar Home.
+7. **Deploy-beveiliging:** SFTP met wachtwoord, en de controle van de server-sleutel is uitgeschakeld (`StrictHostKeyChecking=no`). Werkt, maar een SSH-sleutel en een vaste host key zijn veiliger.
+8. **Commitbericht `b0b3938`** noemt "standpunten & lobby, agenda, datums op nieuwskaarten", maar bevat alleen de wijziging "platform" → "platforms" (die daarna weer is teruggedraaid). Die onderdelen zijn dus níet gebouwd.
