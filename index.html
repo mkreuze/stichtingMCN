@@ -39,6 +39,8 @@ nav{background:#fcf7f2;border-bottom:1px solid var(--border);position:sticky;top
 .nav-links a::after{content:'';position:absolute;bottom:0;left:13px;right:13px;height:2px;background:var(--green);transform:scaleX(0);transition:transform .2s}
 .nav-links a:hover{background:transparent;color:var(--ink)}
 .nav-links a:hover::after{transform:scaleX(1)}
+.nav-links a.active{color:var(--ink)}
+.nav-links a.active::after{transform:scaleX(1)}
 .nav-cta{background:var(--green)!important;color:var(--white)!important;border-radius:6px!important;padding:9px 20px!important}
 .nav-cta:hover{background:var(--green-d)!important;color:var(--white)!important}
 .nav-toggle{display:none;background:none;border:none;cursor:pointer;padding:8px;margin-left:auto}
@@ -249,11 +251,11 @@ footer{background:#fcf7f2;color:var(--ink-mid);padding:3.5rem 2rem 2rem;border-t
       <span></span>
     </button>
     <ul class="nav-links">
-      <li><a onclick="showPage('nieuws')">Nieuws</a></li>
-      <li><a onclick="showPage('sectoren')">Sectoren</a></li>
-      <li><a onclick="showPage('partners')">Partners</a></li>
-      <li><a onclick="showPage('over')">Over MCN</a></li>
-      <li><a onclick="showPage('contact')">Contact</a></li>
+      <li><a data-page="nieuws" onclick="showPage('nieuws')">Nieuws</a></li>
+      <li><a data-page="sectoren" onclick="showPage('sectoren')">Sectoren</a></li>
+      <li><a data-page="partners" onclick="showPage('partners')">Partners</a></li>
+      <li><a data-page="over" onclick="showPage('over')">Over MCN</a></li>
+      <li><a data-page="contact" onclick="showPage('contact')">Contact</a></li>
       <li><a href="https://www.mobielecollectie.nl/" target="_blank" class="nav-cta">Collectie</a></li>
     </ul>
   </div>
@@ -882,6 +884,9 @@ function showPage(name, opts) {
     el.classList.add('active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
     document.querySelector('nav')?.classList.remove('open');
+    document.querySelectorAll('.nav-links a[data-page]').forEach(a => {
+      a.classList.toggle('active', a.dataset.page === name);
+    });
     if (!opts.skipHistory) {
       history.pushState({ page: name }, '', '#' + name);
     }
