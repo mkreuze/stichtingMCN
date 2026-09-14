@@ -253,6 +253,7 @@ footer{background:#fcf7f2;color:var(--ink-mid);padding:3.5rem 2rem 2rem;border-t
     <ul class="nav-links">
       <li><a data-page="nieuws" onclick="showPage('nieuws')">Nieuws</a></li>
       <li><a data-page="sectoren" onclick="showPage('sectoren')">Sectoren</a></li>
+      <li><a data-page="projecten" onclick="showPage('projecten')">Projecten</a></li>
       <li><a data-page="partners" onclick="showPage('partners')">Partners</a></li>
       <li><a data-page="over" onclick="showPage('over')">Over MCN</a></li>
       <li><a data-page="contact" onclick="showPage('contact')">Contact</a></li>
@@ -571,6 +572,33 @@ footer{background:#fcf7f2;color:var(--ink-mid);padding:3.5rem 2rem 2rem;border-t
 </div>
 
 <!-- ══════════════════════════════════════════════════════
+     PROJECTEN PAGE
+══════════════════════════════════════════════════════ -->
+<div id="page-projecten" class="page">
+  <div class="section">
+    <div class="article-breadcrumb"><span onclick="showPage('home')">Home</span> &rsaquo; Projecten</div>
+    <div class="section-head">
+      <div class="chip chip-g">Projecten</div>
+      <h2>Onze projecten</h2>
+    </div>
+    <div style="max-width:800px">
+      <h3>Chroom-6</h3>
+      <p>Bij onderhoud, restauratie en conservering van mobiel erfgoed kwamen vrijwilligers soms onbedoeld in aanraking met chroom-6, een kankerverwekkende stof die decennialang veel werd toegepast in verf, coatings en corrosiebescherming van voertuigen, vaartuigen en vliegtuigen. Toen de gezondheidsrisico&rsquo;s van chroom-6 breed in het nieuws kwamen, ontstond onduidelijkheid bij eigenaren en vrijwilligers over hoe hiermee veilig om te gaan bij onderhoudswerkzaamheden.</p>
+      <p>MCN heeft daarop, samen met verenigingen van eigenaren van mobiel erfgoed en externe veiligheidsexperts, een heldere instructie ontwikkeld voor veilig werken met chroom-6-houdende materialen. Dit project geldt binnen MCN als een voorbeeld van geslaagde belangenbehartiging: het combineert de zorg voor de gezondheid van vrijwilligers met het behoud van authentiek erfgoed, zonder dat objecten onnodig worden aangetast.</p>
+
+      <h3>NRME 2.0 / MCN Platform</h3>
+      <p>Sinds de oprichting in 2000 bouwt MCN aan het Nationaal Register Mobiel Erfgoed (NRME): een landelijk overzicht van historische schepen, treinen, trams, auto&rsquo;s, motoren en vliegtuigen, gevoed vanuit de registers van de vier koepelorganisaties. In 2023 bevatte het register al circa 2.600 objecten. Vanaf 2020 is gewerkt aan een grondige modernisering, onder de naam NRME 2.0: technisch verbeterd, toegankelijker voor een breed publiek, en met een koppeling aan het kentekenregister van de RDW zodat historische voertuigen daar herkenbaar worden gemaakt als erfgoed.</p>
+      <p>Deze doorontwikkeling heeft geresulteerd in het huidige MCN Platform (<a href="https://www.mobielecollectie.nl/" target="_blank">mobielecollectie.nl</a>), dat is gebouwd in samenwerking met Spinque (dataverzameling en -koppeling) en Norday (vormgeving en techniek). Het platform brengt objecten uit alle vier de sectoren samen, gekoppeld aan de canon van het mobiele erfgoed en aan verhalen die de geschiedenis van Nederland tastbaar maken. Het is gepresenteerd tijdens het jubileumcongres ter gelegenheid van 25 jaar MCN.</p>
+
+      <h3>PICA &mdash; linked open data bij de bron</h3>
+      <p>Achter het MCN Platform schuilt een grotere uitdaging: de data over mobiel erfgoed is verspreid over bijna 300 behoudsorganisaties, van grote musea tot verenigingen die met vrijwilligers &eacute;&eacute;n enkel object beheren. Het PICA-project richt zich erop deze gegevens bij de bron te verzamelen, te structureren en aan elkaar te koppelen, zodat objecten en verhalen straks eenduidig met elkaar verbonden zijn &mdash; ongeacht bij welke organisatie ze geregistreerd staan.</p>
+      <p>In samenwerking met dataspecialist Spinque en de Rijksdienst voor het Cultureel Erfgoed (RCE) is een gezamenlijk basisstramien ontwikkeld voor de registratie van objecten en verhalen, gebaseerd op landelijke standaarden (Schema.org/NDE) en de CHT-thesaurus van de RCE, aangevuld met een eigen thesaurus voor mobiel-erfgoedspecifieke termen zoals werven, merken en modellen. Bronhouders worden begeleid om hun gegevens voortaan als linked open data te registreren en publiceren &mdash; via aanpassing van hun eigen systeem, overstap naar een geschikt systeem, of aansluiting bij een gedeeld systeem van hun koepelorganisatie. Zo ontstaat een steeds actuelere en betrouwbaardere basis onder het MCN Platform, die ook bruikbaar is voor onderzoek en voor offici&euml;le erfgoedregistratie.</p>
+    </div>
+    <button class="article-back" onclick="showPage('home')">Terug naar nieuws</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
      PARTNERS PAGE
 ══════════════════════════════════════════════════════ -->
 <div id="page-partners" class="page">
@@ -864,6 +892,7 @@ footer{background:#fcf7f2;color:var(--ink-mid);padding:3.5rem 2rem 2rem;border-t
         <ul>
           <li><span onclick="showPage('nieuws')">Nieuws</span></li>
           <li><span onclick="showPage('sectoren')">Sectoren</span></li>
+          <li><span onclick="showPage('projecten')">Projecten</span></li>
           <li><span onclick="showPage('partners')">Partners</span></li>
           <li><span onclick="showPage('over')">Over MCN</span></li>
           <li><span onclick="showPage('contact')">Contact</span></li>
