@@ -127,6 +127,11 @@ Alleen nodig in bijzondere gevallen:
 3. Kies *File* → *Clone repository* → tabblad *GitHub.com* → `mkreuze/stichtingMCN`.
 4. Kies bij *Local path* een map die **niet** door OneDrive, Dropbox of iCloud wordt gesynchroniseerd, bijvoorbeeld `C:\Websites\stichtingMCN`. Synchronisatieprogramma's kunnen Git-mappen verstoren. Klik op *Clone*.
 5. Stel de editor in: *File* → *Options* (Mac: *GitHub Desktop* → *Settings*) → *Integrations* → *External editor*: **Visual Studio Code**.
+6. **Heb je op deze computer meer dan één GitHub-account** (bijvoorbeeld een zakelijk en een privé-account)? Leg dan vast welk account bij deze website hoort, anders vraagt Git steeds opnieuw welk account het moet gebruiken. Open in GitHub Desktop *Repository* → *Open in Command Prompt* (of Git Bash in de websitemap) en voer uit, met jouw GitHub-gebruikersnaam:
+   ```bash
+   git config credential.username jouw-gebruikersnaam
+   ```
+   Controleren: `git config --get credential.username` toont de naam. Welke accounts Windows heeft opgeslagen, zie je met `git credential-manager github list`.
 
 **Stap 4 – Proefwijziging (controleert of alles werkt)**
 
@@ -200,6 +205,7 @@ GitHub → *Actions* → *Deploy naar TransIP* → *Run workflow*.
 - `lftp mirror -R` uploadt nieuwe en gewijzigde bestanden naar TransIP.
 - **Verwijderde bestanden blijven op de server staan** (er wordt zonder `--delete` gespiegeld). Een foto die je uit de repo haalt, is dus nog steeds via de directe URL bereikbaar. Verwijder die zo nodig handmatig via SFTP (WinSCP/Cyberduck), of voeg in `deploy.yml` na de `mirror`-regel eenmalig `cd $SFTP_TARGET_DIR` en `rm -f bestandsnaam` toe, publiceer, en haal die regels daarna weer weg (zo is in september 2026 `nieuws.html` opgeruimd).
 - Mislukt de deploy (rood in *Actions*), dan blijft de vorige versie gewoon online. Meest voorkomende oorzaak: gewijzigd SFTP-wachtwoord of verlopen hostingpakket.
+- **Pushen blijft hangen of vraagt steeds om in te loggen?** Dan komt de wijziging niet eens bij GitHub aan. Meestal staan er meerdere GitHub-accounts op de computer en weet Git niet welk het moet gebruiken; zie §4.1, stap 3.6.
 
 ---
 
@@ -233,3 +239,4 @@ In volgorde van belang. Geen van deze punten verhindert het dagelijks beheer.
 | Datum | Wie | Wat |
 |---|---|---|
 | 13-09-2026 | Marinus Kreuze | Handleiding opgesteld; opruimronde (dubbele bestanden, GitHub Pages uit, PDF's teruggezet in `documenten/`). |
+| 14-09-2026 | Marinus Kreuze | `CLAUDE.md` en `tools/preview-server.js` toegevoegd; pushen hing door twee GitHub-accounts op één computer, opgelost met `credential.username`. |

@@ -24,7 +24,9 @@ Statische website van de Stichting Mobiele Collectie Nederland. **Lees eerst `BE
 ## Publiceren en controleren
 
 1. Push de branch naar `main` (fast-forward): `git push origin <branch>:main`.
-   Blijft de push hangen of vraagt Git om een gebruikersnaam, dan ontbreekt de GitHub-login. Vraag de beheerder die push één keer zelf in een terminal (Git Bash) uit te voeren; daarna onthoudt Git Credential Manager de login.
+   Blijft de push hangen of vraagt Git om een gebruikersnaam, dan kan Git Credential Manager (GCM) niet stil inloggen en wil het een venster tonen, dat Claude niet kan bedienen. Diagnose zonder iets te pushen: `GCM_INTERACTIVE=never GIT_TERMINAL_PROMPT=0 git push --dry-run origin <branch>:main`.
+   - **Meerdere GitHub-accounts op de computer** (zie `git credential-manager github list`): GCM wil dan een account laten kiezen. Oplossing: `git config credential.username <account>` in deze repo. Op de computer van de huidige beheerder staat dit op `mkreuze`.
+   - **Geen opgeslagen login:** vraag de beheerder één keer zelf te pushen in Git Bash en in te loggen in het GitHub-venster.
 2. Volg de run *Deploy naar TransIP* via `https://api.github.com/repos/mkreuze/stichtingMCN/actions/runs` (duurt ca. 30–60 seconden).
 3. Vergelijk live met git, met regeleinden genegeerd (de werkmap gebruikt CRLF):
    `curl -s "https://www.stichtingmcn.nl/index.html?nc=$RANDOM" | tr -d '\r' | md5sum` tegen `git show HEAD:index.html | tr -d '\r' | md5sum`.
