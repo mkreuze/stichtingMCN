@@ -50,6 +50,8 @@ Er zijn **geen** analytics, cookies, formulieren of andere externe diensten.
 | `fotos/` | Foto's bij nieuwsberichten; `fotos/partners/` bevat de partnerlogo's. | Ja |
 | `documenten/` | PDF's waar artikelen naar linken (brief aan de Kamercommissie OCW, rapport *Mobile heritage in Europe*). | Ja |
 | `BEHEER.md` | Deze handleiding. | Nee |
+| `CLAUDE.md` | Werkafspraken voor Claude (AI-assistent): wordt automatisch gelezen als je in deze map met Claude werkt, met welk account ook. | Nee |
+| `tools/preview-server.js` | Kleine lokale testserver: `node tools/preview-server.js . 8001` en open `http://localhost:8001`. Alleen nodig als dubbelklikken op `index.html` niet volstaat. | Nee |
 | `.github/workflows/deploy.yml` | De automatische deploy. | Nee |
 | `.gitignore` | Sluit `.claude/`, `.tmp_*`, editor- en OS-bestanden uit. | Nee |
 
