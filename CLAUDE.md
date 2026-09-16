@@ -2,6 +2,8 @@
 
 Statische website van de Stichting Mobiele Collectie Nederland. **Lees eerst `BEHEER.md`**: daarin staan de opbouw van de site, de systemen, de publicatiestap en de bekende aandachtspunten. Dit bestand bevat alleen wat Claude daarnaast moet weten.
 
+Geen build-stap, geen `package.json`/npm, geen test- of lintcommando's: puur statische HTML/JS/CSS. Zoek dus niet naar tooling die er niet is.
+
 ## Communicatie
 
 - Antwoord in het **Nederlands**.
