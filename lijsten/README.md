@@ -72,3 +72,29 @@ De toegangsregels zijn niet alleen bedacht maar ook nagemeten, met
 `database/toegangsproef.sh` tegen een echte PostgreSQL-database:
 een buitenstaander ziet nul regels, een kijker wijzigt nul regels,
 een bewerker kan zichzelf geen beheerder maken.
+
+## Waar het draait
+
+| | |
+|---|---|
+| Publicatie | Vercel, gekoppeld aan deze GitHub-repo |
+| Tak die live gaat | `mcn-console` |
+| Hoofdmap in Vercel | `lijsten` |
+| Database en inlog | Supabase, Europese server |
+
+Die twee Vercel-instellingen staan onder **Settings → Environments →
+Production → Branch Tracking** en **Settings → Build & Deployment →
+Root Directory**. Vergeet de hoofdmap niet: zonder die instelling
+publiceert Vercel de website uit de hoofdmap van de repo in plaats van
+deze applicatie.
+
+De tak `main` blijft van de website: wat daarop komt, gaat via GitHub
+Actions naar TransIP. De applicatie staat bewust op een eigen tak, zodat
+publiceren van het een het ander niet raakt.
+
+## Na het eerste keer publiceren
+
+Supabase moet weten waar het inloggen op uitkomt, anders loopt de link
+uit de mail dood. Zet in Supabase onder **Authentication → URL
+Configuration** het adres van Vercel bij **Site URL**, en zet hetzelfde
+adres met `/**` erachter bij **Redirect URLs**.
