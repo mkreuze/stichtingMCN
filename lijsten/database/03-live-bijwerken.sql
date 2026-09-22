@@ -12,7 +12,7 @@ begin
     begin
       execute format('alter publication supabase_realtime add table %I', t);
     exception
-      when duplicate_object then null;   -- stond er al bij
+      when others then null;   -- stond er al bij, of dit is geen Supabase
     end;
   end loop;
 end $$;
