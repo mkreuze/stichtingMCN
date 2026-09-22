@@ -543,7 +543,12 @@
   var SUPABASE_ANON_KEY = "sb_publishable_kLI1xtdgeAir1K6d7vc7ng_Mn_pBURg";
   // ──────────────────────────────────────────────────────────────────
 
-  var SUPABASE_LIB = "https://esm.sh/@supabase/supabase-js@2";
+  // Twee adressen voor dezelfde bibliotheek: is de eerste onbereikbaar,
+  // dan wordt de tweede geprobeerd.
+  var SUPABASE_LIBS = [
+    "https://esm.sh/@supabase/supabase-js@2",
+    "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"
+  ];
 
   var sb = null;            // verbinding met de database
   var sessie = null;        // wie is er ingelogd
@@ -1257,7 +1262,7 @@
     var app = document.getElementById("app");
 
     if (opstartFout) {
-      app.innerHTML = '<div class="poort"><p class="poort-tekst">' + escapeHtml(opstartFout) + '</p></div>';
+      app.innerHTML = '<div class="poort"><p class="poort-tekst" style="white-space:pre-wrap;">' + escapeHtml(opstartFout) + '</p></div>';
       return;
     }
     if (!sessie) {
@@ -2536,7 +2541,9 @@
         luisterOpWijzigingen();
       });
     }).catch(function (e) {
-      opstartFout = "De lijst kon niet worden geladen.";
+      opstartFout = "De lijst kon niet worden geladen.\n\n" +
+                    "Melding: " + ((e && (e.message || e.hint || e.details)) || String(e));
+      console.error("Laden mislukt:", e);
       render();
     });
   }
@@ -2571,9 +2578,17 @@
       render();
       return;
     }
+    function haalBibliotheek(i) {
+      if (i >= SUPABASE_LIBS.length) {
+        return Promise.reject(new Error("de bibliotheek kon van geen enkel adres geladen worden"));
+      }
+      return import(SUPABASE_LIBS[i]).catch(function () { return haalBibliotheek(i + 1); });
+    }
+
     var laden = window.__maakClient
       ? Promise.resolve(window.__maakClient(SUPABASE_URL, SUPABASE_ANON_KEY))
-      : import(SUPABASE_LIB).then(function (mod) {
+      : haalBibliotheek(0).then(function (mod) {
+          if (!mod || !mod.createClient) throw new Error("de bibliotheek laadde, maar bevat geen createClient");
           return mod.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         });
 
@@ -2591,8 +2606,10 @@
       sessie = (r && r.data && r.data.session) || null;
       if (sessie) return naInloggen();
       render();
-    }).catch(function () {
-      opstartFout = "Er kon geen verbinding met de database worden gemaakt.";
+    }).catch(function (err) {
+      opstartFout = "Er kon geen verbinding met de database worden gemaakt.\n\n" +
+                    "Melding: " + ((err && (err.message || err.error_description)) || String(err));
+      console.error("Opstarten mislukt:", err);
       render();
     });
   }
