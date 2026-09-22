@@ -1,0 +1,2619 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stichting MCN — Actie- en besluitenlijst</title>
+<style>
+  :root {
+    --ink: #1E2624;
+    --ink-soft: #5C6B66;
+    --ink-faint: #90A19B;
+    --paper: #F3F7F6;
+    --card: #FFFFFF;
+    --line: #DCE6E3;
+    --line-soft: #EDF3F1;
+    --header-bg: #EBF3F1;
+    --accent: #1D9C8C;
+    --accent-soft: #DFF3EF;
+    --accent-ink: #0C6358;
+    --danger: #C4638E;
+    --danger-soft: #FBECF2;
+    --mcn-teal: #4DAE97;
+    --mcn-pink: #C46FA0;
+    --mcn-blue: #4FA3D6;
+    --mcn-grey: #646C79;
+    --shadow: 0 1px 2px rgba(24,33,30,.05), 0 14px 28px -20px rgba(24,33,30,.25);
+    --r-lg: 16px;
+    --r-md: 10px;
+    --r-sm: 7px;
+    --r-pill: 999px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #EAF2F1;
+      --ink-soft: #9FB0AE;
+      --ink-faint: #6E7D79;
+      --paper: #14201F;
+      --card: #1C2827;
+      --line: #2C3B39;
+      --line-soft: #23312E;
+      --header-bg: #223130;
+      --accent: #4FC9B4;
+      --accent-soft: #1E3A34;
+      --accent-ink: #8FE0CE;
+      --danger: #E28FB0;
+      --danger-soft: #3A2430;
+      --mcn-teal: #4DAE97;
+      --mcn-pink: #D890BA;
+      --mcn-blue: #6FBCE8;
+      --mcn-grey: #97A0AB;
+      --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 28px -20px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #EAF2F1;
+    --ink-soft: #9FB0AE;
+    --ink-faint: #6E7D79;
+    --paper: #14201F;
+    --card: #1C2827;
+    --line: #2C3B39;
+    --line-soft: #23312E;
+    --header-bg: #223130;
+    --accent: #4FC9B4;
+    --accent-soft: #1E3A34;
+    --accent-ink: #8FE0CE;
+    --danger: #E28FB0;
+    --danger-soft: #3A2430;
+    --mcn-teal: #4DAE97;
+    --mcn-pink: #D890BA;
+    --mcn-blue: #6FBCE8;
+    --mcn-grey: #97A0AB;
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 28px -20px rgba(0,0,0,.6);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    min-height: 100vh;
+    padding: 44px 20px 88px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .sans { font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  .heading-font { font-family: "Baloo 2", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  .container { max-width: 720px; margin: 0 auto; }
+
+  .masthead-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 4px;
+  }
+  .logo-img {
+    width: 78px;
+    height: 52px;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+  .kicker {
+    font-family: 'Nunito Sans', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.01em;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  h1 {
+    font-family: "Baloo 2", sans-serif;
+    font-weight: 800;
+    font-size: 32px;
+    margin: 0 0 24px;
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+
+  .totals {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow);
+    padding: 16px 18px;
+    margin-bottom: 18px;
+  }
+  .totals-number { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .totals-track { flex: 1; height: 6px; background: var(--line-soft); border-radius: var(--r-pill); overflow: hidden; }
+  .totals-fill { height: 100%; background: linear-gradient(90deg, var(--mcn-teal), var(--accent)); border-radius: var(--r-pill); transition: width 0.3s ease; }
+  .sync-note {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Wie alleen mag meekijken, krijgt de wijzigknoppen niet te zien. */
+  .alleen-lezen .edit-btn,
+  .alleen-lezen .delete-btn,
+  .alleen-lezen .add-task-btn,
+  .alleen-lezen .add-section-btn,
+  .alleen-lezen .check-btn { display: none !important; }
+  .alleen-lezen .task-row { padding-left: 2px; }
+  .meekijk-melding {
+    font-size: 12.5px; color: var(--ink-soft); background: var(--line-soft);
+    border-radius: var(--r-sm); padding: 8px 12px; margin: 0 0 16px;
+  }
+
+  .relatie-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-family: inherit; font-size: 11px; font-weight: 600;
+    color: var(--accent-ink); background: var(--accent-soft);
+    border: none; border-radius: var(--r-pill); padding: 3px 9px 3px 7px;
+    cursor: pointer; align-self: flex-start;
+  }
+  .relatie-chip svg { width: 11px; height: 11px; flex-shrink: 0; }
+  .relatie-chip:hover { filter: brightness(0.96); }
+  .relatie-meta { font-size: 12px; color: var(--ink-faint); flex: 1; min-width: 60px; }
+  .persoon-row .task-title { font-size: 14px; }
+  .persoon-functie { font-size: 11.5px; color: var(--ink-faint); white-space: nowrap; }
+  .contact-link { color: var(--ink-soft); text-decoration: none; }
+  .contact-link:hover { color: var(--accent); text-decoration: underline; }
+  .org-details { padding: 10px 0 4px; border-bottom: 1px solid var(--line-soft); }
+  .org-website { font-size: 12.5px; color: var(--accent); text-decoration: none; }
+  .org-website:hover { text-decoration: underline; }
+
+  .poort {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg);
+    box-shadow: var(--shadow); padding: 28px 26px; max-width: 460px; margin: 8px auto 0;
+  }
+  .poort-kop { font-size: 20px; font-weight: 700; margin: 0 0 10px; color: var(--ink); }
+  .poort-tekst { font-size: 14px; line-height: 1.55; color: var(--ink-soft); margin: 0 0 18px; }
+  .poort-form { display: flex; gap: 8px; flex-wrap: wrap; }
+  .poort-form .txt-input { flex: 1 1 200px; }
+  .poort-status { font-size: 13px; color: var(--accent-ink); background: var(--accent-soft);
+    padding: 10px 12px; border-radius: var(--r-sm); margin: 16px 0 0; line-height: 1.5; }
+
+  .filter-row { display: flex; gap: 6px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+  .filter-row + .filter-row { margin-bottom: 22px; }
+  .collapse-toggle-btn { margin-left: auto; }
+  .filter-btn {
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    padding: 5px 11px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  }
+  .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: var(--card); }
+
+  /* Te doen / Afgerond / Alle als één aaneengesloten knoppenrij */
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden; background: var(--card); }
+  .seg .filter-btn { border: none; border-radius: 0; padding: 5px 12px; background: transparent; }
+  .seg .filter-btn + .filter-btn { border-left: 1px solid var(--line); }
+  .seg .filter-btn:hover { background: var(--line-soft); color: var(--accent); }
+  .seg .filter-btn.active { background: var(--accent); color: var(--card); }
+  .seg .filter-btn.active + .filter-btn { border-left-color: var(--accent); }
+
+  .view-tabs {
+    display: flex; align-items: center; gap: 0; flex-wrap: wrap;
+    border-bottom: 1px solid var(--line); margin-bottom: 20px;
+  }
+  .view-tab {
+    font-family: inherit; font-size: 14.5px; font-weight: 700; color: var(--ink-faint);
+    background: none; border: none; border-bottom: 2px solid transparent;
+    padding: 9px 2px; margin-bottom: -1px; cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .view-tab + .view-tab { margin-left: 22px; }
+  .view-tab:hover { color: var(--accent); }
+  .view-tab.active { color: var(--ink); border-bottom-color: var(--accent); }
+  .view-tab-count {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600;
+    color: var(--ink-faint); margin-left: 6px;
+  }
+  .view-tab.active .view-tab-count { color: var(--accent); }
+  .view-tabs .toolbar-actions { padding-bottom: 6px; }
+
+  .toolbar-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+  .pdf-download-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12.5px; font-weight: 600; color: var(--ink-faint);
+    background: none; border: none; padding: 4px 2px; cursor: pointer;
+  }
+  .pdf-download-btn:hover { color: var(--accent); }
+  .pdf-download-btn svg { width: 13px; height: 13px; margin-right: 0 !important; }
+  .pdf-status { font-size: 12px; color: var(--ink-faint); white-space: nowrap; }
+  .group-empty-state { padding: 18px 0 24px; text-align: center; }
+  .sort-select {
+    font-family: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink-soft);
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r-sm);
+    padding: 5px 8px; cursor: pointer;
+  }
+  .sort-select:hover { border-color: var(--accent); }
+  .sort-select.filter-on { border-color: var(--accent); color: var(--accent); }
+  .toolbar-selects { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .sort-select:hover { border-color: var(--accent); color: var(--accent); }
+  .collapse-toggle-btn { margin-left: 6px; }
+
+  .section-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow);
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .section-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 18px;
+    flex-wrap: wrap;
+  }
+  .section-header-btn {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    color: var(--ink);
+    flex-wrap: wrap;
+    padding: 0;
+  }
+  .section-nr { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; color: var(--ink-faint); flex-shrink: 0; }
+  .section-title { font-family: "Baloo 2", sans-serif; font-weight: 700; font-size: 17px; flex: 0 0 auto; margin-right: 8px; white-space: nowrap; color: var(--ink); letter-spacing: -0.005em; }
+  .section-progress { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 120px; }
+  .progress-track { flex: 1; height: 4px; background: var(--line-soft); border-radius: var(--r-pill); overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: var(--r-pill); }
+  .progress-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px; font-variant-numeric: tabular-nums; color: var(--ink-soft); white-space: nowrap; flex-shrink: 0;
+  }
+  .chevron { flex-shrink: 0; color: var(--ink-faint); transition: transform 0.2s ease; }
+  .chevron.collapsed { transform: rotate(-90deg); }
+
+  .section-header.open {
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .section-body { padding: 4px 18px 16px; }
+  .section-body > .task-row:first-child { border-top: none; }
+  .empty-state {
+    font-size: 13px; color: var(--ink-faint); font-style: italic; padding: 10px 0 14px;
+  }
+
+  .task-row { display: flex; align-items: flex-start; gap: 12px; padding: 13px 0; border-top: 1px solid var(--line-soft); }
+  .task-row.done .task-title { color: var(--ink-faint); text-decoration: line-through; text-decoration-color: var(--line); font-weight: 600; }
+  .task-row.done .task-meta { color: var(--ink-faint); opacity: 0.85; }
+
+  .check-btn {
+    width: 19px; height: 19px; border-radius: 50%; border: 1.5px solid var(--ink-faint);
+    background: none; flex-shrink: 0; margin-top: 2px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; color: var(--card);
+    padding: 0; transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .check-btn:hover { border-color: var(--accent); }
+  .task-row.done .check-btn { background: var(--accent); border-color: var(--accent); }
+
+  .task-body { flex: 1; min-width: 0; }
+  .task-title { font-size: 14.5px; font-weight: 600; line-height: 1.45; color: var(--ink); }
+  .task-meta { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; margin-top: 7px; }
+  .task-meta .when {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums;
+    color: var(--accent-ink); background: var(--accent-soft); padding: 2px 7px; border-radius: var(--r-pill);
+  }
+  .task-meta .note { font-size: 12.5px; color: var(--ink-soft); line-height: 1.5; }
+
+  .completion-line {
+    display: block;
+    font-size: 12px; color: var(--accent); background: none; border: none;
+    padding: 6px 0 0; margin: 0; text-align: left; cursor: pointer;
+  }
+  .completion-line:hover { text-decoration: underline; }
+
+  .complete-form, .add-form {
+    margin-top: 10px; padding: 12px; background: var(--accent-soft); border-radius: var(--r-md);
+  }
+  .add-form { margin-top: 0; border-top: 1px solid var(--line-soft); border-radius: 0; background: none; padding: 14px 0 4px; }
+  .form-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .form-row.single { display: block; }
+
+  .txt-input, .sel-input {
+    font-family: inherit; font-size: 13px; padding: 8px 11px; border: 1px solid var(--line);
+    border-radius: var(--r-sm); background: var(--paper); color: var(--ink); width: 100%;
+  }
+  .txt-input:focus, .sel-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .date-field { flex: 0 0 150px; width: 150px; }
+  .flex1 { flex: 1 1 160px; min-width: 120px; }
+  .nr-field { flex: 0 0 72px; width: 72px; font-variant-numeric: tabular-nums; }
+  .section-edit-form { gap: 8px; }
+  .section-edit-form .form-row { align-items: center; }
+  textarea.txt-input { resize: vertical; min-height: 64px; font-family: inherit; line-height: 1.5; }
+  .followup-hint { font-size: 12px; color: var(--ink-faint); margin: 2px 0 6px; }
+  .completion-extra-toggle {
+    display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--accent);
+    background: none; border: none; padding: 2px 0 0; cursor: pointer;
+  }
+  .completion-extra-toggle:hover { opacity: 0.8; }
+  .completion-extra { margin-top: 2px; padding-top: 4px; border-top: 1px dashed var(--line); }
+  .reopen-confirm {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    margin-top: 8px; padding: 9px 11px; border-radius: var(--r-md);
+    background: var(--accent-soft); font-size: 12.5px; color: var(--ink-soft);
+  }
+  .owner-col { flex: 1 1 140px; min-width: 120px; }
+  .custom-owner-row { display: flex; gap: 4px; align-items: center; }
+  .icon-btn.small { background: none; border: 1px solid var(--line); border-radius: var(--r-sm); padding: 6px; cursor: pointer; color: var(--ink-soft); flex-shrink: 0; }
+  .hidden { display: none !important; }
+
+  .owner-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11.5px; font-weight: 600; padding: 4px 9px; border-radius: var(--r-pill); white-space: nowrap;
+    flex-shrink: 0; margin-top: 1px; border: 1px solid transparent;
+  }
+
+  .delete-btn { background: none; border: none; color: var(--ink-faint); opacity: 0.6; cursor: pointer; padding: 4px; flex-shrink: 0; margin-top: 3px; border-radius: var(--r-sm); }
+  .delete-btn:hover { color: var(--danger); opacity: 1; background: var(--danger-soft); }
+  .edit-btn { background: none; border: none; color: var(--ink-faint); opacity: 0.6; cursor: pointer; padding: 4px; flex-shrink: 0; margin-top: 3px; border-radius: var(--r-sm); }
+  .edit-btn:hover { color: var(--accent); opacity: 1; background: var(--accent-soft); }
+  .section-header .delete-btn { margin-top: 0; }
+
+  .add-task-btn {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 600; color: var(--accent); background: none; border: none; border-top: 1px solid var(--line-soft);
+    width: 100%; padding: 14px 0 2px; cursor: pointer; text-align: left;
+  }
+  .add-task-btn:hover { opacity: 0.8; }
+
+  .add-section-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    font-family: "Baloo 2", sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--accent);
+    background: var(--card);
+    border: 1.5px dashed var(--line);
+    border-radius: var(--r-lg);
+    padding: 15px;
+    cursor: pointer;
+    margin-bottom: 14px;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .add-section-btn:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .label-chip {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.01em;
+    padding: 4px 10px; border-radius: var(--r-pill); border: 1px solid transparent;
+    white-space: nowrap; flex-shrink: 0; cursor: pointer;
+  }
+  .label-chip:hover { filter: brightness(0.94); }
+  .label-chip {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.01em;
+    padding: 3px 9px; border-radius: var(--r-pill); border: 1px solid transparent;
+    white-space: nowrap; cursor: pointer; display: inline-block;
+  }
+  .label-chip:hover { filter: brightness(0.94); }
+  .task-labels { display: flex; flex-wrap: wrap; gap: 5px; }
+  .label-filter-bar {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 9px 0 4px; font-size: 12.5px; color: var(--ink-soft);
+    border-bottom: 1px dashed var(--line);
+  }
+  .label-filter-bar .cancel-btn { padding: 2px 6px; margin-left: auto; }
+  .label-suggests { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+  .label-suggest {
+    font-size: 11.5px; font-weight: 600; background: none;
+    border: 1px dashed var(--line); border-radius: var(--r-pill);
+    padding: 3px 9px; cursor: pointer;
+  }
+  .label-suggest:hover { border-color: currentColor; }
+  .add-section-card { padding: 18px; border-style: dashed; box-shadow: none; }
+  .add-section-body { }
+
+  .form-actions { display: flex; gap: 8px; margin-top: 6px; }
+  .save-btn { font-family: inherit; font-size: 13px; font-weight: 700; background: var(--accent); color: var(--card); border: none; padding: 8px 16px; border-radius: var(--r-sm); cursor: pointer; }
+  .save-btn:hover { opacity: 0.88; }
+  .cancel-btn { font-family: inherit; font-size: 13px; background: none; border: none; color: var(--ink-soft); padding: 8px 8px; cursor: pointer; }
+  .cancel-btn:hover { color: var(--ink); }
+
+  .besluiten-heading {
+    font-weight: 700; font-size: 19px; color: var(--ink); margin: 30px 0 12px; letter-spacing: -0.005em;
+  }
+  .besluiten-card { box-shadow: var(--shadow); }
+  .besluiten-body { padding: 4px 18px 4px; }
+  .decision-row { display: flex; align-items: flex-start; gap: 12px; padding: 13px 0; border-top: 1px solid var(--line-soft); }
+  .decision-row:first-child { border-top: none; }
+  .decision-body { flex: 1; min-width: 0; }
+  .decision-text { font-size: 14.5px; font-weight: 600; line-height: 1.45; color: var(--ink); }
+  .decision-meta { margin-top: 7px; }
+  .decision-source { color: var(--ink-faint); }
+
+  .footnote {
+    font-size: 12px; color: var(--ink-faint); margin-top: 28px; line-height: 1.6;
+    border-top: 1px solid var(--line); padding-top: 18px;
+  }
+  .status-line { font-size: 13px; color: var(--ink-soft); text-align: center; padding: 64px 0; }
+
+  svg { display: block; }
+  button, select, input, textarea { font-family: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  @media (max-width: 480px) {
+    body { padding: 32px 14px 64px; }
+    h1 { font-size: 26px; }
+    .section-title { white-space: normal; }
+    .totals { flex-wrap: wrap; }
+  }
+
+  @media print {
+    @page { margin: 14mm 12mm; }
+    body { background: #fff; padding: 0; }
+    .filter-row, .view-tabs, .add-task-btn, .add-section-btn, .edit-btn, .delete-btn, .footnote { display: none !important; }
+    .totals, .section-card { box-shadow: none; break-inside: avoid; }
+    .task-row { break-inside: avoid; }
+  }
+
+  #pdf-export-root {
+    position: fixed;
+    left: -10000px;
+    top: 0;
+    width: 780px;
+    background: #ffffff;
+    padding: 40px 36px;
+    color: #1E2624;
+    font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --pi: #1E2624; --pis: #5C6B66; --pif: #90A19B;
+    --pl: #DCE6E3; --pls: #EDF3F1;
+    --pa: #1D9C8C; --pas: #DFF3EF; --pai: #0C6358;
+  }
+  #pdf-export-root .pdf-kicker { font-family: 'Nunito Sans', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 0.01em; color: var(--pa); margin-bottom: 4px; }
+  #pdf-export-root .pdf-h1 { font-family: "Baloo 2", sans-serif; font-weight: 800; font-size: 26px; margin: 0 0 2px; color: var(--pi); }
+  #pdf-export-root .pdf-scope { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--pif); margin: 0 0 20px; }
+  #pdf-export-root .pdf-section-card { border: 1px solid var(--pl); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
+  #pdf-export-root .pdf-section-header { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--pls); background: #FAFCFB; }
+  #pdf-export-root .pdf-section-nr { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; color: var(--pif); }
+  #pdf-export-root .pdf-section-title { font-family: "Baloo 2", sans-serif; font-weight: 700; font-size: 15px; color: var(--pi); }
+  #pdf-export-root .pdf-labels { display: flex; flex-wrap: wrap; gap: 4px; }
+  #pdf-export-root .pdf-labels { display: flex; flex-wrap: wrap; gap: 4px; }
+  #pdf-export-root .pdf-label { font-size: 9.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+  #pdf-export-root .pdf-section-body { padding: 2px 16px 4px; }
+  #pdf-export-root .pdf-empty { font-size: 11px; color: var(--pif); font-style: italic; padding: 10px 0; }
+  #pdf-export-root .pdf-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-top: 1px solid var(--pls); }
+  #pdf-export-root .pdf-row:first-child { border-top: none; }
+  #pdf-export-root .pdf-check { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--pif); flex-shrink: 0; margin-top: 3px; }
+  #pdf-export-root .pdf-check.done { background: var(--pa); border-color: var(--pa); }
+  #pdf-export-root .pdf-row-body { flex: 1; min-width: 0; }
+  #pdf-export-root .pdf-title-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  #pdf-export-root .pdf-title { font-size: 13px; font-weight: 600; line-height: 1.4; color: var(--pi); }
+  #pdf-export-root .pdf-row.done .pdf-title { color: var(--pif); text-decoration: line-through; text-decoration-color: var(--pl); }
+  #pdf-export-root .pdf-owner { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 999px; white-space: nowrap; flex-shrink: 0; }
+  #pdf-export-root .pdf-meta { display: flex; flex-direction: column; gap: 3px; margin-top: 6px; align-items: flex-start; }
+  #pdf-export-root .pdf-when { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; font-weight: 600; color: var(--pai); background: var(--pas); padding: 2px 7px; border-radius: 999px; }
+  #pdf-export-root .pdf-note { font-size: 10.5px; color: var(--pis); line-height: 1.45; }
+  #pdf-export-root .pdf-besluiten-heading { font-family: "Baloo 2", sans-serif; font-weight: 700; font-size: 17px; margin: 22px 0 10px; color: var(--pi); }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="masthead-row">
+      <img class="logo-img" src="logo.png" alt="Logo Stichting MCN" />
+      <div>
+        <div class="kicker">Stichting Mobiele Collectie Nederland</div>
+        <h1>Actie- en besluitenlijst</h1>
+      </div>
+    </div>
+    <div id="app"><div class="status-line">Lijst laden…</div></div>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ─── Verbinding met de database ───────────────────────────────────
+  // Deze twee waarden staan in Supabase onder Project Settings → API.
+  // Ze mogen openbaar zijn: wat iemand mag zien en wijzigen wordt in de
+  // database zelf bepaald, aan de hand van de tabel "leden".
+  var SUPABASE_URL = "";
+  var SUPABASE_ANON_KEY = "";
+  // ──────────────────────────────────────────────────────────────────
+
+  var SUPABASE_LIB = "https://esm.sh/@supabase/supabase-js@2";
+
+  var sb = null;            // verbinding met de database
+  var sessie = null;        // wie is er ingelogd
+  var mijnRol = null;       // kijker | bewerker | beheerder | null
+  var inlogStatus = "";     // melding op het inlogscherm
+  var opstartFout = "";     // als de verbinding niet lukt
+  var organisaties = [];
+  var personen = [];
+
+  // De lijst komt volledig uit de database; er is geen startlijst in de pagina.
+
+  // Lokale UI-state (niet gedeeld, niet opgeslagen)
+  var ui = {
+    view: "acties", // acties | besluiten | relaties
+    bewerkOrg: {},      // organisatie-id -> true
+    bewerkPersoon: {},  // persoon-id -> true
+    nieuweOrg: false,
+    nieuwPersoonBij: {},// organisatie-id -> true
+    relatieFilter: "alle", // "alle" of een organisatie-id
+    openOrg: {},        // organisatie-id -> true (personen tonen)
+    filter: "todo", // todo | done | alle
+    labelFilter: "alle", // "alle" of de naam van een label
+    actionLabelFilter: "alle", // "alle" of een label dat op acties staat
+    sortMode: "standaard", // standaard | label | datum
+    dateFilter: "alle", // alle | verlopen | week | maand | geen
+    editingDecision: {}, // besluit-id -> true
+    taskLabelFilter: {}, // sectionId -> label (alleen acties met dat label tonen)
+    collapsed: {},
+    adding: {},        // sectionId -> true
+    customOwner: {},   // sectionId -> true (aan het typen van nieuwe naam)
+    completing: {},    // taskId -> true (bezig met afronden)
+    completingExtra: {}, // taskId -> true (vervolgtaak/besluit-velden getoond)
+    editingCompletion: {}, // taskId -> true (afrondingsgegevens bewerken)
+    reopening: {},     // taskId -> true (bevestiging om weer open te zetten)
+    editingTask: {},   // taskId -> true (taakgegevens bewerken)
+    editingSection: {}, // sectionId -> true (naam/volgnummer bewerken)
+    editCustomOwner: {}, // taskId -> true (aan het typen van nieuwe naam bij bewerken)
+    addingSection: false // formulier voor nieuwe categorie tonen
+  };
+
+  var currentSections = null;
+  var currentDecisions = null;
+  var syncing = false;
+  var saveError = false;
+  var pdfStatus = "";
+
+  function escapeHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  // Categorieën hadden vroeger één vaste groep; dat leest nu als labels verder.
+  // Oude gegevens hoeven daardoor niet omgezet te worden.
+  var LEGACY_GROUP_LABELS = {
+    bestuur: ["Bestuur"],
+    projectgroep: ["Projectgroep"],
+    beide: ["Bestuur", "Projectgroep"]
+  };
+  var LABEL_PALETTE = { "Bestuur": "#3E86B8", "Projectgroep": "#1D9C8C" };
+  var LABEL_HUES = ["#B85D95", "#7A6BA6", "#C07A3E", "#4A8F6B", "#646C79", "#3E86B8", "#1D9C8C"];
+
+  function sectionLabels(section) {
+    if (Array.isArray(section.labels)) return section.labels;
+    return LEGACY_GROUP_LABELS[section.group] || [];
+  }
+
+  function taskLabels(task) {
+    return Array.isArray(task.labels) ? task.labels : [];
+  }
+
+  // Labels van acties verschillen per categorie, dus suggesties komen
+  // altijd uit dezelfde categorie.
+  function organisatieOp(id) {
+    return organisaties.find(function (o) { return o.id === id; }) || null;
+  }
+  function persoonOp(id) {
+    return personen.find(function (x) { return x.id === id; }) || null;
+  }
+  function personenBij(orgId) {
+    return personen.filter(function (x) { return x.organisatie_id === orgId; });
+  }
+  function actiesBij(orgId, persoonId) {
+    var uit = [];
+    (currentSections || []).forEach(function (sec) {
+      sec.tasks.forEach(function (t) {
+        if (persoonId ? t.persoonId === persoonId : t.organisatieId === orgId) {
+          uit.push({ sectie: sec, taak: t });
+        }
+      });
+    });
+    return uit;
+  }
+  function relatieNaam(taak) {
+    var pers = taak.persoonId ? persoonOp(taak.persoonId) : null;
+    var org = taak.organisatieId ? organisatieOp(taak.organisatieId) : null;
+    if (pers && org) return pers.naam + " · " + org.naam;
+    if (pers) return pers.naam;
+    if (org) return org.naam;
+    return "";
+  }
+  function nieuwId(voorvoegsel) {
+    return voorvoegsel + "-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
+  }
+
+  // ── Opslaan van relaties ───────────────────────────────────────
+  function bewaarRelatie(tabel, rij, lokaleLijst) {
+    if (!sb || !magBewerken()) { saveError = true; render(); return; }
+    syncing = true; render();
+    controleer(sb.from(tabel).upsert(rij)).then(function () {
+      var i = lokaleLijst.findIndex(function (x) { return x.id === rij.id; });
+      if (i === -1) lokaleLijst.push(rij); else lokaleLijst[i] = rij;
+      lokaleLijst.sort(function (a, b) { return (a.naam || "").localeCompare(b.naam || "", "nl"); });
+      syncing = false; saveError = false; render();
+    }).catch(function () {
+      syncing = false; saveError = true; render();
+      laadAlles().then(render).catch(function () {});
+    });
+  }
+
+  function verwijderRelatie(tabel, id, lokaleLijst) {
+    if (!sb || !magBewerken()) { saveError = true; render(); return; }
+    syncing = true; render();
+    controleer(sb.from(tabel).delete().eq("id", id)).then(function () {
+      var i = lokaleLijst.findIndex(function (x) { return x.id === id; });
+      if (i !== -1) lokaleLijst.splice(i, 1);
+      syncing = false; saveError = false; render();
+      // Acties die eraan hingen zijn in de database losgekoppeld; hier ook.
+      laadAlles().then(render).catch(function () {});
+    }).catch(function () {
+      syncing = false; saveError = true; render();
+    });
+  }
+
+  function allTaskLabels(sections) {
+    var set = {};
+    (sections || []).forEach(function (s) {
+      s.tasks.forEach(function (t) { taskLabels(t).forEach(function (l) { set[l] = true; }); });
+    });
+    return Object.keys(set).sort(function (a, b) { return a.localeCompare(b, "nl"); });
+  }
+
+  function labelsInSection(section) {
+    var set = {};
+    section.tasks.forEach(function (t) { taskLabels(t).forEach(function (l) { set[l] = true; }); });
+    return Object.keys(set).sort(function (a, b) { return a.localeCompare(b, "nl"); });
+  }
+
+  function allLabels(sections) {
+    var set = {};
+    (sections || []).forEach(function (s) {
+      sectionLabels(s).forEach(function (l) { set[l] = true; });
+    });
+    return Object.keys(set).sort(function (a, b) { return a.localeCompare(b, "nl"); });
+  }
+
+  function labelColor(label) {
+    if (LABEL_PALETTE[label]) return LABEL_PALETTE[label];
+    var hash = 0;
+    for (var i = 0; i < label.length; i++) hash = label.charCodeAt(i) + ((hash << 5) - hash);
+    return LABEL_HUES[Math.abs(hash) % LABEL_HUES.length];
+  }
+
+  function leesVeld(form, naam) {
+    var el = form.querySelector('[data-field="' + naam + '"]');
+    return el ? el.value.trim() : "";
+  }
+
+  function parseLabels(text) {
+    return String(text || "").split(",").map(function (l) {
+      return l.trim();
+    }).filter(function (l, i, arr) {
+      return l && arr.indexOf(l) === i;
+    });
+  }
+
+  var OWNER_PALETTE = { "Marinus": "#1D9C8C", "Sectoren": "#3E86B8", "Marketing": "#B85D95" };
+  var HUES = ["#3E86B8", "#B85D95", "#1D9C8C", "#646C79", "#7A6BA6"];
+  function ownerColor(owner) {
+    if (OWNER_PALETTE[owner]) return OWNER_PALETTE[owner];
+    var hash = 0;
+    for (var i = 0; i < owner.length; i++) hash = owner.charCodeAt(i) + ((hash << 5) - hash);
+    return HUES[Math.abs(hash) % HUES.length];
+  }
+
+  function todayISO() {
+    var d = new Date();
+    var tz = d.getTimezoneOffset() * 60000;
+    return new Date(d - tz).toISOString().slice(0, 10);
+  }
+  function formatDateNL(iso) {
+    if (!iso) return "";
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso;
+    var d = new Date(iso + "T00:00:00");
+    if (isNaN(d)) return iso;
+    return d.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
+  }
+
+  function knownOwners(sections) {
+    var set = { "Marinus": true, "Sectoren": true };
+    sections.forEach(function (s) { s.tasks.forEach(function (t) { set[t.owner] = true; }); });
+    return Object.keys(set);
+  }
+
+  // Bij het openen staan alle categorieën ingeklapt: je ziet eerst een inhoudsopgave.
+  // Categorieën die je later zelf toevoegt beginnen wel uitgeklapt.
+  var initialCollapseApplied = false;
+  function applyInitialCollapse() {
+    if (initialCollapseApplied || !currentSections) return;
+    initialCollapseApplied = true;
+    currentSections.forEach(function (s) { ui.collapsed[s.id] = true; });
+  }
+
+  // Invouwen sluit ook de formulieren die in die categorie openstonden,
+  // anders staat een taak bij het volgende uitklappen nog in bewerkmodus.
+  function closeOpenFormsInSection(sectionId) {
+    delete ui.adding[sectionId];
+    delete ui.taskLabelFilter[sectionId];
+    delete ui.customOwner[sectionId];
+    var s = (currentSections || []).find(function (x) { return x.id === sectionId; });
+    if (!s) return;
+    s.tasks.forEach(function (t) {
+      delete ui.editingTask[t.id];
+      delete ui.editCustomOwner[t.id];
+      delete ui.completing[t.id];
+      delete ui.completingExtra[t.id];
+      delete ui.editingCompletion[t.id];
+      delete ui.reopening[t.id];
+    });
+  }
+
+  function parseWhenDate(when) {
+    if (when && /^\d{4}-\d{2}-\d{2}$/.test(when)) return when;
+    return null;
+  }
+
+  function addDaysISO(iso, dagen) {
+    var d = new Date(iso + "T00:00:00");
+    d.setDate(d.getDate() + dagen);
+    var tz = d.getTimezoneOffset() * 60000;
+    return new Date(d - tz).toISOString().slice(0, 10);
+  }
+
+  // Alleen echte datums (uit de datumkiezer) zijn te vergelijken; vrije tekst
+  // zoals "week van 17 aug" telt als "zonder datum".
+  function matchesDateFilter(task) {
+    if (ui.dateFilter === "alle") return true;
+    var d = parseWhenDate(task.when);
+    if (ui.dateFilter === "geen") return !d;
+    if (!d) return false;
+    var vandaag = todayISO();
+    if (ui.dateFilter === "verlopen") return d < vandaag;
+    if (ui.dateFilter === "week") return d <= addDaysISO(vandaag, 7);
+    if (ui.dateFilter === "maand") return d <= addDaysISO(vandaag, 30);
+    return true;
+  }
+
+  function sortedSections(sections) {
+    var list = sections.slice();
+    if (ui.sortMode === "label") {
+      list.sort(function (a, b) {
+        var la = sectionLabels(a)[0] || "";
+        var lb = sectionLabels(b)[0] || "";
+        if (la !== lb) {
+          if (!la) return 1;
+          if (!lb) return -1;
+          return la.localeCompare(lb, "nl");
+        }
+        return (a.nr || 0) - (b.nr || 0);
+      });
+    }
+    return list;
+  }
+
+  // Taken zonder echte datum ("week van 17 aug") komen achteraan.
+  function sortedTasks(tasks) {
+    if (ui.sortMode !== "datum") return tasks;
+    var list = tasks.slice();
+    list.sort(function (a, b) {
+      var da = parseWhenDate(a.when);
+      var db = parseWhenDate(b.when);
+      if (da && db) return da < db ? -1 : da > db ? 1 : 0;
+      if (da && !db) return -1;
+      if (!da && db) return 1;
+      return 0;
+    });
+    return list;
+  }
+
+  function filterSectionsByLabel(sections, labelFilter) {
+    if (labelFilter === "alle") return sections;
+    return sections.filter(function (s) { return sectionLabels(s).indexOf(labelFilter) !== -1; });
+  }
+
+  function cloneDecisions() {
+    return JSON.parse(JSON.stringify(currentDecisions || []));
+  }
+
+  function findDecisionForTask(taskId) {
+    return (currentDecisions || []).find(function (d) { return d.taskId === taskId; }) || null;
+  }
+
+  function sortedDecisions(decisions) {
+    return (decisions || []).slice().sort(function (a, b) { return (b.date || "").localeCompare(a.date || ""); });
+  }
+
+  function lightenHex(hex, pct) {
+    var h = hex.replace("#", "");
+    if (h.length === 3) h = h.split("").map(function (c) { return c + c; }).join("");
+    var r = parseInt(h.substr(0, 2), 16), g = parseInt(h.substr(2, 2), 16), b = parseInt(h.substr(4, 2), 16);
+    function mix(c) { return Math.round(c * pct + 255 * (1 - pct)); }
+    return "rgb(" + mix(r) + "," + mix(g) + "," + mix(b) + ")";
+  }
+  function ownerTagStyle(owner) {
+    var color = ownerColor(owner);
+    return "color:" + color + ";background:" + lightenHex(color, 0.14) + ";";
+  }
+
+  function buildPrintHtml(sections, labelFilter, decisions) {
+    var visible = filterSectionsByLabel(sections, labelFilter);
+    var scopeLabel = labelFilter === "alle" ? "alle labels" : labelFilter;
+    var html = "";
+    html += '<div class="pdf-kicker">Stichting Mobiele Collectie Nederland</div>';
+    html += '<div class="pdf-h1">Actie- en besluitenlijst</div>';
+    html += '<div class="pdf-scope">Afgedrukt op ' + escapeHtml(formatDateNL(todayISO())) + " — " + escapeHtml(scopeLabel) + '</div>';
+
+    visible.forEach(function (section) {
+      html += '<div class="pdf-section-card">';
+      html += '<div class="pdf-section-header"><span class="pdf-section-nr">' + String(section.nr).padStart(2, "0") + '</span><span class="pdf-section-title">' + escapeHtml(section.title) + '</span>';
+      sectionLabels(section).forEach(function (l) {
+        var lc = labelColor(l);
+        html += '<span class="pdf-label" style="color:' + lc + ';background:' + lightenHex(lc, 0.14) + ';">' + escapeHtml(l) + '</span>';
+      });
+      html += '</div>';
+      html += '<div class="pdf-section-body">';
+      if (section.tasks.length === 0) {
+        html += '<div class="pdf-empty">Geen taken.</div>';
+      }
+      section.tasks.forEach(function (task) {
+        html += '<div class="pdf-row' + (task.done ? " done" : "") + '">';
+        html += '<div class="pdf-check' + (task.done ? " done" : "") + '"></div>';
+        html += '<div class="pdf-row-body">';
+        html += '<div class="pdf-title-row"><div class="pdf-title">' + escapeHtml(task.title) + '</div><span class="pdf-owner" style="' + ownerTagStyle(task.owner) + '">' + escapeHtml(task.owner) + "</span></div>";
+        var pdfTaakLabels = taskLabels(task);
+        if (task.when || task.note || pdfTaakLabels.length || (task.done && task.completedDate)) {
+          html += '<div class="pdf-meta">';
+          if (pdfTaakLabels.length) {
+            html += '<div class="pdf-labels">';
+            pdfTaakLabels.forEach(function (l) {
+              var lc = labelColor(l);
+              html += '<span class="pdf-label" style="color:' + lc + ';background:' + lightenHex(lc, 0.14) + ';">' + escapeHtml(l) + '</span>';
+            });
+            html += '</div>';
+          }
+          if (task.when) html += '<span class="pdf-when">' + escapeHtml(formatDateNL(task.when)) + "</span>";
+          if (task.done && task.completedDate) html += '<span class="pdf-when">Afgerond ' + escapeHtml(formatDateNL(task.completedDate)) + "</span>";
+          if (task.note) html += '<div class="pdf-note">' + escapeHtml(task.note) + "</div>";
+          html += "</div>";
+        }
+        html += "</div></div>";
+      });
+      html += "</div></div>";
+    });
+
+    if (visible.length === 0) {
+      html += '<div class="pdf-empty">Geen categorieën met dit label.</div>';
+    }
+
+    var decisionList = sortedDecisions(decisions);
+    html += '<div class="pdf-besluiten-heading">Besluitenlijst</div>';
+    if (decisionList.length === 0) {
+      html += '<div class="pdf-empty">Nog geen besluiten vastgelegd.</div>';
+    } else {
+      html += '<div class="pdf-section-card"><div class="pdf-section-body" style="padding-top:8px;">';
+      decisionList.forEach(function (d) {
+        var sourceBits = [d.date ? formatDateNL(d.date) : "", d.sectionTitle, d.taskTitle].filter(function (v) { return !!v; });
+        html += '<div class="pdf-row"><div class="pdf-row-body">';
+        html += '<div class="pdf-title">' + escapeHtml(d.text) + "</div>";
+        if (sourceBits.length) html += '<div class="pdf-meta"><div class="pdf-note">' + escapeHtml(sourceBits.join("   ·   ")) + "</div></div>";
+        html += "</div></div>";
+      });
+      html += "</div></div>";
+    }
+
+    return html;
+  }
+
+  function renderPdfBlob(sections, labelFilter, decisions) {
+    return new Promise(function (resolve, reject) {
+      if (!window.html2canvas || !window.jspdf) { resolve(null); return; }
+      var container = document.createElement("div");
+      container.id = "pdf-export-root";
+      container.innerHTML = buildPrintHtml(sections, labelFilter, decisions);
+      document.body.appendChild(container);
+
+      function cleanup() {
+        if (container.parentNode) container.parentNode.removeChild(container);
+      }
+
+      var fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+      fontsReady.then(function () {
+        return new Promise(function (r) { requestAnimationFrame(function () { requestAnimationFrame(r); }); });
+      }).then(function () {
+        var scale = 2;
+        var rootRect = container.getBoundingClientRect();
+        var rows = container.querySelectorAll(".pdf-row, .pdf-section-card, .pdf-besluiten-heading");
+        var points = [];
+        rows.forEach(function (r) {
+          var rect = r.getBoundingClientRect();
+          var top = Math.round((rect.top - rootRect.top) * scale);
+          if (top > 0) points.push(top);
+        });
+        var breakPoints = Array.from(new Set(points)).sort(function (a, b) { return a - b; });
+
+        return html2canvas(container, { scale: scale, backgroundColor: "#ffffff", useCORS: true }).then(function (canvas) {
+          var jsPDFCtor = window.jspdf.jsPDF;
+          var doc = new jsPDFCtor({ unit: "mm", format: "a4" });
+          var pageWidthMM = doc.internal.pageSize.getWidth();
+          var pageHeightMM = doc.internal.pageSize.getHeight();
+          var marginMM = 14;
+          var contentWidthMM = pageWidthMM - marginMM * 2;
+          var pxPerMM = canvas.width / contentWidthMM;
+          var pageContentHeightMM = pageHeightMM - marginMM * 2;
+          var pageContentHeightPx = Math.floor(pageContentHeightMM * pxPerMM);
+
+          var renderedPx = 0;
+          var first = true;
+          while (renderedPx < canvas.height) {
+            var maxEnd = Math.min(renderedPx + pageContentHeightPx, canvas.height);
+            var chosen = maxEnd;
+            if (maxEnd < canvas.height) {
+              for (var i = breakPoints.length - 1; i >= 0; i--) {
+                if (breakPoints[i] > renderedPx && breakPoints[i] <= maxEnd) { chosen = breakPoints[i]; break; }
+              }
+            }
+            var sliceHeightPx = chosen - renderedPx;
+            if (sliceHeightPx <= 0) sliceHeightPx = maxEnd - renderedPx;
+
+            var sliceCanvas = document.createElement("canvas");
+            sliceCanvas.width = canvas.width;
+            sliceCanvas.height = sliceHeightPx;
+            var ctx = sliceCanvas.getContext("2d");
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+            ctx.drawImage(canvas, 0, renderedPx, canvas.width, sliceHeightPx, 0, 0, canvas.width, sliceHeightPx);
+
+            if (!first) doc.addPage();
+            first = false;
+            var sliceHeightMM = sliceHeightPx / pxPerMM;
+            doc.addImage(sliceCanvas.toDataURL("image/jpeg", 0.92), "JPEG", marginMM, marginMM, contentWidthMM, sliceHeightMM);
+
+            renderedPx += sliceHeightPx;
+          }
+
+          cleanup();
+          resolve(doc.output("blob"));
+        });
+      }).catch(function (err) {
+        cleanup();
+        reject(err);
+      });
+    });
+  }
+
+  // De PDF-bibliotheken zijn samen ruim een halve megabyte. Ze worden pas
+  // opgehaald wanneer iemand echt een PDF wil, zodat de lijst zelf snel opent.
+  var PDF_LIBS = [
+    "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"
+  ];
+  var pdfLibsPromise = null;
+
+  function loadScript(src) {
+    return new Promise(function (resolve, reject) {
+      var el = document.createElement("script");
+      el.src = src;
+      el.onload = function () { resolve(); };
+      el.onerror = function () { reject(new Error("script laden mislukt")); };
+      document.head.appendChild(el);
+    });
+  }
+
+  function loadPdfLibs() {
+    if (window.html2canvas && window.jspdf) return Promise.resolve();
+    if (!pdfLibsPromise) {
+      pdfLibsPromise = Promise.all(PDF_LIBS.map(loadScript)).catch(function (err) {
+        pdfLibsPromise = null;   // volgende poging mag het opnieuw proberen
+        throw err;
+      });
+    }
+    return pdfLibsPromise;
+  }
+
+  function bewaarBestand(blob, bestandsnaam) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = bestandsnaam;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+    return Promise.resolve();
+  }
+
+  function downloadPdf() {
+    pdfStatus = "PDF opmaken…";
+    render();
+    loadPdfLibs().then(function () {
+      return renderPdfBlob(currentSections, ui.labelFilter, currentDecisions);
+    }).then(function (blob) {
+      if (!blob) {
+        pdfStatus = "PDF kon niet worden gemaakt. Ververs de pagina en probeer het opnieuw.";
+        render();
+        return;
+      }
+      pdfStatus = "Bestand aanbieden…";
+      render();
+      return bewaarBestand(blob, "actielijst-mcn-" + todayISO() + ".pdf").then(function () {
+        pdfStatus = "Gedownload.";
+        render();
+      });
+    }).catch(function (err) {
+      pdfStatus = "Downloaden lukte niet" + (err && err.code ? " (" + err.code + ")" : "") + ".";
+      render();
+    });
+  }
+
+  function renderRelatiesHtml() {
+    var html = "";
+    var mag = magBewerken();
+
+    if (organisaties.length === 0 && !ui.nieuweOrg) {
+      html += '<div class="empty-state group-empty-state">Nog geen organisaties. Voeg er hieronder één toe.</div>';
+    }
+
+    organisaties.forEach(function (org) {
+      var leden = personenBij(org.id);
+      var open = !!ui.openOrg[org.id];
+      var aantalActies = actiesBij(org.id, null).filter(function (x) { return !x.taak.done; }).length;
+
+      html += '<section class="section-card">';
+
+      if (ui.bewerkOrg[org.id]) {
+        html += renderOrgFormulier(org);
+        html += '</section>';
+        return;
+      }
+
+      html += '<div class="section-header' + (open ? " open" : "") + '">';
+      html += '<button class="section-header-btn" data-action="toggle-org" data-org="' + org.id + '">';
+      html += '<span class="section-title">' + escapeHtml(org.naam) + '</span>';
+      html += '<span class="relatie-meta sans">';
+      if (org.plaats) html += escapeHtml(org.plaats);
+      if (org.soort) html += (org.plaats ? " · " : "") + escapeHtml(org.soort);
+      html += '</span>';
+      html += '<span class="progress-label sans">' + leden.length + ' ' + (leden.length === 1 ? "persoon" : "personen") + '</span>';
+      html += chevronSvg(!open);
+      html += '</button>';
+      if (aantalActies) {
+        html += '<button class="label-chip" data-action="filter-op-relatie" data-org="' + org.id + '" title="Toon de acties van deze organisatie">'
+             + aantalActies + ' ' + (aantalActies === 1 ? "actie" : "acties") + '</button>';
+      }
+      if (mag) {
+        html += '<button class="edit-btn" data-action="bewerk-org" data-org="' + org.id + '" aria-label="Organisatie bewerken" title="Gegevens wijzigen">' + pencilSvg() + '</button>';
+        if (leden.length === 0 && aantalActies === 0) {
+          html += '<button class="delete-btn" data-action="verwijder-org" data-org="' + org.id + '" aria-label="Organisatie verwijderen" title="Verwijderen">' + xSvg() + '</button>';
+        }
+      }
+      html += '</div>';
+
+      if (open) {
+        html += '<div class="section-body">';
+        if (org.website || org.notitie) {
+          html += '<div class="org-details">';
+          if (org.website) html += '<a class="org-website" href="' + escapeHtml(org.website) + '" target="_blank" rel="noopener">' + escapeHtml(org.website) + '</a>';
+          if (org.notitie) html += '<div class="note">' + escapeHtml(org.notitie) + '</div>';
+          html += '</div>';
+        }
+
+        leden.forEach(function (pers) {
+          if (ui.bewerkPersoon[pers.id]) { html += renderPersoonFormulier(org, pers); return; }
+          var eigenActies = actiesBij(null, pers.id).filter(function (x) { return !x.taak.done; }).length;
+          html += '<div class="task-row persoon-row">';
+          html += '<div class="task-body">';
+          html += '<div class="task-title-row">';
+          html += '<div class="task-title">' + escapeHtml(pers.naam) + '</div>';
+          if (pers.functie) html += '<span class="persoon-functie sans">' + escapeHtml(pers.functie) + '</span>';
+          html += '</div>';
+          html += '<div class="task-meta">';
+          if (pers.email) html += '<a class="note contact-link" href="mailto:' + escapeHtml(pers.email) + '">' + escapeHtml(pers.email) + '</a>';
+          if (pers.telefoon) html += '<a class="note contact-link" href="tel:' + escapeHtml(pers.telefoon.replace(/\s/g, "")) + '">' + escapeHtml(pers.telefoon) + '</a>';
+          if (eigenActies) html += '<button class="label-chip" data-action="filter-op-persoon" data-persoon="' + pers.id + '">' + eigenActies + ' ' + (eigenActies === 1 ? "actie" : "acties") + '</button>';
+          html += '</div>';
+          html += '</div>';
+          if (mag) {
+            html += '<button class="edit-btn" data-action="bewerk-persoon" data-persoon="' + pers.id + '" aria-label="Persoon bewerken">' + pencilSvg() + '</button>';
+            html += '<button class="delete-btn" data-action="verwijder-persoon" data-persoon="' + pers.id + '" aria-label="Persoon verwijderen">' + xSvg() + '</button>';
+          }
+          html += '</div>';
+        });
+
+        if (ui.nieuwPersoonBij[org.id]) {
+          html += renderPersoonFormulier(org, null);
+        } else if (mag) {
+          html += '<button class="add-task-btn" data-action="nieuw-persoon" data-org="' + org.id + '">' + plusSvg() + 'Persoon toevoegen</button>';
+        }
+        html += '</div>';
+      }
+      html += '</section>';
+    });
+
+    if (ui.nieuweOrg) {
+      html += '<section class="section-card">' + renderOrgFormulier(null) + '</section>';
+    } else if (mag) {
+      html += '<button class="add-section-btn" data-action="nieuwe-org">' + plusSvg() + 'Organisatie toevoegen</button>';
+    }
+    return html;
+  }
+
+  function renderOrgFormulier(org) {
+    var id = org ? org.id : "nieuw";
+    var html = '<div class="add-form" data-form="org" data-org="' + id + '">';
+    html += '<div class="form-row">';
+    html += '<input type="text" class="txt-input flex1" data-field="org-naam" value="' + escapeHtml(org ? org.naam : "") + '" placeholder="Naam van de organisatie" data-autofocus="1" />';
+    html += '<input type="text" class="txt-input" data-field="org-plaats" value="' + escapeHtml(org ? org.plaats : "") + '" placeholder="Plaats" />';
+    html += '</div>';
+    html += '<div class="form-row">';
+    html += '<input type="text" class="txt-input flex1" data-field="org-soort" value="' + escapeHtml(org ? org.soort : "") + '" placeholder="Soort — bijv. museum, overheid, leverancier" />';
+    html += '<input type="text" class="txt-input flex1" data-field="org-website" value="' + escapeHtml(org ? org.website : "") + '" placeholder="https://…" />';
+    html += '</div>';
+    html += '<div class="form-row single"><textarea class="txt-input" rows="2" data-field="org-notitie" placeholder="Toelichting (optioneel)">' + escapeHtml(org ? org.notitie : "") + '</textarea></div>';
+    html += '<div class="form-actions">';
+    html += '<button class="save-btn" data-action="bewaar-org" data-org="' + id + '">Opslaan</button>';
+    html += '<button class="cancel-btn" data-action="annuleer-org" data-org="' + id + '">Annuleren</button>';
+    html += '</div></div>';
+    return html;
+  }
+
+  function renderPersoonFormulier(org, pers) {
+    var id = pers ? pers.id : "nieuw";
+    var html = '<div class="add-form" data-form="persoon" data-persoon="' + id + '" data-org="' + org.id + '">';
+    html += '<div class="form-row">';
+    html += '<input type="text" class="txt-input flex1" data-field="p-naam" value="' + escapeHtml(pers ? pers.naam : "") + '" placeholder="Naam" data-autofocus="1" />';
+    html += '<input type="text" class="txt-input flex1" data-field="p-functie" value="' + escapeHtml(pers ? pers.functie : "") + '" placeholder="Functie" />';
+    html += '</div>';
+    html += '<div class="form-row">';
+    html += '<input type="email" class="txt-input flex1" data-field="p-email" value="' + escapeHtml(pers ? pers.email : "") + '" placeholder="E-mailadres" />';
+    html += '<input type="text" class="txt-input" data-field="p-telefoon" value="' + escapeHtml(pers ? pers.telefoon : "") + '" placeholder="Telefoon" />';
+    html += '</div>';
+    html += '<div class="form-actions">';
+    html += '<button class="save-btn" data-action="bewaar-persoon" data-persoon="' + id + '" data-org="' + org.id + '">Opslaan</button>';
+    html += '<button class="cancel-btn" data-action="annuleer-persoon" data-persoon="' + id + '" data-org="' + org.id + '">Annuleren</button>';
+    html += '</div></div>';
+    return html;
+  }
+
+  function renderDecisionsHtml() {
+    var html = '';
+    var decisionList = sortedDecisions(currentDecisions);
+    if (decisionList.length === 0) {
+      html += '<div class="empty-state group-empty-state">Nog geen besluiten vastgelegd. Bij het afronden van een taak kun je een besluit toevoegen.</div>';
+    } else {
+      html += '<section class="section-card besluiten-card"><div class="section-body besluiten-body">';
+      decisionList.forEach(function (d) {
+        if (ui.editingDecision[d.id]) {
+          html += '<div class="decision-row"><div class="decision-body">';
+          html += '<div class="add-form" data-form="edit-decision" data-decision="' + d.id + '" style="border-top:none;padding-top:0;">';
+          html += '<div class="form-row single"><textarea class="txt-input" rows="3" data-field="decision-text" data-autofocus="1">' + escapeHtml(d.text) + '</textarea></div>';
+          html += '<div class="form-row single"><input type="date" class="txt-input date-field" data-field="decision-date" value="' + escapeHtml(d.date || "") + '" title="Datum van het besluit" /></div>';
+          html += '<div class="form-actions">';
+          html += '<button class="save-btn" data-action="submit-edit-decision" data-decision="' + d.id + '">Opslaan</button>';
+          html += '<button class="cancel-btn" data-action="cancel-edit-decision" data-decision="' + d.id + '">Annuleren</button>';
+          html += '</div></div></div></div>';
+          return;
+        }
+        html += '<div class="decision-row">';
+        html += '<div class="decision-body">';
+        html += '<div class="decision-text">' + escapeHtml(d.text) + '</div>';
+        html += '<div class="task-meta decision-meta">';
+        if (d.date) html += '<div class="when">' + escapeHtml(formatDateNL(d.date)) + '</div>';
+        if (d.sectionTitle || d.taskTitle) {
+          html += '<div class="note decision-source">' + escapeHtml(d.sectionTitle) + (d.taskTitle ? ' — ' + escapeHtml(d.taskTitle) : '') + '</div>';
+        }
+        html += '</div>';
+        html += '</div>';
+        html += '<button class="edit-btn" data-action="open-edit-decision" data-decision="' + d.id + '" aria-label="Bewerk besluit" title="Besluit bewerken">' + pencilSvg() + '</button>';
+        html += '<button class="delete-btn" data-action="delete-decision" data-decision="' + d.id + '" aria-label="Verwijder besluit">' + xSvg() + '</button>';
+        html += '</div>';
+      });
+      html += '</div></section>';
+    }
+    return html;
+  }
+
+  function renderInlogscherm() {
+    var html = '<div class="poort">';
+    html += '<h2 class="poort-kop heading-font">Inloggen</h2>';
+    html += '<p class="poort-tekst">Vul je e-mailadres in. Je krijgt een mail met een link ' +
+            'waarmee je binnenkomt — je hebt geen wachtwoord nodig.</p>';
+    html += '<div class="poort-form" data-form="inloggen">';
+    html += '<input type="email" class="txt-input" data-field="inlog-email" placeholder="jouw@e-mailadres.nl" data-autofocus="1" autocomplete="email" />';
+    html += '<button class="save-btn" data-action="stuur-inloglink">Stuur mij een link</button>';
+    html += '</div>';
+    if (inlogStatus) html += '<p class="poort-status">' + escapeHtml(inlogStatus) + '</p>';
+    html += '</div>';
+    return html;
+  }
+
+  function render() {
+    var app = document.getElementById("app");
+
+    if (opstartFout) {
+      app.innerHTML = '<div class="poort"><p class="poort-tekst">' + escapeHtml(opstartFout) + '</p></div>';
+      return;
+    }
+    if (!sessie) {
+      app.innerHTML = renderInlogscherm();
+      attachAutofocus();
+      return;
+    }
+    if (!mijnRol) {
+      app.innerHTML = '<div class="poort">' +
+        '<h2 class="poort-kop heading-font">Nog geen toegang</h2>' +
+        '<p class="poort-tekst">Je bent ingelogd als <strong>' + escapeHtml(sessie.user.email) + '</strong>, ' +
+        'maar dat adres staat niet op de lijst met mensen die deze lijst mogen gebruiken. ' +
+        'Vraag de beheerder om je toe te voegen.</p>' +
+        '<button class="cancel-btn" data-action="uitloggen">Uitloggen</button></div>';
+      return;
+    }
+    if (currentSections === null) {
+      app.innerHTML = '<div class="status-line">Lijst laden…</div>';
+      return;
+    }
+    applyInitialCollapse();
+    var sections = currentSections;
+    var allTasks = [];
+    sections.forEach(function (s) { allTasks = allTasks.concat(s.tasks); });
+    var totalDone = allTasks.filter(function (t) { return t.done; }).length;
+    var totalCount = allTasks.length;
+    var totalPct = totalCount ? Math.round((totalDone / totalCount) * 100) : 0;
+    var owners = knownOwners(sections);
+    var visibleSections = sortedSections(filterSectionsByLabel(sections, ui.labelFilter));
+    var labelsInUse = allLabels(sections);
+    var taskLabelsInUse = allTaskLabels(sections);
+
+    var html = "";
+    var besluitenAantal = (currentDecisions || []).length;
+    app.classList.toggle("alleen-lezen", !magBewerken());
+
+    html += '<div class="view-tabs">';
+    [["acties", "Acties", totalCount],
+     ["besluiten", "Besluiten", besluitenAantal],
+     ["relaties", "Relaties", organisaties.length]].forEach(function (v) {
+      html += '<button class="view-tab' + (ui.view === v[0] ? " active" : "") + '" data-action="set-view" data-view="' + v[0] + '">' + v[1] + '<span class="view-tab-count">' + v[2] + '</span></button>';
+    });
+    html += '<span class="toolbar-actions">';
+    html += '<button class="pdf-download-btn" data-action="download-pdf">' + downloadSvg() + 'PDF downloaden</button>';
+    if (pdfStatus) html += '<span class="pdf-status sans">' + escapeHtml(pdfStatus) + '</span>';
+    html += '<button class="pdf-download-btn" data-action="uitloggen" title="' + escapeHtml(sessie.user.email) + (mijnRol === "kijker" ? " — je kunt meekijken, niet wijzigen" : "") + '">' + escapeHtml(sessie.user.email.split("@")[0]) + (mijnRol === "kijker" ? " (meekijken)" : "") + '</button>';
+    html += '</span>';
+    html += '</div>';
+
+    if (!magBewerken()) {
+      html += '<p class="meekijk-melding">Je kunt deze lijst bekijken, maar niet wijzigen. ' +
+              'Vraag de beheerder om de rol \u201cbewerker\u201d als dat wel moet.</p>';
+    }
+
+    if (ui.view === "relaties") {
+      if (saveError) {
+        html += '<p class="sync-error sans" style="color:var(--danger);font-size:12px;margin:0 0 16px;">Opslaan lukte net niet. Probeer het nog eens.</p>';
+      }
+      html += renderRelatiesHtml();
+      html += '<p class="footnote">Acties koppel je aan een organisatie of persoon bij het toevoegen of bewerken van een actie.</p>';
+      app.innerHTML = html;
+      attachAutofocus();
+      return;
+    }
+
+    if (ui.view === "besluiten") {
+      if (saveError) {
+        html += '<p class="sync-error sans" style="color:var(--danger);font-size:12px;margin:0 0 16px;">Opslaan lukte net niet. Probeer het nog eens.</p>';
+      }
+      html += renderDecisionsHtml();
+      html += '<p class="footnote">Een besluit leg je vast bij het afronden van een actie. De PDF bevat beide lijsten.</p>';
+      app.innerHTML = html;
+      attachAutofocus();
+      return;
+    }
+
+    html += '<div class="totals">';
+    html += '<span class="totals-number sans">' + totalDone + ' / ' + totalCount + ' afgerond</span>';
+    html += '<span class="totals-track"><span class="totals-fill" style="width:' + totalPct + '%"></span></span>';
+    html += '<span class="sync-note">' + (syncing ? "Opslaan…" : "Gedeeld · live bijgewerkt") + '</span>';
+    html += '</div>';
+
+    if (saveError) {
+      html += '<p class="sync-error sans" style="color:var(--danger);font-size:12px;margin:-8px 0 16px;">Opslaan lukte net niet. Probeer het nog eens.</p>';
+    }
+
+    var actieLabelFilter = ui.actionLabelFilter !== "alle" ? ui.actionLabelFilter : null;
+    var relFilterOrg = null, relFilterPersoon = null;
+    if (ui.relatieFilter !== "alle") {
+      if (ui.relatieFilter.indexOf("persoon:") === 0) relFilterPersoon = ui.relatieFilter.slice(8);
+      else relFilterOrg = ui.relatieFilter;
+    }
+    function relatieOk(t) {
+      if (relFilterPersoon) return t.persoonId === relFilterPersoon;
+      if (relFilterOrg) return t.organisatieId === relFilterOrg;
+      return true;
+    }
+    var dateFilterActief = ui.dateFilter !== "alle" || !!actieLabelFilter || ui.relatieFilter !== "alle";
+    var allCollapsed = visibleSections.length > 0 && visibleSections.every(function (s) { return !!ui.collapsed[s.id]; });
+    var treffers = 0;
+    visibleSections.forEach(function (s) {
+      treffers += s.tasks.filter(function (t) {
+        var statusOk = ui.filter === "todo" ? !t.done : ui.filter === "done" ? t.done : true;
+        var labelOk = !actieLabelFilter || taskLabels(t).indexOf(actieLabelFilter) !== -1;
+        return statusOk && labelOk && relatieOk(t) && matchesDateFilter(t);
+      }).length;
+    });
+
+    html += '<div class="filter-row">';
+    html += '<span class="seg">';
+    [["todo", "Te doen"], ["done", "Afgerond"], ["alle", "Alle"]].forEach(function (f) {
+      html += '<button class="filter-btn' + (ui.filter === f[0] ? " active" : "") + '" data-action="set-filter" data-filter="' + f[0] + '">' + f[1] + '</button>';
+    });
+    html += '</span>';
+    html += '<button class="filter-btn" data-action="toggle-collapse-all">' + (allCollapsed ? "Alles uitklappen" : "Alles inklappen") + '</button>';
+
+    html += '<span class="toolbar-selects">';
+
+    if (labelsInUse.length) {
+      html += '<select class="sort-select" data-action="set-label-filter" title="Toon alleen categorie\u00ebn van deze groep">';
+      html += '<option value="alle"' + (ui.labelFilter === "alle" ? " selected" : "") + '>Alle groepen</option>';
+      labelsInUse.forEach(function (l) {
+        html += '<option value="' + escapeHtml(l) + '"' + (ui.labelFilter === l ? " selected" : "") + '>' + escapeHtml(l) + '</option>';
+      });
+      html += '</select>';
+    }
+
+    if (taskLabelsInUse.length) {
+      html += '<select class="sort-select' + (ui.actionLabelFilter !== "alle" ? " filter-on" : "") + '" data-action="set-action-label-filter" title="Toon alleen acties met dit label">';
+      html += '<option value="alle"' + (ui.actionLabelFilter === "alle" ? " selected" : "") + '>Alle labels</option>';
+      taskLabelsInUse.forEach(function (l) {
+        html += '<option value="' + escapeHtml(l) + '"' + (ui.actionLabelFilter === l ? " selected" : "") + '>' + escapeHtml(l) + '</option>';
+      });
+      html += '</select>';
+    }
+
+    html += '<select class="sort-select' + (ui.dateFilter !== "alle" ? " filter-on" : "") + '" data-action="set-date-filter" title="Filter op actiedatum">';
+    [["alle", "Alle datums"], ["verlopen", "Datum verstreken"], ["week", "Binnen 7 dagen"], ["maand", "Binnen 30 dagen"], ["geen", "Geen vaste datum"]].forEach(function (o) {
+      html += '<option value="' + o[0] + '"' + (ui.dateFilter === o[0] ? " selected" : "") + '>' + o[1] + '</option>';
+    });
+    html += '</select>';
+
+    html += '<select class="sort-select" data-action="set-sort" title="Volgorde van de lijst">';
+    [["standaard", "Standaard volgorde"], ["label", "Sorteer op label"], ["datum", "Sorteer op datum"]].forEach(function (o) {
+      html += '<option value="' + o[0] + '"' + (ui.sortMode === o[0] ? " selected" : "") + '>' + o[1] + '</option>';
+    });
+    html += '</select>';
+
+    html += '</span>';
+    html += '</div>';
+
+    if (ui.relatieFilter !== "alle") {
+      var fNaam = relFilterPersoon
+        ? ((persoonOp(relFilterPersoon) || {}).naam || "deze persoon")
+        : ((organisatieOp(relFilterOrg) || {}).naam || "deze organisatie");
+      html += '<div class="label-filter-bar">';
+      html += '<span>Alleen acties van</span>';
+      html += '<span class="relatie-chip" style="pointer-events:none;">' + personSvg() + escapeHtml(fNaam) + '</span>';
+      html += '<button class="cancel-btn" data-action="wis-relatiefilter">Toon alles</button>';
+      html += '</div>';
+    }
+
+    if (visibleSections.length === 0) {
+      html += '<div class="empty-state group-empty-state">Geen categorieën in deze groep.</div>';
+    } else if (dateFilterActief && treffers === 0) {
+      html += '<div class="empty-state group-empty-state">Geen acties die aan dit datumfilter voldoen.</div>';
+    }
+
+    visibleSections.forEach(function (section) {
+      var done = section.tasks.filter(function (t) { return t.done; }).length;
+      var total = section.tasks.length;
+      var pct = total ? Math.round((done / total) * 100) : 0;
+      var taakLabelFilter = ui.taskLabelFilter[section.id];
+      var visibleTasks = sortedTasks(section.tasks.filter(function (t) {
+        var statusOk = ui.filter === "todo" ? !t.done : ui.filter === "done" ? t.done : true;
+        var labelOk = !taakLabelFilter || taskLabels(t).indexOf(taakLabelFilter) !== -1;
+        var globaalLabelOk = !actieLabelFilter || taskLabels(t).indexOf(actieLabelFilter) !== -1;
+        return statusOk && labelOk && globaalLabelOk && relatieOk(t) && matchesDateFilter(t);
+      }));
+      // Met een datumfilter aan: categorieën zonder treffers verbergen en de rest
+      // openklappen, anders zie je bij ingeklapte categorieën niets van het filter.
+      if (dateFilterActief) {
+        if (visibleTasks.length === 0 && !ui.editingSection[section.id]) return;
+      }
+      var collapsed = dateFilterActief ? false : !!ui.collapsed[section.id];
+
+      html += '<section class="section-card">';
+
+      if (ui.editingSection[section.id]) {
+        var eigenLabels = sectionLabels(section);
+        var suggesties = labelsInUse.filter(function (l) { return eigenLabels.indexOf(l) === -1; });
+        html += '<div class="section-header section-edit-form" data-form="edit-section" data-section="' + section.id + '">';
+        html += '<div class="form-row" style="width:100%;">';
+        html += '<input type="text" class="txt-input flex1" data-field="section-title" value="' + escapeHtml(section.title) + '" placeholder="Naam van de categorie" data-autofocus="1" />';
+        html += '<input type="number" class="txt-input nr-field" data-field="section-nr" min="1" max="' + sections.length + '" value="' + (section.nr || 1) + '" title="Volgnummer — bepaalt de volgorde in de lijst" />';
+        html += '</div>';
+        html += '<div class="form-row single" style="width:100%;">';
+        html += '<div class="followup-hint">Labels — meerdere mag, gescheiden door komma\'s</div>';
+        html += '<input type="text" class="txt-input" data-field="section-labels" value="' + escapeHtml(eigenLabels.join(", ")) + '" placeholder="Bijv. Bestuur, MCN Platform" />';
+        if (suggesties.length) {
+          html += '<div class="label-suggests">';
+          suggesties.forEach(function (l) {
+            html += '<button type="button" class="label-suggest" data-action="add-label-suggestion" data-label="' + escapeHtml(l) + '" style="color:' + labelColor(l) + ';">+ ' + escapeHtml(l) + '</button>';
+          });
+          html += '</div>';
+        }
+        html += '</div>';
+        html += '<div class="form-actions" style="width:100%;">';
+        html += '<button class="save-btn" data-action="submit-edit-section" data-section="' + section.id + '">Opslaan</button>';
+        html += '<button class="cancel-btn" data-action="cancel-edit-section" data-section="' + section.id + '">Annuleren</button>';
+        html += '</div>';
+        html += '</div>';
+        html += '</section>';
+        return;
+      }
+
+      html += '<div class="section-header' + (collapsed ? "" : " open") + '">';
+      html += '<button class="section-header-btn" data-action="toggle-collapse" data-section="' + section.id + '">';
+      html += '<span class="section-nr">' + String(section.nr).padStart(2, "0") + '</span>';
+      html += '<span class="section-title">' + escapeHtml(section.title) + '</span>';
+      html += '<span class="section-progress">';
+      html += '<span class="progress-track"><span class="progress-fill" style="width:' + pct + '%"></span></span>';
+      html += '<span class="progress-label sans">' + done + ' / ' + total + '</span>';
+      html += '</span>';
+      html += chevronSvg(collapsed);
+      html += '</button>';
+      sectionLabels(section).forEach(function (l) {
+        var c = labelColor(l);
+        html += '<button class="label-chip" data-action="set-label-filter" data-label="' + escapeHtml(l) + '" title="Toon alleen categorieën met dit label" style="color:' + c + ';background:' + lightenHex(c, 0.14) + ';">' + escapeHtml(l) + '</button>';
+      });
+      html += '<button class="edit-btn" data-action="open-edit-section" data-section="' + section.id + '" aria-label="Categorie bewerken" title="Naam, volgnummer of labels wijzigen">' + pencilSvg() + '</button>';
+      if (total === 0) {
+        html += '<button class="delete-btn" data-action="delete-section" data-section="' + section.id + '" aria-label="Verwijder lege categorie" title="Lege categorie verwijderen">' + xSvg() + '</button>';
+      }
+      html += '</div>';
+
+      if (!collapsed) {
+        html += '<div class="section-body">';
+
+        if (taakLabelFilter) {
+          var fc = labelColor(taakLabelFilter);
+          html += '<div class="label-filter-bar">';
+          html += '<span>Alleen acties met label</span>';
+          html += '<span class="label-chip" style="color:' + fc + ';background:' + lightenHex(fc, 0.14) + ';">' + escapeHtml(taakLabelFilter) + '</span>';
+          html += '<button class="cancel-btn" data-action="clear-task-label-filter" data-section="' + section.id + '">Toon alles</button>';
+          html += '</div>';
+        }
+
+        if (total === 0 && !ui.adding[section.id]) {
+          html += '<div class="empty-state">Nog geen taken in dit onderdeel.</div>';
+        } else if (total > 0 && visibleTasks.length === 0) {
+          html += '<div class="empty-state">' + (ui.filter === "todo" ? "Alles hier is al afgerond." : "Hier staat nog niets afgerond.") + '</div>';
+        }
+
+        visibleTasks.forEach(function (task) {
+          html += renderTaskRow(section, task, owners);
+        });
+
+        if (ui.adding[section.id]) {
+          html += renderAddForm(section, owners);
+        } else {
+          html += '<button class="add-task-btn" data-action="open-add" data-section="' + section.id + '">' + plusSvg() + 'Taak toevoegen</button>';
+        }
+
+        html += '</div>';
+      }
+      html += '</section>';
+    });
+
+    if (ui.addingSection) {
+      html += renderAddSectionForm();
+    } else {
+      html += '<button class="add-section-btn" data-action="open-add-section">' + plusSvg() + 'Nieuwe categorie toevoegen</button>';
+    }
+
+    html += '<p class="footnote">Deze lijst is gedeeld: iedereen die deze pagina opent ziet dezelfde taken, en wijzigingen worden bewaard en direct bijgewerkt bij alle geopende vensters.</p>';
+
+    app.innerHTML = html;
+    attachAutofocus();
+  }
+
+  function renderAddSectionForm() {
+    var html = '<div class="section-card add-section-card">';
+    html += '<div class="add-section-body">';
+    html += '<div class="form-row single"><input type="text" class="txt-input" data-field="section-title" placeholder="Naam van de nieuwe categorie…" data-autofocus="1" /></div>';
+    html += '<div class="form-row single">';
+    html += '<div class="followup-hint">Labels (optioneel) — meerdere mag, gescheiden door komma\'s</div>';
+    html += '<input type="text" class="txt-input" data-field="section-labels" placeholder="Bijv. Bestuur, MCN Platform" />';
+    html += '</div>';
+    html += '<div class="form-actions">';
+    html += '<button class="save-btn" data-action="submit-add-section">Categorie aanmaken</button>';
+    html += '<button class="cancel-btn" data-action="cancel-add-section">Annuleren</button>';
+    html += '</div></div></div>';
+    return html;
+  }
+
+  function chevronSvg(collapsed) {
+    var rot = collapsed ? ' style="transform:rotate(-90deg)"' : "";
+    return '<svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"' + rot + '><polyline points="6 9 12 15 18 9"></polyline></svg>';
+  }
+  function personSvg() {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+  }
+
+  function plusSvg() {
+    return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;flex-shrink:0;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
+  }
+  function checkSvg() {
+    return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+  }
+  function xSvg(size) {
+    size = size || 14;
+    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+  }
+  function pencilSvg() {
+    return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg>';
+  }
+  function userSvg() {
+    return '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
+  }
+  function downloadSvg() {
+    return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;flex-shrink:0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>';
+  }
+
+  function renderTaskRow(section, task, owners) {
+    var color = ownerColor(task.owner);
+    var editing = !task.done && ui.editingTask[task.id];
+    var html = '<div class="task-row' + (task.done ? " done" : "") + '">';
+    html += '<button class="check-btn" data-action="' + (task.done ? "ask-uncomplete" : "toggle-complete") + '" data-section="' + section.id + '" data-task="' + task.id + '" aria-label="' + (task.done ? "Taak weer openzetten" : "Markeer als afgerond") + '"' + (editing ? " disabled" : "") + '>';
+    if (task.done) html += checkSvg();
+    html += '</button>';
+    html += '<div class="task-body">';
+
+    if (editing) {
+      html += renderEditTaskForm(section, task, owners);
+    } else {
+      html += '<div class="task-title">' + escapeHtml(task.title) + '</div>';
+      var eigenTaakLabels = taskLabels(task);
+      var relatie = relatieNaam(task);
+      if (task.when || task.note || eigenTaakLabels.length || relatie) {
+        html += '<div class="task-meta">';
+        if (eigenTaakLabels.length) {
+          html += '<div class="task-labels">';
+          eigenTaakLabels.forEach(function (l) {
+            var lc = labelColor(l);
+            html += '<button class="label-chip" data-action="set-task-label-filter" data-section="' + section.id + '" data-label="' + escapeHtml(l) + '" title="Toon alleen acties met dit label" style="color:' + lc + ';background:' + lightenHex(lc, 0.14) + ';">' + escapeHtml(l) + '</button>';
+          });
+          html += '</div>';
+        }
+        if (relatie) {
+          html += '<button class="relatie-chip" data-action="toon-relatie" data-org="' + escapeHtml(task.organisatieId || "") + '" data-persoon="' + escapeHtml(task.persoonId || "") + '" title="Naar de relatielijst">' + personSvg() + escapeHtml(relatie) + '</button>';
+        }
+        if (task.when) html += '<div class="when">' + escapeHtml(formatDateNL(task.when)) + '</div>';
+        if (task.note) html += '<div class="note">' + escapeHtml(task.note) + '</div>';
+        html += '</div>';
+      }
+    }
+
+    if (task.done && !ui.editingCompletion[task.id]) {
+      html += '<button class="completion-line" data-action="edit-completion" data-section="' + section.id + '" data-task="' + task.id + '" title="Bewerk afrondingsdatum of commentaar">';
+      html += 'Afgerond op ' + escapeHtml(formatDateNL(task.completedDate));
+      if (task.completedNote) html += ' — ' + escapeHtml(task.completedNote);
+      html += '</button>';
+    }
+
+    if (task.done && ui.reopening[task.id] && !ui.editingCompletion[task.id]) {
+      html += '<div class="reopen-confirm">';
+      html += '<span>Deze taak weer op "te doen" zetten? De afrondingsgegevens blijven bewaard.</span>';
+      html += '<button class="save-btn" data-action="confirm-uncomplete" data-section="' + section.id + '" data-task="' + task.id + '">Heropenen</button>';
+      html += '<button class="cancel-btn" data-action="cancel-uncomplete" data-task="' + task.id + '">Annuleren</button>';
+      html += '</div>';
+    }
+
+    if (task.done && ui.editingCompletion[task.id]) {
+      html += renderCompletionForm(section, task, "edit-completion");
+    }
+    if (!task.done && ui.completing[task.id] && !editing) {
+      html += renderCompletionForm(section, task, "complete");
+    }
+
+    html += '</div>';
+    if (!editing) {
+      html += '<span class="owner-tag" style="color:' + color + ';background:color-mix(in srgb, ' + color + ' 12%, var(--card));border-color:color-mix(in srgb, ' + color + ' 30%, var(--card));">' + userSvg() + ' ' + escapeHtml(task.owner) + '</span>';
+      if (!task.done) {
+        html += '<button class="edit-btn" data-action="open-edit-task" data-section="' + section.id + '" data-task="' + task.id + '" aria-label="Bewerk taak">' + pencilSvg() + '</button>';
+      }
+      html += '<button class="delete-btn" data-action="delete-task" data-section="' + section.id + '" data-task="' + task.id + '" aria-label="Verwijder taak">' + xSvg() + '</button>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function renderEditTaskForm(section, task, owners) {
+    var useCustom = !!ui.editCustomOwner[task.id] || owners.indexOf(task.owner) === -1;
+    var html = '<div class="add-form" data-form="edit-task" data-section="' + section.id + '" data-task="' + task.id + '" style="border-top:none;padding-top:0;">';
+    html += '<div class="form-row single"><input type="text" class="txt-input" data-field="title" value="' + escapeHtml(task.title) + '" data-autofocus="1" /></div>';
+    html += '<div class="form-row">';
+    html += '<div class="owner-col">';
+    if (!useCustom) {
+      html += '<select class="sel-input" data-field="owner-select" data-section="' + section.id + '" data-task="' + task.id + '">';
+      owners.forEach(function (o) {
+        html += '<option value="' + escapeHtml(o) + '"' + (o === task.owner ? " selected" : "") + '>' + escapeHtml(o) + '</option>';
+      });
+      html += '<option value="__custom__">+ Andere naam…</option>';
+      html += '</select>';
+    } else {
+      html += '<div class="custom-owner-row">';
+      html += '<input type="text" class="txt-input" data-field="owner-custom" value="' + escapeHtml(task.owner) + '" placeholder="Naam" />';
+      html += '<button type="button" class="icon-btn small" data-action="cancel-edit-custom-owner" data-task="' + task.id + '">' + xSvg(14) + '</button>';
+      html += '</div>';
+    }
+    html += '</div>';
+    // Oudere taken hebben een vrije datumtekst ("17 aug"); die past niet in een
+    // datumkiezer, dus dan een tekstveld — anders werd de tekst bij bewerken gewist.
+    if (task.when && !/^\d{4}-\d{2}-\d{2}$/.test(task.when)) {
+      html += '<input type="text" class="txt-input date-field" data-field="when" value="' + escapeHtml(task.when) + '" title="Wanneer (optioneel)" />';
+    } else {
+      html += '<input type="date" class="txt-input date-field" data-field="when" value="' + escapeHtml(task.when || "") + '" title="Wanneer (optioneel)" />';
+    }
+    html += '</div>';
+    html += '<div class="form-row single"><textarea class="txt-input note-area" data-field="note" placeholder="Toelichting (optioneel)" rows="3">' + escapeHtml(task.note || "") + '</textarea></div>';
+    html += renderTaskLabelField(section, taskLabels(task));
+    html += renderRelatieVeld(task);
+    html += '<div class="form-row single">';
+    html += '<div class="followup-hint">Categorie</div>';
+    html += '<select class="sel-input" data-field="section-target">';
+    (currentSections || []).forEach(function (s) {
+      html += '<option value="' + escapeHtml(s.id) + '"' + (s.id === section.id ? " selected" : "") + '>' + escapeHtml(s.title) + '</option>';
+    });
+    html += '</select>';
+    html += '</div>';
+    html += '<div class="form-actions">';
+    html += '<button class="save-btn" data-action="submit-edit-task" data-section="' + section.id + '" data-task="' + task.id + '">Opslaan</button>';
+    html += '<button class="cancel-btn" data-action="cancel-edit-task" data-task="' + task.id + '">Annuleren</button>';
+    html += '</div></div>';
+    return html;
+  }
+
+  function renderCompletionForm(section, task, mode) {
+    var date = task.completedDate || todayISO();
+    var note = task.completedNote || "";
+    var existingDecision = findDecisionForTask(task.id);
+    var decisionText = existingDecision ? existingDecision.text : "";
+    var showExtra = !!ui.completingExtra[task.id] || !!decisionText;
+    var html = '<div class="complete-form" data-form="complete" data-section="' + section.id + '" data-task="' + task.id + '" data-mode="' + mode + '">';
+    html += '<div class="form-row single"><input type="date" class="txt-input date-field" data-field="date" value="' + escapeHtml(date) + '" /></div>';
+    html += '<div class="form-row single"><textarea class="txt-input" rows="3" data-field="note" placeholder="Commentaar bij afronding (optioneel)" data-autofocus="1">' + escapeHtml(note) + '</textarea></div>';
+
+    if (!showExtra) {
+      html += '<button type="button" class="completion-extra-toggle" data-action="toggle-completing-extra" data-task="' + task.id + '">' + plusSvg() + 'Vervolgtaak of besluit toevoegen</button>';
+      html += '<input type="hidden" data-field="followup-title" value="" />';
+      html += '<input type="hidden" data-field="decision-text" value="" />';
+    } else {
+      html += '<div class="completion-extra">';
+      html += '<div class="form-row single">';
+      html += '<div class="followup-hint">Vervolgtaak — wordt toegevoegd aan hetzelfde onderdeel</div>';
+      html += '<input type="text" class="txt-input" data-field="followup-title" placeholder="Titel van de vervolgtaak…" />';
+      html += '</div>';
+      html += '<div class="form-row single">';
+      html += '<div class="followup-hint">Besluit — komt op de besluitenlijst</div>';
+      html += '<textarea class="txt-input" rows="2" data-field="decision-text" placeholder="Omschrijving van het besluit…">' + escapeHtml(decisionText) + '</textarea>';
+      html += '</div>';
+      html += '</div>';
+    }
+
+    html += '<div class="form-actions">';
+    html += '<button class="save-btn" data-action="submit-complete" data-section="' + section.id + '" data-task="' + task.id + '" data-mode="' + mode + '">Bevestig afronding</button>';
+    html += '<button class="cancel-btn" data-action="cancel-complete" data-section="' + section.id + '" data-task="' + task.id + '" data-mode="' + mode + '">Annuleren</button>';
+    html += '</div></div>';
+    return html;
+  }
+
+  function renderAddForm(section, owners) {
+    var useCustom = !!ui.customOwner[section.id];
+    var html = '<div class="add-form" data-form="add" data-section="' + section.id + '">';
+    html += '<div class="form-row single"><input type="text" class="txt-input" data-field="title" placeholder="Nieuwe taak…" data-autofocus="1" /></div>';
+    html += '<div class="form-row">';
+    html += '<div class="owner-col">';
+    if (!useCustom) {
+      html += '<select class="sel-input" data-field="owner-select" data-section="' + section.id + '">';
+      owners.forEach(function (o) { html += '<option value="' + escapeHtml(o) + '">' + escapeHtml(o) + '</option>'; });
+      html += '<option value="__custom__">+ Andere naam…</option>';
+      html += '</select>';
+    } else {
+      html += '<div class="custom-owner-row">';
+      html += '<input type="text" class="txt-input" data-field="owner-custom" placeholder="Naam" data-autofocus="1" />';
+      html += '<button type="button" class="icon-btn small" data-action="cancel-custom-owner" data-section="' + section.id + '">' + xSvg(14) + '</button>';
+      html += '</div>';
+    }
+    html += '</div>';
+    html += '<input type="date" class="txt-input date-field" data-field="when" title="Wanneer (optioneel)" />';
+    html += '</div>';
+    html += '<div class="form-row single"><textarea class="txt-input note-area" data-field="note" placeholder="Toelichting (optioneel)" rows="3"></textarea></div>';
+    html += renderTaskLabelField(section, []);
+    html += renderRelatieVeld(null);
+    html += '<div class="form-actions">';
+    html += '<button class="save-btn" data-action="submit-add" data-section="' + section.id + '">Taak toevoegen</button>';
+    html += '<button class="cancel-btn" data-action="cancel-add" data-section="' + section.id + '">Annuleren</button>';
+    html += '</div></div>';
+    return html;
+  }
+
+  function renderRelatieVeld(taak) {
+    var orgId = (taak && taak.organisatieId) || "";
+    var persId = (taak && taak.persoonId) || "";
+    // Staat er een persoon maar geen organisatie, dan die van de persoon tonen.
+    if (persId && !orgId) {
+      var pp = persoonOp(persId);
+      if (pp) orgId = pp.organisatie_id || "";
+    }
+    var html = '<div class="form-row single">';
+    html += '<div class="followup-hint">Relatie (optioneel)</div>';
+    html += '<div class="form-row" style="margin:0;">';
+    html += '<select class="sel-input flex1" data-field="actie-org">';
+    html += '<option value="">— geen organisatie —</option>';
+    organisaties.forEach(function (o) {
+      html += '<option value="' + escapeHtml(o.id) + '"' + (o.id === orgId ? " selected" : "") + '>' + escapeHtml(o.naam) + '</option>';
+    });
+    html += '</select>';
+    html += '<select class="sel-input flex1" data-field="actie-persoon">';
+    html += '<option value="">— geen persoon —</option>';
+    (orgId ? personenBij(orgId) : personen).forEach(function (x) {
+      html += '<option value="' + escapeHtml(x.id) + '"' + (x.id === persId ? " selected" : "") + '>' + escapeHtml(x.naam) + '</option>';
+    });
+    html += '</select>';
+    html += '</div></div>';
+    return html;
+  }
+
+  function renderTaskLabelField(section, huidige) {
+    var suggesties = labelsInSection(section).filter(function (l) { return huidige.indexOf(l) === -1; });
+    var html = '<div class="form-row single">';
+    html += '<div class="followup-hint">Label (optioneel) — meerdere mag, gescheiden door komma\'s</div>';
+    html += '<input type="text" class="txt-input" data-field="task-labels" value="' + escapeHtml(huidige.join(", ")) + '" placeholder="Bijv. Pica Project" />';
+    if (suggesties.length) {
+      html += '<div class="label-suggests">';
+      suggesties.forEach(function (l) {
+        html += '<button type="button" class="label-suggest" data-action="add-task-label" data-label="' + escapeHtml(l) + '" style="color:' + labelColor(l) + ';">+ ' + escapeHtml(l) + '</button>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function attachAutofocus() {
+    var el = document.querySelector('[data-autofocus="1"]');
+    if (el) el.focus();
+  }
+
+  // ---- Mutaties ----
+
+  function cloneSections() {
+    return JSON.parse(JSON.stringify(currentSections));
+  }
+
+  // Zet de lijst zoals hij op het scherm staat om naar tabelregels.
+  function categorieRijen(secties) {
+    return (secties || []).map(function (s) {
+      return { id: s.id, nr: s.nr, titel: s.title, labels: sectionLabels(s) };
+    });
+  }
+  function actieRijen(secties) {
+    var rijen = [];
+    (secties || []).forEach(function (s) {
+      s.tasks.forEach(function (t, i) {
+        rijen.push({
+          id: t.id, categorie_id: s.id, titel: t.title,
+          eigenaar: t.owner || "", wanneer: t.when || "", notitie: t.note || "",
+          labels: taskLabels(t),
+          organisatie_id: t.organisatieId || null,
+          persoon_id: t.persoonId || null,
+          gereed: !!t.done,
+          gereed_op: isoDatumOfNull(t.completedDate),
+          gereed_notitie: t.completedNote || "",
+          volgorde: i
+        });
+      });
+    });
+    return rijen;
+  }
+  function besluitRijen(besluiten) {
+    return (besluiten || []).map(function (d) {
+      return {
+        id: d.id, tekst: d.text, datum: isoDatumOfNull(d.date),
+        actie_id: d.taskId || null,
+        categorie_titel: d.sectionTitle || "", actie_titel: d.taskTitle || ""
+      };
+    });
+  }
+  function isoDatumOfNull(w) {
+    return /^\d{4}-\d{2}-\d{2}$/.test(w || "") ? w : null;
+  }
+
+  // Wat is er veranderd tussen twee verzamelingen regels?
+  function verschillen(oud, nieuw) {
+    var oudOp = {};
+    oud.forEach(function (r) { oudOp[r.id] = JSON.stringify(r); });
+    var nieuwIds = {};
+    var schrijven = [];
+    nieuw.forEach(function (r) {
+      nieuwIds[r.id] = true;
+      if (oudOp[r.id] !== JSON.stringify(r)) schrijven.push(r);
+    });
+    var wissen = oud.filter(function (r) { return !nieuwIds[r.id]; })
+                    .map(function (r) { return r.id; });
+    return { schrijven: schrijven, wissen: wissen };
+  }
+
+  function wegschrijven(tabel, oud, nieuw) {
+    var v = verschillen(oud, nieuw);
+    var stappen = [];
+    if (v.schrijven.length) stappen.push(sb.from(tabel).upsert(v.schrijven));
+    if (v.wissen.length) stappen.push(sb.from(tabel).delete().in("id", v.wissen));
+    return stappen;
+  }
+
+  function persist(next, nextDecisions) {
+    var oudeSecties = currentSections || [];
+    var oudeBesluiten = currentDecisions || [];
+    currentSections = next;
+    if (nextDecisions !== undefined) currentDecisions = nextDecisions;
+    render();
+    if (!sb) return;
+    if (!magBewerken()) { saveError = true; render(); return; }
+
+    syncing = true;
+    render();
+
+    // Categorieën eerst: een nieuwe actie verwijst ernaar. Verwijderen
+    // gaat andersom, dus acties gaan vóór de categorieën eruit.
+    var catV = verschillen(categorieRijen(oudeSecties), categorieRijen(next));
+    var actV = verschillen(actieRijen(oudeSecties), actieRijen(next));
+    var besV = verschillen(besluitRijen(oudeBesluiten), besluitRijen(currentDecisions));
+
+    var keten = Promise.resolve();
+    function stap(fn) { keten = keten.then(function () { return controleer(fn()); }); }
+
+    if (catV.schrijven.length) stap(function () { return sb.from("categorieen").upsert(catV.schrijven); });
+    if (actV.schrijven.length) stap(function () { return sb.from("acties").upsert(actV.schrijven); });
+    if (besV.schrijven.length) stap(function () { return sb.from("besluiten").upsert(besV.schrijven); });
+    if (besV.wissen.length) stap(function () { return sb.from("besluiten").delete().in("id", besV.wissen); });
+    if (actV.wissen.length) stap(function () { return sb.from("acties").delete().in("id", actV.wissen); });
+    if (catV.wissen.length) stap(function () { return sb.from("categorieen").delete().in("id", catV.wissen); });
+
+    keten.then(function () {
+      syncing = false; saveError = false; render();
+    }).catch(function () {
+      // Mislukt: haal de echte toestand terug op, zodat het scherm niet
+      // iets toont wat niet is opgeslagen.
+      syncing = false; saveError = true; render();
+      laadAlles().then(render).catch(function () {});
+    });
+  }
+
+  function controleer(p) {
+    return Promise.resolve(p).then(function (res) {
+      if (res && res.error) throw res.error;
+      return res;
+    });
+  }
+
+  function magBewerken() {
+    return mijnRol === "bewerker" || mijnRol === "beheerder";
+  }
+
+  function findTask(sections, sectionId, taskId) {
+    var s = sections.find(function (s) { return s.id === sectionId; });
+    if (!s) return null;
+    return s.tasks.find(function (t) { return t.id === taskId; }) || null;
+  }
+
+  function completeTask(sectionId, taskId, completedDate, completedNote) {
+    completeTaskWithFollowup(sectionId, taskId, completedDate, completedNote, "", "");
+  }
+
+  function completeTaskWithFollowup(sectionId, taskId, completedDate, completedNote, followupTitle, decisionText) {
+    var next = cloneSections();
+    var t = findTask(next, sectionId, taskId);
+    if (!t) return;
+    t.done = true;
+    t.completedDate = completedDate;
+    t.completedNote = completedNote;
+    delete ui.completing[taskId];
+    delete ui.editingCompletion[taskId];
+
+    var s = next.find(function (s) { return s.id === sectionId; });
+
+    if (followupTitle && s) {
+      s.tasks.push({
+        id: sectionId + "-" + Date.now(),
+        title: followupTitle,
+        owner: t.owner,
+        when: "",
+        note: "Vervolg op: " + t.title,
+        done: false
+      });
+    }
+
+    var nextDecisions = cloneDecisions();
+    var existingIndex = nextDecisions.findIndex(function (d) { return d.taskId === taskId; });
+    if (decisionText) {
+      var record = {
+        id: existingIndex !== -1 ? nextDecisions[existingIndex].id : "besluit-" + Date.now(),
+        text: decisionText,
+        date: completedDate,
+        sectionTitle: s ? s.title : "",
+        taskTitle: t.title,
+        taskId: taskId
+      };
+      if (existingIndex !== -1) { nextDecisions[existingIndex] = record; } else { nextDecisions.push(record); }
+    } else if (existingIndex !== -1) {
+      nextDecisions.splice(existingIndex, 1);
+    }
+
+    persist(next, nextDecisions);
+  }
+
+  function updateDecision(decisionId, text, date) {
+    var next = cloneDecisions();
+    var d = next.find(function (x) { return x.id === decisionId; });
+    if (!d) return;
+    d.text = text;
+    d.date = date;
+    persist(currentSections, next);
+  }
+
+  function deleteDecision(decisionId) {
+    var next = cloneDecisions().filter(function (d) { return d.id !== decisionId; });
+    persist(currentSections, next);
+  }
+
+  // Heropenen bewaart datum en commentaar van de vorige afronding, zodat er
+  // niets verloren gaat en opnieuw afronden die gegevens weer voorstelt.
+  function uncompleteTask(sectionId, taskId) {
+    var next = cloneSections();
+    var t = findTask(next, sectionId, taskId);
+    if (!t) return;
+    t.done = false;
+    persist(next);
+  }
+
+  function deleteTask(sectionId, taskId) {
+    var next = cloneSections();
+    var s = next.find(function (s) { return s.id === sectionId; });
+    if (!s) return;
+    s.tasks = s.tasks.filter(function (t) { return t.id !== taskId; });
+    persist(next);
+  }
+
+  function addTask(sectionId, task) {
+    var next = cloneSections();
+    var s = next.find(function (s) { return s.id === sectionId; });
+    if (!s) return;
+    task.id = sectionId + "-" + Date.now();
+    task.done = false;
+    task.labels = task.labels || [];
+    task.organisatieId = task.organisatieId || "";
+    task.persoonId = task.persoonId || "";
+    s.tasks.push(task);
+    persist(next);
+  }
+
+  function updateTask(sectionId, taskId, patch) {
+    var next = cloneSections();
+    var t = findTask(next, sectionId, taskId);
+    if (!t) return;
+    t.title = patch.title;
+    t.owner = patch.owner;
+    t.when = patch.when;
+    t.note = patch.note;
+    t.labels = patch.labels || [];
+    t.organisatieId = patch.organisatieId || "";
+    t.persoonId = patch.persoonId || "";
+
+    if (patch.sectionId && patch.sectionId !== sectionId) {
+      var from = next.find(function (s) { return s.id === sectionId; });
+      var to = next.find(function (s) { return s.id === patch.sectionId; });
+      if (from && to) {
+        from.tasks = from.tasks.filter(function (x) { return x.id !== taskId; });
+        to.tasks.push(t);
+        ui.collapsed[to.id] = false;
+      }
+    }
+
+    persist(next);
+  }
+
+  // Hernoemt een categorie en zet haar op de gevraagde plek in de leesvolgorde.
+  // Daarna krijgen alle categorieën weer een aaneensluitend nummer (1, 2, 3, …).
+  function updateSection(sectionId, title, desiredNr, labels) {
+    var next = cloneSections();
+    var index = next.findIndex(function (s) { return s.id === sectionId; });
+    if (index === -1) return;
+
+    next[index].title = title;
+    next[index].labels = labels;
+    delete next[index].group; // oude vaste groep is vervangen door labels
+
+    var target = Math.min(Math.max(desiredNr, 1), next.length);
+    var moved = next.splice(index, 1)[0];
+    next.splice(target - 1, 0, moved);
+    next.forEach(function (s, i) { s.nr = i + 1; });
+
+    persist(next);
+  }
+
+  function deleteSection(sectionId) {
+    var target = (currentSections || []).find(function (s) { return s.id === sectionId; });
+    if (!target || target.tasks.length > 0) return;
+    var next = cloneSections().filter(function (s) { return s.id !== sectionId; });
+    persist(next);
+  }
+
+  function slugify(title) {
+    return title
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "categorie";
+  }
+
+  function addSection(title, labels) {
+    var next = cloneSections();
+    var maxNr = next.reduce(function (m, s) { return Math.max(m, s.nr || 0); }, 0);
+    var baseId = slugify(title);
+    var id = baseId;
+    var i = 2;
+    while (next.some(function (s) { return s.id === id; })) {
+      id = baseId + "-" + i;
+      i++;
+    }
+    next.push({ id: id, nr: maxNr + 1, title: title, labels: labels || [], tasks: [] });
+    persist(next);
+  }
+
+  // ---- Event delegation ----
+
+  document.getElementById("app").addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-action]");
+    if (!btn) return;
+    if (btn.tagName === "SELECT") return;   // keuzelijsten lopen via de change-handler
+    var action = btn.getAttribute("data-action");
+    var sectionId = btn.getAttribute("data-section");
+    var taskId = btn.getAttribute("data-task");
+    var decisionId = btn.getAttribute("data-decision");
+
+    var orgId = btn.getAttribute("data-org");
+    var persoonId = btn.getAttribute("data-persoon");
+
+    // Alles wat niets verandert mag iedereen; de rest alleen een bewerker.
+    var KIJKACTIES = [
+      "set-view", "set-filter", "toggle-collapse", "toggle-collapse-all",
+      "set-label-filter", "set-task-label-filter", "clear-task-label-filter",
+      "set-action-label-filter", "set-date-filter", "set-sort",
+      "download-pdf", "uitloggen", "stuur-inloglink",
+      "toggle-org", "filter-op-relatie", "filter-op-persoon",
+      "toon-relatie", "wis-relatiefilter"
+    ];
+    if (!magBewerken() && KIJKACTIES.indexOf(action) === -1) return;
+
+    if (action === "uitloggen") {
+      uitloggen();
+      return;
+    } else if (action === "stuur-inloglink") {
+      var inlogForm = btn.closest('[data-form="inloggen"]');
+      var adres = inlogForm.querySelector('[data-field="inlog-email"]').value.trim();
+      if (adres) stuurInloglink(adres);
+      return;
+    } else if (action === "toggle-org") {
+      ui.openOrg[orgId] = !ui.openOrg[orgId];
+      render();
+      return;
+    } else if (action === "nieuwe-org") {
+      ui.nieuweOrg = true; render(); return;
+    } else if (action === "annuleer-org") {
+      if (orgId === "nieuw") ui.nieuweOrg = false; else delete ui.bewerkOrg[orgId];
+      render(); return;
+    } else if (action === "bewerk-org") {
+      ui.bewerkOrg[orgId] = true; ui.openOrg[orgId] = true; render(); return;
+    } else if (action === "bewaar-org") {
+      var of = btn.closest('[data-form="org"]');
+      var naam = leesVeld(of, "org-naam");
+      if (!naam) return;
+      var bestaand = orgId === "nieuw" ? null : organisatieOp(orgId);
+      var rij = {
+        id: bestaand ? bestaand.id : nieuwId("org"),
+        naam: naam,
+        plaats: leesVeld(of, "org-plaats"),
+        soort: leesVeld(of, "org-soort"),
+        website: leesVeld(of, "org-website"),
+        notitie: leesVeld(of, "org-notitie")
+      };
+      if (orgId === "nieuw") ui.nieuweOrg = false; else delete ui.bewerkOrg[orgId];
+      bewaarRelatie("organisaties", rij, organisaties);
+      return;
+    } else if (action === "verwijder-org") {
+      var o = organisatieOp(orgId);
+      if (!o) return;
+      if (!window.confirm("Organisatie \u201c" + o.naam + "\u201d verwijderen?")) return;
+      verwijderRelatie("organisaties", orgId, organisaties);
+      return;
+    } else if (action === "nieuw-persoon") {
+      ui.nieuwPersoonBij[orgId] = true; render(); return;
+    } else if (action === "annuleer-persoon") {
+      if (persoonId === "nieuw") delete ui.nieuwPersoonBij[orgId]; else delete ui.bewerkPersoon[persoonId];
+      render(); return;
+    } else if (action === "bewerk-persoon") {
+      ui.bewerkPersoon[persoonId] = true; render(); return;
+    } else if (action === "bewaar-persoon") {
+      var pf = btn.closest('[data-form="persoon"]');
+      var pnaam = leesVeld(pf, "p-naam");
+      if (!pnaam) return;
+      var bestaandP = persoonId === "nieuw" ? null : persoonOp(persoonId);
+      var prij = {
+        id: bestaandP ? bestaandP.id : nieuwId("pers"),
+        organisatie_id: orgId,
+        naam: pnaam,
+        functie: leesVeld(pf, "p-functie"),
+        email: leesVeld(pf, "p-email"),
+        telefoon: leesVeld(pf, "p-telefoon")
+      };
+      if (persoonId === "nieuw") delete ui.nieuwPersoonBij[orgId]; else delete ui.bewerkPersoon[persoonId];
+      bewaarRelatie("personen", prij, personen);
+      return;
+    } else if (action === "verwijder-persoon") {
+      var pv = persoonOp(persoonId);
+      if (!pv) return;
+      if (!window.confirm("\u201c" + pv.naam + "\u201d uit de relatielijst verwijderen?")) return;
+      verwijderRelatie("personen", persoonId, personen);
+      return;
+    } else if (action === "toon-relatie") {
+      ui.view = "relaties";
+      if (orgId) ui.openOrg[orgId] = true;
+      else if (persoonId) {
+        var pz = persoonOp(persoonId);
+        if (pz && pz.organisatie_id) ui.openOrg[pz.organisatie_id] = true;
+      }
+      render();
+      return;
+    } else if (action === "filter-op-relatie") {
+      ui.relatieFilter = orgId;
+      ui.view = "acties";
+      ui.filter = "todo";
+      render();
+      return;
+    } else if (action === "filter-op-persoon") {
+      ui.relatieFilter = "persoon:" + persoonId;
+      ui.view = "acties";
+      ui.filter = "todo";
+      render();
+      return;
+    } else if (action === "wis-relatiefilter") {
+      ui.relatieFilter = "alle";
+      render();
+      return;
+    }
+
+    if (action === "set-view") {
+      ui.view = btn.getAttribute("data-view");
+      render();
+    } else if (action === "set-filter") {
+      ui.filter = btn.getAttribute("data-filter");
+      render();
+    } else if (action === "toggle-collapse") {
+      ui.collapsed[sectionId] = !ui.collapsed[sectionId];
+      if (ui.collapsed[sectionId]) closeOpenFormsInSection(sectionId);
+      render();
+    } else if (action === "open-add") {
+      ui.adding[sectionId] = true;
+      render();
+    } else if (action === "cancel-add") {
+      delete ui.adding[sectionId];
+      delete ui.customOwner[sectionId];
+      render();
+    } else if (action === "cancel-custom-owner") {
+      delete ui.customOwner[sectionId];
+      render();
+    } else if (action === "submit-add") {
+      var form = btn.closest('[data-form="add"]');
+      var title = form.querySelector('[data-field="title"]').value.trim();
+      var ownerSelect = form.querySelector('[data-field="owner-select"]');
+      var ownerCustom = form.querySelector('[data-field="owner-custom"]');
+      var owner = ownerCustom ? ownerCustom.value.trim() : (ownerSelect ? ownerSelect.value : "");
+      var when = form.querySelector('[data-field="when"]').value.trim();
+      var note = form.querySelector('[data-field="note"]').value.trim();
+      if (owner === "__custom__") owner = "";
+      if (!title || !owner) return;
+      var labels = parseLabels(form.querySelector('[data-field="task-labels"]').value);
+      addTask(sectionId, { title: title, owner: owner, when: when, note: note, labels: labels,
+        organisatieId: leesVeld(form, "actie-org"), persoonId: leesVeld(form, "actie-persoon") });
+      delete ui.adding[sectionId];
+      delete ui.customOwner[sectionId];
+    } else if (action === "toggle-complete") {
+      ui.completing[taskId] = !ui.completing[taskId];
+      if (!ui.completing[taskId]) delete ui.completingExtra[taskId];
+      render();
+    } else if (action === "ask-uncomplete") {
+      ui.reopening[taskId] = true;
+      render();
+    } else if (action === "cancel-uncomplete") {
+      delete ui.reopening[taskId];
+      render();
+    } else if (action === "confirm-uncomplete") {
+      delete ui.reopening[taskId];
+      uncompleteTask(sectionId, taskId);
+    } else if (action === "edit-completion") {
+      ui.editingCompletion[taskId] = true;
+      render();
+    } else if (action === "cancel-complete") {
+      delete ui.completing[taskId];
+      delete ui.editingCompletion[taskId];
+      delete ui.completingExtra[taskId];
+      render();
+    } else if (action === "toggle-completing-extra") {
+      ui.completingExtra[taskId] = true;
+      render();
+    } else if (action === "submit-complete") {
+      var cform = btn.closest('[data-form="complete"]');
+      var date = cform.querySelector('[data-field="date"]').value || todayISO();
+      var cnote = cform.querySelector('[data-field="note"]').value.trim();
+      var followupTitle = cform.querySelector('[data-field="followup-title"]').value.trim();
+      var decisionText = cform.querySelector('[data-field="decision-text"]').value.trim();
+      delete ui.completingExtra[taskId];
+      completeTaskWithFollowup(sectionId, taskId, date, cnote, followupTitle, decisionText);
+    } else if (action === "delete-task") {
+      deleteTask(sectionId, taskId);
+    } else if (action === "delete-decision") {
+      deleteDecision(decisionId);
+    } else if (action === "open-edit-decision") {
+      ui.editingDecision[decisionId] = true;
+      render();
+    } else if (action === "cancel-edit-decision") {
+      delete ui.editingDecision[decisionId];
+      render();
+    } else if (action === "submit-edit-decision") {
+      var decForm = btn.closest('[data-form="edit-decision"]');
+      var decText = decForm.querySelector('[data-field="decision-text"]').value.trim();
+      var decDate = decForm.querySelector('[data-field="decision-date"]').value;
+      if (!decText) return;
+      delete ui.editingDecision[decisionId];
+      updateDecision(decisionId, decText, decDate);
+    } else if (action === "delete-section") {
+      deleteSection(sectionId);
+    } else if (action === "open-edit-section") {
+      ui.editingSection[sectionId] = true;
+      render();
+    } else if (action === "cancel-edit-section") {
+      delete ui.editingSection[sectionId];
+      render();
+    } else if (action === "submit-edit-section") {
+      var secForm = btn.closest('[data-form="edit-section"]');
+      var newTitle = secForm.querySelector('[data-field="section-title"]').value.trim();
+      var newNr = parseInt(secForm.querySelector('[data-field="section-nr"]').value, 10);
+      var newLabels = parseLabels(secForm.querySelector('[data-field="section-labels"]').value);
+      if (!newTitle) return;
+      delete ui.editingSection[sectionId];
+      updateSection(sectionId, newTitle, isNaN(newNr) ? 1 : newNr, newLabels);
+    } else if (action === "add-label-suggestion") {
+      var labelForm = btn.closest('[data-form="edit-section"]');
+      var labelInput = labelForm.querySelector('[data-field="section-labels"]');
+      var huidige = parseLabels(labelInput.value);
+      var nieuwLabel = btn.getAttribute("data-label");
+      if (huidige.indexOf(nieuwLabel) === -1) huidige.push(nieuwLabel);
+      labelInput.value = huidige.join(", ");
+      labelInput.focus();
+    } else if (action === "add-task-label") {
+      var taakLabelForm = btn.closest("[data-form]");
+      var taakLabelInput = taakLabelForm.querySelector('[data-field="task-labels"]');
+      var huidigeTaakLabels = parseLabels(taakLabelInput.value);
+      var nieuwTaakLabel = btn.getAttribute("data-label");
+      if (huidigeTaakLabels.indexOf(nieuwTaakLabel) === -1) huidigeTaakLabels.push(nieuwTaakLabel);
+      taakLabelInput.value = huidigeTaakLabels.join(", ");
+      taakLabelInput.focus();
+    } else if (action === "set-task-label-filter") {
+      ui.taskLabelFilter[sectionId] = btn.getAttribute("data-label");
+      render();
+    } else if (action === "clear-task-label-filter") {
+      delete ui.taskLabelFilter[sectionId];
+      render();
+    } else if (action === "open-edit-task") {
+      ui.editingTask[taskId] = true;
+      render();
+    } else if (action === "cancel-edit-task") {
+      delete ui.editingTask[taskId];
+      delete ui.editCustomOwner[taskId];
+      render();
+    } else if (action === "cancel-edit-custom-owner") {
+      delete ui.editCustomOwner[taskId];
+      render();
+    } else if (action === "submit-edit-task") {
+      var eform = btn.closest('[data-form="edit-task"]');
+      var etitle = eform.querySelector('[data-field="title"]').value.trim();
+      var eownerSelect = eform.querySelector('[data-field="owner-select"]');
+      var eownerCustom = eform.querySelector('[data-field="owner-custom"]');
+      var eowner = eownerCustom ? eownerCustom.value.trim() : (eownerSelect ? eownerSelect.value : "");
+      var ewhen = eform.querySelector('[data-field="when"]').value.trim();
+      var enote = eform.querySelector('[data-field="note"]').value.trim();
+      var etargetField = eform.querySelector('[data-field="section-target"]');
+      var etarget = etargetField ? etargetField.value : sectionId;
+      if (eowner === "__custom__") eowner = "";
+      if (!etitle || !eowner) return;
+      delete ui.editingTask[taskId];
+      delete ui.editCustomOwner[taskId];
+      var elabels = parseLabels(eform.querySelector('[data-field="task-labels"]').value);
+      updateTask(sectionId, taskId, { title: etitle, owner: eowner, when: ewhen, note: enote,
+        sectionId: etarget, labels: elabels,
+        organisatieId: leesVeld(eform, "actie-org"), persoonId: leesVeld(eform, "actie-persoon") });
+    } else if (action === "toggle-collapse-all") {
+      var visibleForCollapse = filterSectionsByLabel(currentSections, ui.labelFilter);
+      var shouldCollapse = !visibleForCollapse.every(function (s) { return !!ui.collapsed[s.id]; });
+      visibleForCollapse.forEach(function (s) {
+        ui.collapsed[s.id] = shouldCollapse;
+        if (shouldCollapse) closeOpenFormsInSection(s.id);
+      });
+      render();
+    } else if (action === "set-label-filter") {
+      ui.labelFilter = btn.getAttribute("data-label");
+      render();
+    } else if (action === "download-pdf") {
+      downloadPdf();
+    } else if (action === "open-add-section") {
+      ui.addingSection = true;
+      render();
+    } else if (action === "cancel-add-section") {
+      ui.addingSection = false;
+      render();
+    } else if (action === "submit-add-section") {
+      var sform = btn.closest(".add-section-card");
+      var stitle = sform.querySelector('[data-field="section-title"]').value.trim();
+      var slabelsField = sform.querySelector('[data-field="section-labels"]');
+      if (!stitle) return;
+      addSection(stitle, parseLabels(slabelsField ? slabelsField.value : ""));
+      ui.addingSection = false;
+    }
+  });
+
+  document.getElementById("app").addEventListener("change", function (e) {
+    if (e.target.matches('[data-action="set-sort"]')) {
+      ui.sortMode = e.target.value;
+      render();
+      return;
+    }
+    if (e.target.matches('[data-action="set-action-label-filter"]')) {
+      ui.actionLabelFilter = e.target.value;
+      render();
+      return;
+    }
+    if (e.target.matches('[data-action="set-label-filter"]')) {
+      ui.labelFilter = e.target.value;
+      render();
+      return;
+    }
+    if (e.target.matches('[data-action="set-date-filter"]')) {
+      ui.dateFilter = e.target.value;
+      render();
+      return;
+    }
+    if (e.target.matches('[data-field="owner-select"]') && e.target.value === "__custom__") {
+      var addForm = e.target.closest('[data-form="add"]');
+      var editForm = e.target.closest('[data-form="edit-task"]');
+      if (addForm) {
+        ui.customOwner[e.target.getAttribute("data-section")] = true;
+      } else if (editForm) {
+        ui.editCustomOwner[e.target.getAttribute("data-task")] = true;
+      }
+      render();
+    }
+  });
+
+  document.getElementById("app").addEventListener("keydown", function (e) {
+    if (e.key !== "Enter") return;
+    var addForm = e.target.closest('[data-form="add"]');
+    if (addForm && e.target.tagName === "INPUT") {
+      e.preventDefault();
+      addForm.querySelector('[data-action="submit-add"]').click();
+      return;
+    }
+    var completeForm = e.target.closest('[data-form="complete"]');
+    if (completeForm && e.target.tagName === "INPUT") {
+      e.preventDefault();
+      completeForm.querySelector('[data-action="submit-complete"]').click();
+      return;
+    }
+    var editForm = e.target.closest('[data-form="edit-task"]');
+    if (editForm && e.target.tagName === "INPUT") {
+      e.preventDefault();
+      editForm.querySelector('[data-action="submit-edit-task"]').click();
+      return;
+    }
+    var editSectionForm = e.target.closest('[data-form="edit-section"]');
+    if (editSectionForm && e.target.tagName === "INPUT") {
+      e.preventDefault();
+      editSectionForm.querySelector('[data-action="submit-edit-section"]').click();
+      return;
+    }
+    var sectionForm = e.target.closest(".add-section-card");
+    if (sectionForm && e.target.tagName === "INPUT") {
+      e.preventDefault();
+      sectionForm.querySelector('[data-action="submit-add-section"]').click();
+    }
+  });
+
+  window.addEventListener("beforeprint", function () {
+    ui.collapsed = {};
+    render();
+  });
+
+  // ---- Inloggen, laden en live bijwerken ----
+
+  function laadAlles() {
+    return Promise.all([
+      sb.from("categorieen").select("*").order("nr"),
+      sb.from("acties").select("*").order("volgorde"),
+      sb.from("besluiten").select("*"),
+      sb.from("organisaties").select("*").order("naam"),
+      sb.from("personen").select("*").order("naam")
+    ]).then(function (r) {
+      r.forEach(function (x) { if (x.error) throw x.error; });
+      var cats = r[0].data || [], acts = r[1].data || [], bes = r[2].data || [];
+      organisaties = r[3].data || [];
+      personen = r[4].data || [];
+
+      currentSections = cats.map(function (c) {
+        return {
+          id: c.id, nr: c.nr, title: c.titel, labels: c.labels || [],
+          tasks: acts.filter(function (a) { return a.categorie_id === c.id; })
+                     .map(function (a) {
+            return {
+              id: a.id, title: a.titel, owner: a.eigenaar || "", when: a.wanneer || "",
+              note: a.notitie || "", labels: a.labels || [],
+              organisatieId: a.organisatie_id || "", persoonId: a.persoon_id || "",
+              done: !!a.gereed, completedDate: a.gereed_op || "",
+              completedNote: a.gereed_notitie || ""
+            };
+          })
+        };
+      });
+      currentDecisions = bes.map(function (b) {
+        return {
+          id: b.id, text: b.tekst, date: b.datum || "", taskId: b.actie_id || "",
+          sectionTitle: b.categorie_titel || "", taskTitle: b.actie_titel || ""
+        };
+      });
+    });
+  }
+
+  // Wijzigingen van anderen meteen overnemen.
+  function luisterOpWijzigingen() {
+    try {
+      sb.channel("lijst")
+        .on("postgres_changes", { event: "*", schema: "public" }, function () {
+          if (syncing) return;              // eigen schrijfactie loopt nog
+          laadAlles().then(render).catch(function () {});
+        })
+        .subscribe();
+    } catch (e) { /* zonder live bijwerken werkt de lijst ook */ }
+  }
+
+  function bepaalRol() {
+    return sb.from("leden").select("rol,email").then(function (r) {
+      if (r.error) { mijnRol = null; return; }
+      var eigen = (r.data || []).find(function (l) {
+        return (l.email || "").toLowerCase() === (sessie.user.email || "").toLowerCase();
+      });
+      mijnRol = eigen ? eigen.rol : null;
+    });
+  }
+
+  function naInloggen() {
+    return bepaalRol().then(function () {
+      if (!mijnRol) { render(); return; }      // wel ingelogd, geen toegang
+      return laadAlles().then(function () {
+        render();
+        luisterOpWijzigingen();
+      });
+    }).catch(function (e) {
+      opstartFout = "De lijst kon niet worden geladen.";
+      render();
+    });
+  }
+
+  function stuurInloglink(email) {
+    inlogStatus = "Bezig…";
+    render();
+    sb.auth.signInWithOtp({
+      email: email,
+      options: { emailRedirectTo: window.location.href.split("#")[0] }
+    }).then(function (r) {
+      inlogStatus = r.error
+        ? "Versturen lukte niet: " + r.error.message
+        : "Gelukt. Je krijgt een mail met een link om in te loggen — die kun je in dit venster openen.";
+      render();
+    });
+  }
+
+  function uitloggen() {
+    sb.auth.signOut().then(function () {
+      sessie = null; mijnRol = null;
+      currentSections = null; currentDecisions = null;
+      render();
+    });
+  }
+
+  function init() {
+    render();
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      opstartFout = "De verbinding met de database is nog niet ingesteld. " +
+                    "Vul bovenin dit bestand de twee gegevens van Supabase in.";
+      render();
+      return;
+    }
+    var laden = window.__maakClient
+      ? Promise.resolve(window.__maakClient(SUPABASE_URL, SUPABASE_ANON_KEY))
+      : import(SUPABASE_LIB).then(function (mod) {
+          return mod.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        });
+
+    laden.then(function (client) {
+      sb = client;
+      sb.auth.onAuthStateChange(function (_gebeurtenis, nieuweSessie) {
+        var was = sessie && sessie.user && sessie.user.id;
+        sessie = nieuweSessie;
+        var is = sessie && sessie.user && sessie.user.id;
+        if (is && is !== was) naInloggen();
+        if (!is) render();
+      });
+      return sb.auth.getSession();
+    }).then(function (r) {
+      sessie = (r && r.data && r.data.session) || null;
+      if (sessie) return naInloggen();
+      render();
+    }).catch(function () {
+      opstartFout = "Er kon geen verbinding met de database worden gemaakt.";
+      render();
+    });
+  }
+
+  // De lettertypen worden pas opgehaald nadat de pagina volledig geladen is.
+  // Zo kan een trage of geblokkeerde verbinding met Google het openen van de
+  // lijst nooit ophouden; tot die tijd staat alles in de systeemletter.
+  function loadWebfonts() {
+    if (document.getElementById("webfonts")) return;
+    var el = document.createElement("link");
+    el.id = "webfonts";
+    el.rel = "stylesheet";
+    el.href = "https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito+Sans:wght@400;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap";
+    document.head.appendChild(el);
+  }
+  if (document.readyState === "complete") {
+    setTimeout(loadWebfonts, 0);
+  } else {
+    window.addEventListener("load", function () { setTimeout(loadWebfonts, 0); });
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
