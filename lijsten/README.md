@@ -40,11 +40,20 @@ Zet **Confirm email** aan en wachtwoorden uit als je alleen met een
 toegangslink per e-mail wilt werken.
 
 **5. Geef de twee sleutels door.**
-Die staan in Supabase onder **Project Settings → API**:
-de *Project URL* en de *anon public* sleutel.
-Die twee mogen in de pagina staan; ze geven op zichzelf geen toegang,
-want de toegangsregels in de database bepalen wat iemand mag.
-De *service_role* sleutel geef je nooit door en zet je nergens in.
+Die staan in Supabase onder **Settings → API Keys**:
+
+- de **Project URL** (ziet eruit als `https://abcdefgh.supabase.co`)
+- de **publishable** sleutel, die begint met `sb_publishable_`
+
+Heet het bij jou nog *anon public* in plaats van *publishable*? Dan is dat
+de goede; Supabase is die naam aan het vervangen en beide werken.
+
+Deze twee mogen openbaar in de pagina staan: ze geven op zichzelf geen
+toegang, want de toegangsregels in de database bepalen wat iemand mag.
+
+De **secret** sleutel (`sb_secret_…`, vroeger *service_role*) is iets
+heel anders: die omzeilt alle toegangsregels. Die geef je nooit door,
+zet je nergens in een pagina en mail je niet.
 
 ## Wie mag wat
 
