@@ -1288,7 +1288,8 @@
   function zichtbareOrganisaties() {
     return organisaties.filter(function (org) {
       return soortOk(org) &&
-        relatieZoekFilter([org.naam, org.plaats, org.soort, org.sector, org.adres, org.postcode, org.email].join(" "));
+        relatieZoekFilter([org.naam, org.plaats, org.soort, org.sector, org.adres,
+                           org.postcode, org.email, org.notitie].join(" "));
     });
   }
 
