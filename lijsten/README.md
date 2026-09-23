@@ -55,6 +55,20 @@ De **secret** sleutel (`sb_secret_…`, vroeger *service_role*) is iets
 heel anders: die omzeilt alle toegangsregels. Die geef je nooit door,
 zet je nergens in een pagina en mail je niet.
 
+## De relatielijst
+
+Twee weergaven, met een zoekveld dat op beide werkt:
+
+- **Organisaties** — per organisatie een kaart met adres, website en
+  toelichting, en daaronder de personen die erbij horen.
+- **Personen** — één doorlopende lijst van iedereen, met functie,
+  organisatie en contactgegevens.
+
+Het veld *soort* is een keuzelijst. De mogelijke waarden staan bovenin
+`index.html` bij `ORGANISATIE_SOORTEN`; daar pas je ze aan. Staat er iets
+niet bij, dan kun je met *Anders, namelijk…* alsnog zelf iets invullen.
+Een bestaande waarde die niet in de lijst staat, blijft gewoon staan.
+
 ## Wie mag een account aanmaken
 
 Alleen adressen die in de tabel `leden` staan. Dat wordt afgedwongen door

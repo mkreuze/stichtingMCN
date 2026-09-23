@@ -152,6 +152,13 @@
     border-radius: var(--r-sm); padding: 8px 12px; margin: 0 0 16px;
   }
 
+  .seg-telling { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; opacity: 0.7; margin-left: 3px; }
+  .soort-holder { display: flex; }
+  .soort-holder > * { flex: 1; min-width: 0; }
+  .zoek-veld { font-size: 12.5px; padding: 5px 10px; min-width: 200px; }
+  .pc-field { flex: 0 0 96px; }
+  .org-adres { white-space: pre-line; }
+
   .relatie-chip {
     display: inline-flex; align-items: center; gap: 5px;
     font-family: inherit; font-size: 11px; font-weight: 600;
@@ -541,6 +548,22 @@
   // De secret sleutel (sb_secret_...) hoort hier NOOIT te staan.
   var SUPABASE_URL = "https://zdpmrliolynupkbydxpp.supabase.co";
   var SUPABASE_ANON_KEY = "sb_publishable_kLI1xtdgeAir1K6d7vc7ng_Mn_pBURg";
+  // ─── Soorten organisaties ─────────────────────────────────────────
+  // De keuzelijst bij een organisatie. Wil je hier iets aan veranderen,
+  // pas dan deze regel aan; bestaande organisaties houden hun waarde,
+  // ook als die niet meer in de lijst staat.
+  var ORGANISATIE_SOORTEN = [
+    "Museum",
+    "Vereniging",
+    "Stichting",
+    "Overheid",
+    "Fonds",
+    "Leverancier",
+    "Netwerk of koepel",
+    "Onderwijs of onderzoek",
+    "Bedrijf",
+    "Overig"
+  ];
   // ──────────────────────────────────────────────────────────────────
 
   // Twee adressen voor dezelfde bibliotheek: is de eerste onbereikbaar,
@@ -568,6 +591,8 @@
     nieuweOrg: false,
     nieuwPersoonBij: {},// organisatie-id -> true
     relatieFilter: "alle", // "alle" of een organisatie-id
+    relatieView: "organisaties", // organisaties | personen
+    relatieZoek: "",   // zoektekst in de relatielijst
     openOrg: {},        // organisatie-id -> true (personen tonen)
     filter: "todo", // todo | done | alle
     labelFilter: "alle", // "alle" of de naam van een label
@@ -628,6 +653,13 @@
   function persoonOp(id) {
     return personen.find(function (x) { return x.id === id; }) || null;
   }
+  function adresVan(org) {
+    if (!org) return "";
+    var regel = [org.adres || "", [org.postcode || "", org.plaats || ""].filter(Boolean).join("  ")]
+      .filter(Boolean).join(", ");
+    return regel;
+  }
+
   function personenBij(orgId) {
     return personen.filter(function (x) { return x.organisatie_id === orgId; });
   }
@@ -1077,7 +1109,82 @@
     });
   }
 
+  function relatieZoekFilter(tekst) {
+    var z = (ui.relatieZoek || "").trim().toLowerCase();
+    if (!z) return true;
+    return (tekst || "").toLowerCase().indexOf(z) !== -1;
+  }
+
   function renderRelatiesHtml() {
+    var html = "";
+
+    html += '<div class="filter-row">';
+    html += '<span class="seg">';
+    [["organisaties", "Organisaties", organisaties.length],
+     ["personen", "Personen", personen.length]].forEach(function (v) {
+      html += '<button class="filter-btn' + (ui.relatieView === v[0] ? " active" : "") + '" data-action="set-relatie-view" data-relatieview="' + v[0] + '">'
+           + v[1] + ' <span class="seg-telling">' + v[2] + '</span></button>';
+    });
+    html += '</span>';
+    html += '<span class="toolbar-selects">';
+    html += '<input type="search" class="txt-input zoek-veld" data-field="relatie-zoek" value="' + escapeHtml(ui.relatieZoek || "") + '" placeholder="Zoeken op naam…" />';
+    html += '</span>';
+    html += '</div>';
+
+    return html + (ui.relatieView === "personen" ? renderPersonenHtml() : renderOrganisatiesHtml());
+  }
+
+  function renderPersonenHtml() {
+    var html = "";
+    var mag = magBewerken();
+    var lijst = personen.filter(function (x) {
+      var org = organisatieOp(x.organisatie_id);
+      return relatieZoekFilter([x.naam, x.functie, x.email, org ? org.naam : ""].join(" "));
+    });
+
+    if (personen.length === 0) {
+      html += '<div class="empty-state group-empty-state">Nog geen personen. Voeg ze toe bij een organisatie.</div>';
+      return html;
+    }
+    if (lijst.length === 0) {
+      html += '<div class="empty-state group-empty-state">Geen personen gevonden voor \u201c' + escapeHtml(ui.relatieZoek) + '\u201d.</div>';
+      return html;
+    }
+
+    html += '<section class="section-card"><div class="section-body">';
+    lijst.forEach(function (pers) {
+      var org = organisatieOp(pers.organisatie_id);
+      if (ui.bewerkPersoon[pers.id] && org) { html += renderPersoonFormulier(org, pers); return; }
+      var eigenActies = actiesBij(null, pers.id).filter(function (x) { return !x.taak.done; }).length;
+
+      html += '<div class="task-row persoon-row">';
+      html += '<div class="task-body">';
+      html += '<div class="task-title-row">';
+      html += '<div class="task-title">' + escapeHtml(pers.naam) + '</div>';
+      if (pers.functie) html += '<span class="persoon-functie sans">' + escapeHtml(pers.functie) + '</span>';
+      html += '</div>';
+      html += '<div class="task-meta">';
+      if (org) {
+        html += '<button class="relatie-chip" data-action="toon-organisatie" data-org="' + org.id + '" title="Naar deze organisatie">' + escapeHtml(org.naam) + '</button>';
+      } else {
+        html += '<span class="note">Niet aan een organisatie gekoppeld</span>';
+      }
+      if (pers.email) html += '<a class="note contact-link" href="mailto:' + escapeHtml(pers.email) + '">' + escapeHtml(pers.email) + '</a>';
+      if (pers.telefoon) html += '<a class="note contact-link" href="tel:' + escapeHtml(pers.telefoon.replace(/\s/g, "")) + '">' + escapeHtml(pers.telefoon) + '</a>';
+      if (eigenActies) html += '<button class="label-chip" data-action="filter-op-persoon" data-persoon="' + pers.id + '">' + eigenActies + ' ' + (eigenActies === 1 ? "actie" : "acties") + '</button>';
+      html += '</div>';
+      html += '</div>';
+      if (mag) {
+        html += '<button class="edit-btn" data-action="bewerk-persoon" data-persoon="' + pers.id + '" aria-label="Persoon bewerken">' + pencilSvg() + '</button>';
+        html += '<button class="delete-btn" data-action="verwijder-persoon" data-persoon="' + pers.id + '" aria-label="Persoon verwijderen">' + xSvg() + '</button>';
+      }
+      html += '</div>';
+    });
+    html += '</div></section>';
+    return html;
+  }
+
+  function renderOrganisatiesHtml() {
     var html = "";
     var mag = magBewerken();
 
@@ -1085,7 +1192,14 @@
       html += '<div class="empty-state group-empty-state">Nog geen organisaties. Voeg er hieronder één toe.</div>';
     }
 
-    organisaties.forEach(function (org) {
+    var zichtbaar = organisaties.filter(function (org) {
+      return relatieZoekFilter([org.naam, org.plaats, org.soort, org.adres, org.postcode].join(" "));
+    });
+    if (organisaties.length > 0 && zichtbaar.length === 0) {
+      html += '<div class="empty-state group-empty-state">Geen organisaties gevonden voor \u201c' + escapeHtml(ui.relatieZoek) + '\u201d.</div>';
+    }
+
+    zichtbaar.forEach(function (org) {
       var leden = personenBij(org.id);
       var open = !!ui.openOrg[org.id];
       var aantalActies = actiesBij(org.id, null).filter(function (x) { return !x.taak.done; }).length;
@@ -1122,8 +1236,10 @@
 
       if (open) {
         html += '<div class="section-body">';
-        if (org.website || org.notitie) {
+        var adresregel = adresVan(org);
+        if (adresregel || org.website || org.notitie) {
           html += '<div class="org-details">';
+          if (adresregel) html += '<div class="note org-adres">' + escapeHtml(adresregel) + '</div>';
           if (org.website) html += '<a class="org-website" href="' + escapeHtml(org.website) + '" target="_blank" rel="noopener">' + escapeHtml(org.website) + '</a>';
           if (org.notitie) html += '<div class="note">' + escapeHtml(org.notitie) + '</div>';
           html += '</div>';
@@ -1172,12 +1288,16 @@
   function renderOrgFormulier(org) {
     var id = org ? org.id : "nieuw";
     var html = '<div class="add-form" data-form="org" data-org="' + id + '">';
-    html += '<div class="form-row">';
-    html += '<input type="text" class="txt-input flex1" data-field="org-naam" value="' + escapeHtml(org ? org.naam : "") + '" placeholder="Naam van de organisatie" data-autofocus="1" />';
-    html += '<input type="text" class="txt-input" data-field="org-plaats" value="' + escapeHtml(org ? org.plaats : "") + '" placeholder="Plaats" />';
+    html += '<div class="form-row single">';
+    html += '<input type="text" class="txt-input" data-field="org-naam" value="' + escapeHtml(org ? org.naam : "") + '" placeholder="Naam van de organisatie" data-autofocus="1" />';
     html += '</div>';
     html += '<div class="form-row">';
-    html += '<input type="text" class="txt-input flex1" data-field="org-soort" value="' + escapeHtml(org ? org.soort : "") + '" placeholder="Soort — bijv. museum, overheid, leverancier" />';
+    html += '<input type="text" class="txt-input flex1" data-field="org-adres" value="' + escapeHtml(org ? (org.adres || "") : "") + '" placeholder="Straat en huisnummer" />';
+    html += '<input type="text" class="txt-input pc-field" data-field="org-postcode" value="' + escapeHtml(org ? (org.postcode || "") : "") + '" placeholder="Postcode" />';
+    html += '<input type="text" class="txt-input flex1" data-field="org-plaats" value="' + escapeHtml(org ? org.plaats : "") + '" placeholder="Plaats" />';
+    html += '</div>';
+    html += '<div class="form-row">';
+    html += renderSoortVeld(org);
     html += '<input type="text" class="txt-input flex1" data-field="org-website" value="' + escapeHtml(org ? org.website : "") + '" placeholder="https://…" />';
     html += '</div>';
     html += '<div class="form-row single"><textarea class="txt-input" rows="2" data-field="org-notitie" placeholder="Toelichting (optioneel)">' + escapeHtml(org ? org.notitie : "") + '</textarea></div>';
@@ -1186,6 +1306,34 @@
     html += '<button class="cancel-btn" data-action="annuleer-org" data-org="' + id + '">Annuleren</button>';
     html += '</div></div>';
     return html;
+  }
+
+  // Het soort-veld wisselt tussen een keuzelijst en een eigen tekstveld.
+  // Dat gebeurt ter plekke, zonder het formulier opnieuw te tekenen, zodat
+  // wat er al ingevuld staat niet verloren gaat.
+  function soortKeuzelijst(huidig) {
+    var opties = ORGANISATIE_SOORTEN.slice();
+    // Een bestaande waarde die niet in de lijst staat, blijft gewoon kiesbaar.
+    if (huidig && opties.indexOf(huidig) === -1) opties.unshift(huidig);
+    var html = '<select class="sel-input" data-field="org-soort">';
+    html += '<option value=""' + (huidig ? "" : " selected") + '>— soort kiezen —</option>';
+    opties.forEach(function (o) {
+      html += '<option value="' + escapeHtml(o) + '"' + (o === huidig ? " selected" : "") + '>' + escapeHtml(o) + '</option>';
+    });
+    html += '<option value="__eigen__">+ Anders, namelijk…</option>';
+    html += '</select>';
+    return html;
+  }
+
+  function soortTekstveld(huidig) {
+    return '<div class="custom-owner-row">'
+      + '<input type="text" class="txt-input" data-field="org-soort" value="' + escapeHtml(huidig || "") + '" placeholder="Soort" />'
+      + '<button type="button" class="icon-btn small" data-action="terug-naar-soortlijst" title="Terug naar de keuzelijst">' + xSvg(14) + '</button>'
+      + '</div>';
+  }
+
+  function renderSoortVeld(org) {
+    return '<span class="soort-holder flex1">' + soortKeuzelijst(org ? (org.soort || "") : "") + '</span>';
   }
 
   function renderPersoonFormulier(org, pers) {
@@ -2121,7 +2269,8 @@
       "set-action-label-filter", "set-date-filter", "set-sort",
       "download-pdf", "uitloggen", "stuur-inloglink",
       "toggle-org", "filter-op-relatie", "filter-op-persoon",
-      "toon-relatie", "wis-relatiefilter"
+      "toon-relatie", "wis-relatiefilter",
+      "set-relatie-view", "toon-organisatie"
     ];
     if (!magBewerken() && KIJKACTIES.indexOf(action) === -1) return;
 
@@ -2133,12 +2282,26 @@
       var adres = inlogForm.querySelector('[data-field="inlog-email"]').value.trim();
       if (adres) stuurInloglink(adres);
       return;
+    } else if (action === "set-relatie-view") {
+      ui.relatieView = btn.getAttribute("data-relatieview");
+      render();
+      return;
+    } else if (action === "toon-organisatie") {
+      ui.relatieView = "organisaties";
+      ui.relatieZoek = "";
+      ui.openOrg[orgId] = true;
+      render();
+      return;
     } else if (action === "toggle-org") {
       ui.openOrg[orgId] = !ui.openOrg[orgId];
       render();
       return;
     } else if (action === "nieuwe-org") {
       ui.nieuweOrg = true; render(); return;
+    } else if (action === "terug-naar-soortlijst") {
+      var soortHouder = btn.closest(".soort-holder");
+      if (soortHouder) soortHouder.innerHTML = soortKeuzelijst("");
+      return;
     } else if (action === "annuleer-org") {
       if (orgId === "nieuw") ui.nieuweOrg = false; else delete ui.bewerkOrg[orgId];
       render(); return;
@@ -2152,6 +2315,8 @@
       var rij = {
         id: bestaand ? bestaand.id : nieuwId("org"),
         naam: naam,
+        adres: leesVeld(of, "org-adres"),
+        postcode: leesVeld(of, "org-postcode"),
         plaats: leesVeld(of, "org-plaats"),
         soort: leesVeld(of, "org-soort"),
         website: leesVeld(of, "org-website"),
@@ -2401,6 +2566,16 @@
     }
   });
 
+  document.getElementById("app").addEventListener("input", function (e) {
+    if (e.target.matches('[data-field="relatie-zoek"]')) {
+      ui.relatieZoek = e.target.value;
+      var pos = e.target.selectionStart;
+      render();
+      var opnieuw = document.querySelector('[data-field="relatie-zoek"]');
+      if (opnieuw) { opnieuw.focus(); try { opnieuw.setSelectionRange(pos, pos); } catch (x) {} }
+    }
+  });
+
   document.getElementById("app").addEventListener("change", function (e) {
     if (e.target.matches('[data-action="set-sort"]')) {
       ui.sortMode = e.target.value;
@@ -2420,6 +2595,15 @@
     if (e.target.matches('[data-action="set-date-filter"]')) {
       ui.dateFilter = e.target.value;
       render();
+      return;
+    }
+    if (e.target.matches('[data-field="org-soort"]') && e.target.value === "__eigen__") {
+      var houder = e.target.closest(".soort-holder");
+      if (houder) {
+        houder.innerHTML = soortTekstveld("");
+        var veld = houder.querySelector("input");
+        if (veld) veld.focus();
+      }
       return;
     }
     if (e.target.matches('[data-field="owner-select"]') && e.target.value === "__custom__") {
