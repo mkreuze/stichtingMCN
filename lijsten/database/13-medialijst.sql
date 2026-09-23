@@ -4,7 +4,8 @@
 --  Uit "MCN Medialijst" (Klaas Smit): 132 organisaties, waarvan er
 --  13 al in de relatielijst stonden. Gemaakt op 23 September 2026.
 --
---  Draai dit ná 11 (soorten) en 12 (sectoren).
+--  Dit bestand is zelfstandig: het maakt zelf aan wat het nodig
+--  heeft. De bestanden 11 en 12 hoeven niet eerst gedraaid te zijn.
 --
 --  LET OP: elke organisatie staat hier als een eigen opdracht. Dat
 --  is lang, maar het betekent dat een plak die halverwege afkapt
@@ -13,6 +14,44 @@
 --
 --  Onderaan staat een telling. Klopt die niet, plak dan opnieuw.
 -- ============================================================
+
+
+-- ── Eerst zorgen dat alles bestaat wat dit bestand nodig heeft ──
+-- Zo maakt het niet uit of bestand 11 en 12 al gedraaid hebben.
+
+alter table organisaties add column if not exists sector text not null default '';
+
+create table if not exists organisatie_soorten  (naam text primary key, volgorde integer not null default 100);
+create table if not exists organisatie_sectoren (naam text primary key, volgorde integer not null default 100);
+
+alter table organisatie_soorten  enable row level security;
+alter table organisatie_sectoren enable row level security;
+
+drop policy if exists lezen on organisatie_soorten;
+drop policy if exists toevoegen on organisatie_soorten;
+drop policy if exists wijzigen on organisatie_soorten;
+drop policy if exists verwijderen on organisatie_soorten;
+create policy lezen       on organisatie_soorten for select to authenticated using (public.is_lid());
+create policy toevoegen   on organisatie_soorten for insert to authenticated with check (public.mag_bewerken());
+create policy wijzigen    on organisatie_soorten for update to authenticated using (public.mag_bewerken()) with check (public.mag_bewerken());
+create policy verwijderen on organisatie_soorten for delete to authenticated using (public.mag_bewerken());
+
+drop policy if exists lezen on organisatie_sectoren;
+drop policy if exists toevoegen on organisatie_sectoren;
+drop policy if exists wijzigen on organisatie_sectoren;
+drop policy if exists verwijderen on organisatie_sectoren;
+create policy lezen       on organisatie_sectoren for select to authenticated using (public.is_lid());
+create policy toevoegen   on organisatie_sectoren for insert to authenticated with check (public.mag_bewerken());
+create policy wijzigen    on organisatie_sectoren for update to authenticated using (public.mag_bewerken()) with check (public.mag_bewerken());
+create policy verwijderen on organisatie_sectoren for delete to authenticated using (public.mag_bewerken());
+
+-- De standaardlijsten, voor het geval bestand 11 en 12 niet gedraaid zijn.
+insert into organisatie_soorten (naam, volgorde) values ('Museum',10),('Vereniging',20),('Stichting',30),('Overheid',40),('Fonds',50),('Leverancier',60),('Netwerk of koepel',70),('Onderwijs of onderzoek',80),('Pers of media',90),('Bedrijf',100),('Overig',110) on conflict (naam) do nothing;
+insert into organisatie_sectoren (naam, volgorde) values ('Wegvervoer',10),('Railvervoer',20),('Varend erfgoed',30),('Luchtvaart',40),('Militair erfgoed',50),('Overkoepelend',60),('Niet sectorgebonden',70) on conflict (naam) do nothing;
+
+-- Soorten en sectoren die al bij een organisatie stonden, erbij zetten.
+insert into organisatie_soorten (naam, volgorde) select distinct soort, 300 from organisaties where soort <> '' on conflict (naam) do nothing;
+insert into organisatie_sectoren (naam, volgorde) select distinct sector, 300 from organisaties where sector <> '' on conflict (naam) do nothing;
 
 -- ── Sectoren ────────────────────────────────────────────────
 insert into organisatie_sectoren (naam, volgorde) values ('Algemeen', 200) on conflict (naam) do nothing;
