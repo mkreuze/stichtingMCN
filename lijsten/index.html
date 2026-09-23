@@ -83,7 +83,12 @@
   }
   .sans { font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
   .heading-font { font-family: "Baloo 2", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-  .container { max-width: 720px; margin: 0 auto; }
+  /* Breder dan voorheen (720px), zodat de relatielijst en de acties meer
+     kwijt kunnen. Boven de 1180px wordt een tekstregel te lang om
+     prettig te lezen, dus daar stopt het. */
+  .container { max-width: 1180px; margin: 0 auto; }
+  /* De toelichting bij een actie blijft wel op leesbare breedte. */
+  .task-meta .note { max-width: 78ch; }
 
   .masthead-row {
     display: flex;
@@ -172,6 +177,47 @@
   .relatie-chip:hover { filter: brightness(0.96); }
   .relatie-meta { font-size: 12px; color: var(--ink-faint); flex: 1; min-width: 60px; }
   .persoon-row .task-title { font-size: 14px; }
+
+  /* De personenlijst als kolommen: naam, functie, organisatie, e-mail,
+     telefoon. Op een smal scherm klapt het terug naar onder elkaar. */
+  .personen-tabel { padding: 6px 18px 12px; }
+  .personen-kop, .persoon-regel {
+    display: grid;
+    grid-template-columns: minmax(130px, 1.1fr) minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1.5fr) minmax(0, 118px) auto;
+    align-items: center;
+    column-gap: 14px;
+  }
+  .personen-kop {
+    font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--ink-faint); padding: 6px 0 8px; border-bottom: 1px solid var(--line);
+  }
+  .persoon-regel { padding: 9px 0; border-top: 1px solid var(--line-soft); font-size: 13px; }
+  .persoon-regel:hover { background: var(--line-soft); }
+  .pk-naam { font-weight: 700; color: var(--ink); }
+  .pk-veld { color: var(--ink-soft); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pk-veld .relatie-chip { max-width: 100%; overflow: hidden; text-overflow: ellipsis; display: inline-block; white-space: nowrap; }
+  .pk-leeg { color: var(--ink-faint); font-style: italic; }
+  .pk-knoppen { display: flex; align-items: center; gap: 2px; justify-content: flex-end; }
+  .persoon-formulier { padding: 4px 0; border-top: 1px solid var(--line-soft); }
+
+  @media (max-width: 820px) {
+    .personen-kop { display: none; }
+    .persoon-regel { grid-template-columns: 1fr auto; row-gap: 2px; padding: 12px 0; }
+    .persoon-regel .pk-naam { grid-column: 1; }
+    .persoon-regel .pk-knoppen { grid-row: 1 / span 5; grid-column: 2; align-items: flex-start; }
+    .persoon-regel .pk-veld { grid-column: 1; white-space: normal; }
+    .persoon-regel .pk-veld:empty { display: none; }
+  }
+  /* Bij een contactpersoon staan de gegevens achter elkaar in plaats van
+     onder elkaar; bij een actie blijft het onder elkaar staan. */
+  .persoon-row .task-meta {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 18px;
+    row-gap: 4px;
+  }
+  .persoon-row .task-title-row { gap: 12px; }
   .persoon-functie { font-size: 11.5px; color: var(--ink-faint); white-space: nowrap; }
   .contact-link { color: var(--ink-soft); text-decoration: none; }
   .contact-link:hover { color: var(--accent); text-decoration: underline; }
@@ -1348,33 +1394,40 @@
       return html;
     }
 
-    html += '<section class="section-card"><div class="section-body">';
+    html += '<section class="section-card"><div class="section-body personen-tabel">';
+    html += '<div class="personen-kop sans">';
+    html += '<span>Naam</span><span>Functie</span><span>Organisatie</span><span>E-mail</span><span>Telefoon</span><span></span>';
+    html += '</div>';
+
     lijst.forEach(function (pers) {
       var org = organisatieOp(pers.organisatie_id);
-      if (ui.bewerkPersoon[pers.id] && org) { html += renderPersoonFormulier(org, pers); return; }
+      if (ui.bewerkPersoon[pers.id] && org) {
+        html += '<div class="persoon-formulier">' + renderPersoonFormulier(org, pers) + '</div>';
+        return;
+      }
       var eigenActies = actiesBij(null, pers.id).filter(function (x) { return !x.taak.done; }).length;
 
-      html += '<div class="task-row persoon-row">';
-      html += '<div class="task-body">';
-      html += '<div class="task-title-row">';
-      html += '<div class="task-title">' + escapeHtml(pers.naam) + '</div>';
-      if (pers.functie) html += '<span class="persoon-functie sans">' + escapeHtml(pers.functie) + '</span>';
-      html += '</div>';
-      html += '<div class="task-meta">';
+      html += '<div class="persoon-regel">';
+      html += '<span class="pk-naam">' + escapeHtml(pers.naam) + '</span>';
+      html += '<span class="pk-veld">' + escapeHtml(pers.functie || "") + '</span>';
+      html += '<span class="pk-veld">';
       if (org) {
         html += '<button class="relatie-chip" data-action="toon-organisatie" data-org="' + org.id + '" title="Naar deze organisatie">' + escapeHtml(org.naam) + '</button>';
       } else {
-        html += '<span class="note">Niet aan een organisatie gekoppeld</span>';
+        html += '<span class="pk-leeg">geen organisatie</span>';
       }
-      if (pers.email) html += '<a class="note contact-link" href="mailto:' + escapeHtml(pers.email) + '">' + escapeHtml(pers.email) + '</a>';
-      if (pers.telefoon) html += '<a class="note contact-link" href="tel:' + escapeHtml(pers.telefoon.replace(/\s/g, "")) + '">' + escapeHtml(pers.telefoon) + '</a>';
-      if (eigenActies) html += '<button class="label-chip" data-action="filter-op-persoon" data-persoon="' + pers.id + '">' + eigenActies + ' ' + (eigenActies === 1 ? "actie" : "acties") + '</button>';
-      html += '</div>';
-      html += '</div>';
+      html += '</span>';
+      html += '<span class="pk-veld">' + (pers.email
+        ? '<a class="contact-link" href="mailto:' + escapeHtml(pers.email) + '">' + escapeHtml(pers.email) + '</a>' : '') + '</span>';
+      html += '<span class="pk-veld">' + (pers.telefoon
+        ? '<a class="contact-link" href="tel:' + escapeHtml(pers.telefoon.replace(/\s/g, "")) + '">' + escapeHtml(pers.telefoon) + '</a>' : '') + '</span>';
+      html += '<span class="pk-knoppen">';
+      if (eigenActies) html += '<button class="label-chip" data-action="filter-op-persoon" data-persoon="' + pers.id + '" title="Toon de acties van deze persoon">' + eigenActies + '</button>';
       if (mag) {
         html += '<button class="edit-btn" data-action="bewerk-persoon" data-persoon="' + pers.id + '" aria-label="Persoon bewerken">' + pencilSvg() + '</button>';
         html += '<button class="delete-btn" data-action="verwijder-persoon" data-persoon="' + pers.id + '" aria-label="Persoon verwijderen">' + xSvg() + '</button>';
       }
+      html += '</span>';
       html += '</div>';
     });
     html += '</div></section>';
