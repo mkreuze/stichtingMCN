@@ -553,6 +553,21 @@
   // De soorten organisaties komen uit de database en zijn in de Console
   // zelf te beheren (tabblad Relaties, knop "Soorten beheren").
   var soorten = [];
+  var sectoren = [];
+
+  // De twee keuzelijsten werken hetzelfde; deze beschrijving houdt de
+  // code op één plek in plaats van alles twee keer.
+  var KEUZELIJSTEN = [
+    { veld: "soort",  tabel: "organisatie_soorten",  kop: "Soorten organisaties",
+      omschrijving: "Wat voor organisatie is het", lees: function () { return soorten; },
+      zet: function (v) { soorten = v; } },
+    { veld: "sector", tabel: "organisatie_sectoren", kop: "Sectoren",
+      omschrijving: "In welk deel van het mobiel erfgoed is ze actief", lees: function () { return sectoren; },
+      zet: function (v) { sectoren = v; } }
+  ];
+  function keuzelijst(veld) {
+    return KEUZELIJSTEN.find(function (k) { return k.veld === veld; });
+  }
 
   // Twee adressen voor dezelfde bibliotheek: is de eerste onbereikbaar,
   // dan wordt de tweede geprobeerd.
@@ -581,7 +596,8 @@
     relatieFilter: "alle", // "alle" of een organisatie-id
     relatieView: "organisaties", // organisaties | personen
     relatieZoek: "",   // zoektekst in de relatielijst
-    soortFilter: "alle",  // "alle", een soort, of "geen"
+    soortFilter: "alle",   // "alle", een soort, of "geen"
+    sectorFilter: "alle",  // idem voor sector
     soortenBeheer: false, // het beheerpaneel voor soorten
     bewerkSoort: {},      // soortnaam -> true
     nieuwSoort: false,
@@ -693,19 +709,22 @@
     });
   }
 
-  function bewaarSoort(oudeNaam, nieuweNaam) {
+  function bewaarSoort(veld, oudeNaam, nieuweNaam) {
     if (!sb || !magBewerken()) { saveError = true; render(); return; }
+    var k = keuzelijst(veld);
     syncing = true; render();
-    var volgorde = oudeNaam ? (soorten.indexOf(oudeNaam) + 1) * 10 : (soorten.length + 1) * 10 + 100;
-    controleer(sb.from("organisatie_soorten").upsert({ naam: nieuweNaam, volgorde: volgorde }))
+    var lijst = k.lees();
+    var volgorde = oudeNaam ? (lijst.indexOf(oudeNaam) + 1) * 10 : (lijst.length + 1) * 10 + 100;
+    controleer(sb.from(k.tabel).upsert({ naam: nieuweNaam, volgorde: volgorde }))
       .then(function () {
         if (!oudeNaam) return;
-        // Hernoemen: de organisaties die deze soort hadden, gaan mee.
-        var raken = organisaties.filter(function (o) { return o.soort === oudeNaam; });
+        // Hernoemen: de organisaties die deze waarde hadden, gaan mee.
+        var raken = organisaties.filter(function (o) { return o[veld] === oudeNaam; });
         return Promise.all(raken.map(function (o) {
-          return controleer(sb.from("organisaties").update({ soort: nieuweNaam }).eq("id", o.id));
+          var patch = {}; patch[veld] = nieuweNaam;
+          return controleer(sb.from("organisaties").update(patch).eq("id", o.id));
         })).then(function () {
-          return controleer(sb.from("organisatie_soorten").delete().eq("naam", oudeNaam));
+          return controleer(sb.from(k.tabel).delete().eq("naam", oudeNaam));
         });
       })
       .then(function () { return laadAlles(); })
@@ -713,12 +732,13 @@
       .catch(function () { syncing = false; saveError = true; render(); laadAlles().then(render).catch(function () {}); });
   }
 
-  function verwijderSoort(naam) {
+  function verwijderSoort(veld, naam) {
     if (!sb || !magBewerken()) { saveError = true; render(); return; }
+    var k = keuzelijst(veld);
     syncing = true; render();
-    controleer(sb.from("organisatie_soorten").delete().eq("naam", naam))
+    controleer(sb.from(k.tabel).delete().eq("naam", naam))
       .then(function () {
-        soorten = soorten.filter(function (x) { return x !== naam; });
+        k.zet(k.lees().filter(function (x) { return x !== naam; }));
         syncing = false; saveError = false; render();
       })
       .catch(function () { syncing = false; saveError = true; render(); });
@@ -1109,6 +1129,124 @@
     return Promise.resolve();
   }
 
+  // ── Excel-bestanden ────────────────────────────────────────────
+  var EXCEL_LIBS = [
+    "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js",
+    "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"
+  ];
+  var excelPromise = null;
+
+  function loadExcelLib() {
+    if (window.XLSX) return Promise.resolve();
+    if (!excelPromise) {
+      excelPromise = laadEenVan(EXCEL_LIBS).catch(function (err) {
+        excelPromise = null;
+        throw err;
+      });
+    }
+    return excelPromise;
+  }
+
+  function laadEenVan(adressen) {
+    function poging(i) {
+      if (i >= adressen.length) return Promise.reject(new Error("het bestand kon van geen enkel adres geladen worden"));
+      return loadScript(adressen[i]).catch(function () { return poging(i + 1); });
+    }
+    return poging(0);
+  }
+
+  // Waar gaat deze download over? Dat zetten we boven de lijst, zodat
+  // later terug te vinden is welke selectie je hebt uitgedraaid.
+  function selectieOmschrijving() {
+    var d = [];
+    if (ui.soortFilter === "geen") d.push("zonder soort");
+    else if (ui.soortFilter !== "alle") d.push("soort: " + ui.soortFilter);
+    if (ui.sectorFilter === "geen") d.push("zonder sector");
+    else if (ui.sectorFilter !== "alle") d.push("sector: " + ui.sectorFilter);
+    if ((ui.relatieZoek || "").trim()) d.push('zoekterm: "' + ui.relatieZoek.trim() + '"');
+    return d.length ? d.join(" \u00b7 ") : "alle relaties";
+  }
+
+  function adressenlijstRijen() {
+    var orgs = zichtbareOrganisaties();
+    var orgBlad = [["Organisatie", "Soort", "Sector", "Adres", "Postcode", "Plaats",
+                    "E-mail algemeen", "Telefoon", "Website", "Toelichting",
+                    "Personen", "Openstaande acties"]];
+    orgs.forEach(function (o) {
+      orgBlad.push([
+        o.naam, o.soort || "", o.sector || "", o.adres || "", o.postcode || "", o.plaats || "",
+        o.email || "", o.telefoon || "", o.website || "", o.notitie || "",
+        personenBij(o.id).length,
+        actiesBij(o.id, null).filter(function (x) { return !x.taak.done; }).length
+      ]);
+    });
+
+    var persBlad = [["Naam", "Functie", "Organisatie", "E-mail", "Telefoon", "Openstaande acties"]];
+    zichtbarePersonen().forEach(function (x) {
+      var org = organisatieOp(x.organisatie_id);
+      persBlad.push([
+        x.naam, x.functie || "", org ? org.naam : "", x.email || "", x.telefoon || "",
+        actiesBij(null, x.id).filter(function (y) { return !y.taak.done; }).length
+      ]);
+    });
+    return { organisaties: orgBlad, personen: persBlad };
+  }
+
+  function mailinglijstRijen() {
+    var rijen = [["Naam", "Organisatie", "E-mailadres", "Soort adres"]];
+    var gezien = {};
+    function voegToe(naam, org, email, soort) {
+      var sleutel = (email || "").trim().toLowerCase();
+      if (!sleutel || gezien[sleutel]) return;
+      gezien[sleutel] = true;
+      rijen.push([naam, org, email.trim(), soort]);
+    }
+    zichtbarePersonen().forEach(function (x) {
+      var org = organisatieOp(x.organisatie_id);
+      voegToe(x.naam, org ? org.naam : "", x.email, "persoon");
+    });
+    zichtbareOrganisaties().forEach(function (o) {
+      voegToe("", o.naam, o.email, "algemeen");
+    });
+    return rijen;
+  }
+
+  function downloadExcel(soort) {
+    pdfStatus = "Bestand maken\u2026";
+    render();
+    loadExcelLib().then(function () {
+      var wb = XLSX.utils.book_new();
+      var naam, toelichting;
+      if (soort === "mailing") {
+        var m = mailinglijstRijen();
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(m), "Mailinglijst");
+        naam = "mailinglijst-" + todayISO() + ".xlsx";
+        toelichting = [["Mailinglijst"], [], ["Gemaakt op", formatDateNL(todayISO())],
+          ["Selectie", selectieOmschrijving()], ["Aantal adressen", m.length - 1],
+          [], ["Elk e-mailadres staat één keer in de lijst, ook als het bij"],
+          ["meerdere personen of organisaties voorkwam."]];
+      } else {
+        var r = adressenlijstRijen();
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(r.organisaties), "Organisaties");
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(r.personen), "Personen");
+        naam = "adressenlijst-" + todayISO() + ".xlsx";
+        toelichting = [["Adressenlijst"], [], ["Gemaakt op", formatDateNL(todayISO())],
+          ["Selectie", selectieOmschrijving()],
+          ["Aantal organisaties", r.organisaties.length - 1],
+          ["Aantal personen", r.personen.length - 1]];
+      }
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(toelichting), "Over deze lijst");
+      var data = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+      return bewaarBestand(new Blob([data], { type: "application/octet-stream" }), naam);
+    }).then(function () {
+      pdfStatus = "Gedownload.";
+      render();
+    }).catch(function (err) {
+      pdfStatus = "Downloaden lukte niet: " + ((err && err.message) || String(err));
+      render();
+    });
+  }
+
   function downloadPdf() {
     pdfStatus = "PDF opmaken…";
     render();
@@ -1138,6 +1276,30 @@
     return (tekst || "").toLowerCase().indexOf(z) !== -1;
   }
 
+  function keuzeOk(org, waarde, veld) {
+    if (waarde === "alle") return true;
+    if (waarde === "geen") return !org || !org[veld];
+    return !!org && org[veld] === waarde;
+  }
+  function soortOk(org) {
+    return keuzeOk(org, ui.soortFilter, "soort") && keuzeOk(org, ui.sectorFilter, "sector");
+  }
+
+  function zichtbareOrganisaties() {
+    return organisaties.filter(function (org) {
+      return soortOk(org) &&
+        relatieZoekFilter([org.naam, org.plaats, org.soort, org.sector, org.adres, org.postcode, org.email].join(" "));
+    });
+  }
+
+  function zichtbarePersonen() {
+    return personen.filter(function (x) {
+      var org = organisatieOp(x.organisatie_id);
+      return soortOk(org) &&
+        relatieZoekFilter([x.naam, x.functie, x.email, org ? org.naam : ""].join(" "));
+    });
+  }
+
   function renderRelatiesHtml() {
     var html = "";
 
@@ -1151,19 +1313,19 @@
     html += '</span>';
     html += '<span class="toolbar-selects">';
     html += '<input type="search" class="txt-input zoek-veld" data-field="relatie-zoek" value="' + escapeHtml(ui.relatieZoek || "") + '" placeholder="Zoeken op naam…" />';
-    if (ui.relatieView === "organisaties") {
-      html += '<select class="sort-select' + (ui.soortFilter !== "alle" ? " filter-on" : "") + '" data-action="set-soort-filter" title="Filter op soort organisatie">';
-      html += '<option value="alle"' + (ui.soortFilter === "alle" ? " selected" : "") + '>Alle soorten</option>';
-      soorten.forEach(function (x) {
-        var n = organisaties.filter(function (o) { return o.soort === x; }).length;
-        html += '<option value="' + escapeHtml(x) + '"' + (ui.soortFilter === x ? " selected" : "") + '>' + escapeHtml(x) + ' (' + n + ')</option>';
+    [["soort", ui.soortFilter, soorten, "soorten"], ["sector", ui.sectorFilter, sectoren, "sectoren"]].forEach(function (f) {
+      html += '<select class="sort-select' + (f[1] !== "alle" ? " filter-on" : "") + '" data-action="set-keuze-filter" data-keuzeveld="' + f[0] + '">';
+      html += '<option value="alle"' + (f[1] === "alle" ? " selected" : "") + '>Alle ' + f[3] + '</option>';
+      f[2].forEach(function (x) {
+        var n = organisaties.filter(function (o) { return o[f[0]] === x; }).length;
+        html += '<option value="' + escapeHtml(x) + '"' + (f[1] === x ? " selected" : "") + '>' + escapeHtml(x) + ' (' + n + ')</option>';
       });
-      var zonder = organisaties.filter(function (o) { return !o.soort; }).length;
-      html += '<option value="geen"' + (ui.soortFilter === "geen" ? " selected" : "") + '>Nog geen soort (' + zonder + ')</option>';
+      var zonder = organisaties.filter(function (o) { return !o[f[0]]; }).length;
+      html += '<option value="geen"' + (f[1] === "geen" ? " selected" : "") + '>Nog geen ' + f[0] + ' (' + zonder + ')</option>';
       html += '</select>';
-      if (magBewerken()) {
-        html += '<button class="filter-btn' + (ui.soortenBeheer ? " active" : "") + '" data-action="toggle-soorten-beheer">Soorten beheren</button>';
-      }
+    });
+    if (ui.relatieView === "organisaties" && magBewerken()) {
+      html += '<button class="filter-btn' + (ui.soortenBeheer ? " active" : "") + '" data-action="toggle-soorten-beheer">Soorten beheren</button>';
     }
     html += '</span>';
     html += '</div>';
@@ -1174,10 +1336,7 @@
   function renderPersonenHtml() {
     var html = "";
     var mag = magBewerken();
-    var lijst = personen.filter(function (x) {
-      var org = organisatieOp(x.organisatie_id);
-      return relatieZoekFilter([x.naam, x.functie, x.email, org ? org.naam : ""].join(" "));
-    });
+    var lijst = zichtbarePersonen();
 
     if (personen.length === 0) {
       html += '<div class="empty-state group-empty-state">Nog geen personen. Voeg ze toe bij een organisatie.</div>';
@@ -1221,70 +1380,69 @@
     return html;
   }
 
-  function renderSoortenBeheer() {
-    var html = '<section class="section-card soorten-kaart">';
-    html += '<div class="section-header open"><span class="section-title">Soorten organisaties</span>';
-    html += '<span class="relatie-meta sans">Deze lijst staat in de keuzelijst bij een organisatie</span>';
-    html += '<button class="cancel-btn" data-action="toggle-soorten-beheer">Sluiten</button>';
-    html += '</div>';
-    html += '<div class="section-body">';
+  function renderKeuzelijstBeheer() {
+    var html = "";
+    KEUZELIJSTEN.forEach(function (k) {
+      var lijst = k.lees();
+      html += '<section class="section-card soorten-kaart">';
+      html += '<div class="section-header open"><span class="section-title">' + escapeHtml(k.kop) + '</span>';
+      html += '<span class="relatie-meta sans">' + escapeHtml(k.omschrijving) + '</span>';
+      html += '<button class="cancel-btn" data-action="toggle-soorten-beheer">Sluiten</button>';
+      html += '</div><div class="section-body">';
 
-    if (soorten.length === 0) {
-      html += '<div class="empty-state">Nog geen soorten.</div>';
-    }
-    soorten.forEach(function (x) {
-      var aantal = organisaties.filter(function (o) { return o.soort === x; }).length;
-      if (ui.bewerkSoort[x]) {
-        html += '<div class="add-form" data-form="soort" data-soort="' + escapeHtml(x) + '">';
+      if (lijst.length === 0) html += '<div class="empty-state">Nog niets in deze lijst.</div>';
+
+      lijst.forEach(function (x) {
+        var sleutel = k.veld + "|" + x;
+        var aantal = organisaties.filter(function (o) { return o[k.veld] === x; }).length;
+        if (ui.bewerkSoort[sleutel]) {
+          html += '<div class="add-form" data-form="soort" data-soort="' + escapeHtml(sleutel) + '">';
+          html += '<div class="form-row">';
+          html += '<input type="text" class="txt-input flex1" data-field="soort-naam" value="' + escapeHtml(x) + '" data-autofocus="1" />';
+          html += '<button class="save-btn" data-action="bewaar-soort" data-soort="' + escapeHtml(sleutel) + '">Opslaan</button>';
+          html += '<button class="cancel-btn" data-action="annuleer-soort" data-soort="' + escapeHtml(sleutel) + '">Annuleren</button>';
+          html += '</div>';
+          if (aantal) html += '<div class="followup-hint">Hernoemen past ' + aantal + ' ' + (aantal === 1 ? 'organisatie' : 'organisaties') + ' mee aan.</div>';
+          html += '</div>';
+          return;
+        }
+        html += '<div class="task-row soort-row">';
+        html += '<div class="task-body"><div class="task-title-row">';
+        html += '<div class="task-title">' + escapeHtml(x) + '</div>';
+        html += '<span class="progress-label sans">' + aantal + '\u00d7</span>';
+        html += '</div></div>';
+        html += '<button class="edit-btn" data-action="bewerk-soort" data-soort="' + escapeHtml(sleutel) + '" aria-label="Hernoemen">' + pencilSvg() + '</button>';
+        if (aantal === 0) {
+          html += '<button class="delete-btn" data-action="verwijder-soort" data-soort="' + escapeHtml(sleutel) + '" aria-label="Verwijderen" title="Verwijderen">' + xSvg() + '</button>';
+        }
+        html += '</div>';
+      });
+
+      if (ui.nieuwSoort === k.veld) {
+        html += '<div class="add-form" data-form="soort" data-soort="' + k.veld + '|nieuw">';
         html += '<div class="form-row">';
-        html += '<input type="text" class="txt-input flex1" data-field="soort-naam" value="' + escapeHtml(x) + '" data-autofocus="1" />';
-        html += '<button class="save-btn" data-action="bewaar-soort" data-soort="' + escapeHtml(x) + '">Opslaan</button>';
-        html += '<button class="cancel-btn" data-action="annuleer-soort" data-soort="' + escapeHtml(x) + '">Annuleren</button>';
-        html += '</div>';
-        if (aantal) html += '<div class="followup-hint">Hernoemen past ' + aantal + ' ' + (aantal === 1 ? 'organisatie' : 'organisaties') + ' mee aan.</div>';
-        html += '</div>';
-        return;
+        html += '<input type="text" class="txt-input flex1" data-field="soort-naam" placeholder="Nieuwe naam" data-autofocus="1" />';
+        html += '<button class="save-btn" data-action="bewaar-soort" data-soort="' + k.veld + '|nieuw">Toevoegen</button>';
+        html += '<button class="cancel-btn" data-action="annuleer-soort" data-soort="' + k.veld + '|nieuw">Annuleren</button>';
+        html += '</div></div>';
+      } else {
+        html += '<button class="add-task-btn" data-action="nieuwe-soort" data-keuzeveld="' + k.veld + '">' + plusSvg() + 'Toevoegen</button>';
       }
-      html += '<div class="task-row soort-row">';
-      html += '<div class="task-body"><div class="task-title-row">';
-      html += '<div class="task-title">' + escapeHtml(x) + '</div>';
-      html += '<span class="progress-label sans">' + aantal + '\u00d7</span>';
-      html += '</div></div>';
-      html += '<button class="edit-btn" data-action="bewerk-soort" data-soort="' + escapeHtml(x) + '" aria-label="Soort hernoemen">' + pencilSvg() + '</button>';
-      if (aantal === 0) {
-        html += '<button class="delete-btn" data-action="verwijder-soort" data-soort="' + escapeHtml(x) + '" aria-label="Soort verwijderen" title="Verwijderen">' + xSvg() + '</button>';
-      }
-      html += '</div>';
+      html += '</div></section>';
     });
-
-    if (ui.nieuwSoort) {
-      html += '<div class="add-form" data-form="soort" data-soort="nieuw">';
-      html += '<div class="form-row">';
-      html += '<input type="text" class="txt-input flex1" data-field="soort-naam" placeholder="Naam van de nieuwe soort" data-autofocus="1" />';
-      html += '<button class="save-btn" data-action="bewaar-soort" data-soort="nieuw">Toevoegen</button>';
-      html += '<button class="cancel-btn" data-action="annuleer-soort" data-soort="nieuw">Annuleren</button>';
-      html += '</div></div>';
-    } else {
-      html += '<button class="add-task-btn" data-action="nieuwe-soort">' + plusSvg() + 'Soort toevoegen</button>';
-    }
-    html += '</div></section>';
     return html;
   }
 
   function renderOrganisatiesHtml() {
     var html = "";
     var mag = magBewerken();
-    if (ui.soortenBeheer && mag) html += renderSoortenBeheer();
+    if (ui.soortenBeheer && mag) html += renderKeuzelijstBeheer();
 
     if (organisaties.length === 0 && !ui.nieuweOrg) {
       html += '<div class="empty-state group-empty-state">Nog geen organisaties. Voeg er hieronder één toe.</div>';
     }
 
-    var zichtbaar = organisaties.filter(function (org) {
-      if (ui.soortFilter === "geen" && org.soort) return false;
-      if (ui.soortFilter !== "alle" && ui.soortFilter !== "geen" && org.soort !== ui.soortFilter) return false;
-      return relatieZoekFilter([org.naam, org.plaats, org.soort, org.adres, org.postcode, org.email].join(" "));
-    });
+    var zichtbaar = zichtbareOrganisaties();
     if (organisaties.length > 0 && zichtbaar.length === 0) {
       html += '<div class="empty-state group-empty-state">Geen organisaties gevonden voor \u201c' + escapeHtml(ui.relatieZoek) + '\u201d.</div>';
     }
@@ -1306,8 +1464,8 @@
       html += '<button class="section-header-btn" data-action="toggle-org" data-org="' + org.id + '">';
       html += '<span class="section-title">' + escapeHtml(org.naam) + '</span>';
       html += '<span class="relatie-meta sans">';
-      if (org.plaats) html += escapeHtml(org.plaats);
-      if (org.soort) html += (org.plaats ? " · " : "") + escapeHtml(org.soort);
+      var kenmerken = [org.plaats, org.soort, org.sector].filter(Boolean);
+      html += escapeHtml(kenmerken.join(" · "));
       html += '</span>';
       html += '<span class="progress-label sans">' + leden.length + ' ' + (leden.length === 1 ? "persoon" : "personen") + '</span>';
       html += chevronSvg(!open);
@@ -1407,12 +1565,13 @@
   // Het soort-veld wisselt tussen een keuzelijst en een eigen tekstveld.
   // Dat gebeurt ter plekke, zonder het formulier opnieuw te tekenen, zodat
   // wat er al ingevuld staat niet verloren gaat.
-  function soortKeuzelijst(huidig) {
-    var opties = soorten.slice();
+  function keuzeVeldLijst(veld, huidig) {
+    var k = keuzelijst(veld);
+    var opties = k.lees().slice();
     // Een bestaande waarde die niet in de lijst staat, blijft gewoon kiesbaar.
     if (huidig && opties.indexOf(huidig) === -1) opties.unshift(huidig);
-    var html = '<select class="sel-input" data-field="org-soort">';
-    html += '<option value=""' + (huidig ? "" : " selected") + '>— soort kiezen —</option>';
+    var html = '<select class="sel-input" data-field="org-' + veld + '" data-keuzeveld="' + veld + '">';
+    html += '<option value=""' + (huidig ? "" : " selected") + '>— ' + veld + ' kiezen —</option>';
     opties.forEach(function (o) {
       html += '<option value="' + escapeHtml(o) + '"' + (o === huidig ? " selected" : "") + '>' + escapeHtml(o) + '</option>';
     });
@@ -1421,15 +1580,16 @@
     return html;
   }
 
-  function soortTekstveld(huidig) {
+  function keuzeVeldTekst(veld, huidig) {
     return '<div class="custom-owner-row">'
-      + '<input type="text" class="txt-input" data-field="org-soort" value="' + escapeHtml(huidig || "") + '" placeholder="Soort" />'
-      + '<button type="button" class="icon-btn small" data-action="terug-naar-soortlijst" title="Terug naar de keuzelijst">' + xSvg(14) + '</button>'
+      + '<input type="text" class="txt-input" data-field="org-' + veld + '" value="' + escapeHtml(huidig || "") + '" placeholder="' + veld + '" />'
+      + '<button type="button" class="icon-btn small" data-action="terug-naar-keuzelijst" data-keuzeveld="' + veld + '" title="Terug naar de keuzelijst">' + xSvg(14) + '</button>'
       + '</div>';
   }
 
   function renderSoortVeld(org) {
-    return '<span class="soort-holder flex1">' + soortKeuzelijst(org ? (org.soort || "") : "") + '</span>';
+    return '<span class="soort-holder flex1" data-keuzeveld="soort">' + keuzeVeldLijst("soort", org ? (org.soort || "") : "") + '</span>'
+         + '<span class="soort-holder flex1" data-keuzeveld="sector">' + keuzeVeldLijst("sector", org ? (org.sector || "") : "") + '</span>';
   }
 
   function renderPersoonFormulier(org, pers) {
@@ -1550,7 +1710,12 @@
       html += '<button class="view-tab' + (ui.view === v[0] ? " active" : "") + '" data-action="set-view" data-view="' + v[0] + '">' + v[1] + '<span class="view-tab-count">' + v[2] + '</span></button>';
     });
     html += '<span class="toolbar-actions">';
-    html += '<button class="pdf-download-btn" data-action="download-pdf">' + downloadSvg() + 'PDF downloaden</button>';
+    if (ui.view === "relaties") {
+      html += '<button class="pdf-download-btn" data-action="download-adressen" title="Organisaties en personen, zoals ze nu gefilterd zijn">' + downloadSvg() + 'Adressenlijst</button>';
+      html += '<button class="pdf-download-btn" data-action="download-mailing" title="Eén regel per e-mailadres, zoals nu gefilterd">' + downloadSvg() + 'Mailinglijst</button>';
+    } else {
+      html += '<button class="pdf-download-btn" data-action="download-pdf">' + downloadSvg() + 'PDF downloaden</button>';
+    }
     if (pdfStatus) html += '<span class="pdf-status sans">' + escapeHtml(pdfStatus) + '</span>';
     html += '<button class="pdf-download-btn" data-action="uitloggen" title="' + escapeHtml(sessie.user.email) + (mijnRol === "kijker" ? " — je kunt meekijken, niet wijzigen" : "") + '">' + escapeHtml(sessie.user.email.split("@")[0]) + (mijnRol === "kijker" ? " (meekijken)" : "") + '</button>';
     html += '</span>';
@@ -2363,10 +2528,11 @@
       "set-view", "set-filter", "toggle-collapse", "toggle-collapse-all",
       "set-label-filter", "set-task-label-filter", "clear-task-label-filter",
       "set-action-label-filter", "set-date-filter", "set-sort",
-      "download-pdf", "uitloggen", "stuur-inloglink",
+      "download-pdf", "download-adressen", "download-mailing",
+      "uitloggen", "stuur-inloglink",
       "toggle-org", "filter-op-relatie", "filter-op-persoon",
       "toon-relatie", "wis-relatiefilter",
-      "set-relatie-view", "toon-organisatie", "set-soort-filter"
+      "set-relatie-view", "toon-organisatie", "set-keuze-filter"
     ];
     if (!magBewerken() && KIJKACTIES.indexOf(action) === -1) return;
 
@@ -2383,29 +2549,30 @@
       render();
       return;
     } else if (action === "nieuwe-soort") {
-      ui.nieuwSoort = true; render(); return;
+      ui.nieuwSoort = btn.getAttribute("data-keuzeveld"); render(); return;
     } else if (action === "bewerk-soort") {
       ui.bewerkSoort[btn.getAttribute("data-soort")] = true; render(); return;
     } else if (action === "annuleer-soort") {
       var asn = btn.getAttribute("data-soort");
-      if (asn === "nieuw") ui.nieuwSoort = false; else delete ui.bewerkSoort[asn];
+      if (asn.indexOf("|nieuw") !== -1) ui.nieuwSoort = false; else delete ui.bewerkSoort[asn];
       render(); return;
     } else if (action === "bewaar-soort") {
-      var oud = btn.getAttribute("data-soort");
+      var deel = btn.getAttribute("data-soort").split("|");
+      var veld = deel[0], oud = deel.slice(1).join("|");
       var sf = btn.closest('[data-form="soort"]');
       var nieuw = leesVeld(sf, "soort-naam");
       if (!nieuw) return;
-      if (oud === "nieuw") ui.nieuwSoort = false; else delete ui.bewerkSoort[oud];
+      if (oud === "nieuw") ui.nieuwSoort = false; else delete ui.bewerkSoort[veld + "|" + oud];
       if (oud !== "nieuw" && oud === nieuw) { render(); return; }
-      if (soorten.indexOf(nieuw) !== -1) {
+      if (keuzelijst(veld).lees().indexOf(nieuw) !== -1) {
         saveError = true; render(); return;   // bestaat al
       }
-      bewaarSoort(oud === "nieuw" ? null : oud, nieuw);
+      bewaarSoort(veld, oud === "nieuw" ? null : oud, nieuw);
       return;
     } else if (action === "verwijder-soort") {
-      var vs = btn.getAttribute("data-soort");
-      if (!window.confirm("Soort \u201c" + vs + "\u201d verwijderen uit de keuzelijst?")) return;
-      verwijderSoort(vs);
+      var vd = btn.getAttribute("data-soort").split("|");
+      if (!window.confirm("\u201c" + vd.slice(1).join("|") + "\u201d verwijderen uit de keuzelijst?")) return;
+      verwijderSoort(vd[0], vd.slice(1).join("|"));
       return;
     } else if (action === "set-relatie-view") {
       ui.relatieView = btn.getAttribute("data-relatieview");
@@ -2423,9 +2590,9 @@
       return;
     } else if (action === "nieuwe-org") {
       ui.nieuweOrg = true; render(); return;
-    } else if (action === "terug-naar-soortlijst") {
-      var soortHouder = btn.closest(".soort-holder");
-      if (soortHouder) soortHouder.innerHTML = soortKeuzelijst("");
+    } else if (action === "terug-naar-keuzelijst") {
+      var keuzeHouder = btn.closest(".soort-holder");
+      if (keuzeHouder) keuzeHouder.innerHTML = keuzeVeldLijst(keuzeHouder.getAttribute("data-keuzeveld"), "");
       return;
     } else if (action === "annuleer-org") {
       if (orgId === "nieuw") ui.nieuweOrg = false; else delete ui.bewerkOrg[orgId];
@@ -2444,6 +2611,7 @@
         postcode: leesVeld(of, "org-postcode"),
         plaats: leesVeld(of, "org-plaats"),
         soort: leesVeld(of, "org-soort"),
+        sector: leesVeld(of, "org-sector"),
         email: leesVeld(of, "org-email"),
         telefoon: leesVeld(of, "org-telefoon"),
         website: leesVeld(of, "org-website"),
@@ -2516,6 +2684,7 @@
 
     if (action === "set-view") {
       ui.view = btn.getAttribute("data-view");
+      pdfStatus = "";
       render();
     } else if (action === "set-filter") {
       ui.filter = btn.getAttribute("data-filter");
@@ -2677,6 +2846,10 @@
       render();
     } else if (action === "download-pdf") {
       downloadPdf();
+    } else if (action === "download-adressen") {
+      downloadExcel("adressen");
+    } else if (action === "download-mailing") {
+      downloadExcel("mailing");
     } else if (action === "open-add-section") {
       ui.addingSection = true;
       render();
@@ -2709,8 +2882,9 @@
       render();
       return;
     }
-    if (e.target.matches('[data-action="set-soort-filter"]')) {
-      ui.soortFilter = e.target.value;
+    if (e.target.matches('[data-action="set-keuze-filter"]')) {
+      if (e.target.getAttribute("data-keuzeveld") === "sector") ui.sectorFilter = e.target.value;
+      else ui.soortFilter = e.target.value;
       render();
       return;
     }
@@ -2729,12 +2903,12 @@
       render();
       return;
     }
-    if (e.target.matches('[data-field="org-soort"]') && e.target.value === "__eigen__") {
+    if (e.target.matches("[data-keuzeveld]") && e.target.value === "__eigen__") {
       var houder = e.target.closest(".soort-holder");
       if (houder) {
-        houder.innerHTML = soortTekstveld("");
-        var veld = houder.querySelector("input");
-        if (veld) veld.focus();
+        houder.innerHTML = keuzeVeldTekst(houder.getAttribute("data-keuzeveld"), "");
+        var invoer = houder.querySelector("input");
+        if (invoer) invoer.focus();
       }
       return;
     }
@@ -2797,13 +2971,15 @@
       sb.from("besluiten").select("*"),
       sb.from("organisaties").select("*").order("naam"),
       sb.from("personen").select("*").order("naam"),
-      sb.from("organisatie_soorten").select("*").order("volgorde")
+      sb.from("organisatie_soorten").select("*").order("volgorde"),
+      sb.from("organisatie_sectoren").select("*").order("volgorde")
     ]).then(function (r) {
-      r.forEach(function (x, i) { if (x.error && i !== 5) throw x.error; });
+      r.forEach(function (x, i) { if (x.error && i < 5) throw x.error; });
       var cats = r[0].data || [], acts = r[1].data || [], bes = r[2].data || [];
       organisaties = r[3].data || [];
       personen = r[4].data || [];
       soorten = (r[5].data || []).map(function (x) { return x.naam; });
+      sectoren = (r[6].data || []).map(function (x) { return x.naam; });
 
       currentSections = cats.map(function (c) {
         return {
