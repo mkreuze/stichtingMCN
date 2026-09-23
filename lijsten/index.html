@@ -1193,7 +1193,7 @@
     }
 
     var zichtbaar = organisaties.filter(function (org) {
-      return relatieZoekFilter([org.naam, org.plaats, org.soort, org.adres, org.postcode].join(" "));
+      return relatieZoekFilter([org.naam, org.plaats, org.soort, org.adres, org.postcode, org.email].join(" "));
     });
     if (organisaties.length > 0 && zichtbaar.length === 0) {
       html += '<div class="empty-state group-empty-state">Geen organisaties gevonden voor \u201c' + escapeHtml(ui.relatieZoek) + '\u201d.</div>';
@@ -1237,9 +1237,11 @@
       if (open) {
         html += '<div class="section-body">';
         var adresregel = adresVan(org);
-        if (adresregel || org.website || org.notitie) {
+        if (adresregel || org.email || org.telefoon || org.website || org.notitie) {
           html += '<div class="org-details">';
           if (adresregel) html += '<div class="note org-adres">' + escapeHtml(adresregel) + '</div>';
+          if (org.email) html += '<a class="note contact-link" href="mailto:' + escapeHtml(org.email) + '">' + escapeHtml(org.email) + '</a>';
+          if (org.telefoon) html += '<a class="note contact-link" href="tel:' + escapeHtml(org.telefoon.replace(/\s/g, "")) + '">' + escapeHtml(org.telefoon) + '</a>';
           if (org.website) html += '<a class="org-website" href="' + escapeHtml(org.website) + '" target="_blank" rel="noopener">' + escapeHtml(org.website) + '</a>';
           if (org.notitie) html += '<div class="note">' + escapeHtml(org.notitie) + '</div>';
           html += '</div>';
@@ -1299,6 +1301,10 @@
     html += '<div class="form-row">';
     html += renderSoortVeld(org);
     html += '<input type="text" class="txt-input flex1" data-field="org-website" value="' + escapeHtml(org ? org.website : "") + '" placeholder="https://…" />';
+    html += '</div>';
+    html += '<div class="form-row">';
+    html += '<input type="email" class="txt-input flex1" data-field="org-email" value="' + escapeHtml(org ? (org.email || "") : "") + '" placeholder="Algemeen e-mailadres" />';
+    html += '<input type="text" class="txt-input" data-field="org-telefoon" value="' + escapeHtml(org ? (org.telefoon || "") : "") + '" placeholder="Telefoon" />';
     html += '</div>';
     html += '<div class="form-row single"><textarea class="txt-input" rows="2" data-field="org-notitie" placeholder="Toelichting (optioneel)">' + escapeHtml(org ? org.notitie : "") + '</textarea></div>';
     html += '<div class="form-actions">';
@@ -2319,6 +2325,8 @@
         postcode: leesVeld(of, "org-postcode"),
         plaats: leesVeld(of, "org-plaats"),
         soort: leesVeld(of, "org-soort"),
+        email: leesVeld(of, "org-email"),
+        telefoon: leesVeld(of, "org-telefoon"),
         website: leesVeld(of, "org-website"),
         notitie: leesVeld(of, "org-notitie")
       };
