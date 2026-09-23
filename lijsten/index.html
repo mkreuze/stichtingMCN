@@ -153,6 +153,8 @@
   }
 
   .seg-telling { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; opacity: 0.7; margin-left: 3px; }
+  .soorten-kaart { border-color: var(--accent); }
+  .soort-row { padding: 9px 0; }
   .soort-holder { display: flex; }
   .soort-holder > * { flex: 1; min-width: 0; }
   .zoek-veld { font-size: 12.5px; padding: 5px 10px; min-width: 200px; }
@@ -548,23 +550,9 @@
   // De secret sleutel (sb_secret_...) hoort hier NOOIT te staan.
   var SUPABASE_URL = "https://zdpmrliolynupkbydxpp.supabase.co";
   var SUPABASE_ANON_KEY = "sb_publishable_kLI1xtdgeAir1K6d7vc7ng_Mn_pBURg";
-  // ─── Soorten organisaties ─────────────────────────────────────────
-  // De keuzelijst bij een organisatie. Wil je hier iets aan veranderen,
-  // pas dan deze regel aan; bestaande organisaties houden hun waarde,
-  // ook als die niet meer in de lijst staat.
-  var ORGANISATIE_SOORTEN = [
-    "Museum",
-    "Vereniging",
-    "Stichting",
-    "Overheid",
-    "Fonds",
-    "Leverancier",
-    "Netwerk of koepel",
-    "Onderwijs of onderzoek",
-    "Bedrijf",
-    "Overig"
-  ];
-  // ──────────────────────────────────────────────────────────────────
+  // De soorten organisaties komen uit de database en zijn in de Console
+  // zelf te beheren (tabblad Relaties, knop "Soorten beheren").
+  var soorten = [];
 
   // Twee adressen voor dezelfde bibliotheek: is de eerste onbereikbaar,
   // dan wordt de tweede geprobeerd.
@@ -593,6 +581,10 @@
     relatieFilter: "alle", // "alle" of een organisatie-id
     relatieView: "organisaties", // organisaties | personen
     relatieZoek: "",   // zoektekst in de relatielijst
+    soortFilter: "alle",  // "alle", een soort, of "geen"
+    soortenBeheer: false, // het beheerpaneel voor soorten
+    bewerkSoort: {},      // soortnaam -> true
+    nieuwSoort: false,
     openOrg: {},        // organisatie-id -> true (personen tonen)
     filter: "todo", // todo | done | alle
     labelFilter: "alle", // "alle" of de naam van een label
@@ -699,6 +691,37 @@
       syncing = false; saveError = true; render();
       laadAlles().then(render).catch(function () {});
     });
+  }
+
+  function bewaarSoort(oudeNaam, nieuweNaam) {
+    if (!sb || !magBewerken()) { saveError = true; render(); return; }
+    syncing = true; render();
+    var volgorde = oudeNaam ? (soorten.indexOf(oudeNaam) + 1) * 10 : (soorten.length + 1) * 10 + 100;
+    controleer(sb.from("organisatie_soorten").upsert({ naam: nieuweNaam, volgorde: volgorde }))
+      .then(function () {
+        if (!oudeNaam) return;
+        // Hernoemen: de organisaties die deze soort hadden, gaan mee.
+        var raken = organisaties.filter(function (o) { return o.soort === oudeNaam; });
+        return Promise.all(raken.map(function (o) {
+          return controleer(sb.from("organisaties").update({ soort: nieuweNaam }).eq("id", o.id));
+        })).then(function () {
+          return controleer(sb.from("organisatie_soorten").delete().eq("naam", oudeNaam));
+        });
+      })
+      .then(function () { return laadAlles(); })
+      .then(function () { syncing = false; saveError = false; render(); })
+      .catch(function () { syncing = false; saveError = true; render(); laadAlles().then(render).catch(function () {}); });
+  }
+
+  function verwijderSoort(naam) {
+    if (!sb || !magBewerken()) { saveError = true; render(); return; }
+    syncing = true; render();
+    controleer(sb.from("organisatie_soorten").delete().eq("naam", naam))
+      .then(function () {
+        soorten = soorten.filter(function (x) { return x !== naam; });
+        syncing = false; saveError = false; render();
+      })
+      .catch(function () { syncing = false; saveError = true; render(); });
   }
 
   function verwijderRelatie(tabel, id, lokaleLijst) {
@@ -1128,6 +1151,20 @@
     html += '</span>';
     html += '<span class="toolbar-selects">';
     html += '<input type="search" class="txt-input zoek-veld" data-field="relatie-zoek" value="' + escapeHtml(ui.relatieZoek || "") + '" placeholder="Zoeken op naam…" />';
+    if (ui.relatieView === "organisaties") {
+      html += '<select class="sort-select' + (ui.soortFilter !== "alle" ? " filter-on" : "") + '" data-action="set-soort-filter" title="Filter op soort organisatie">';
+      html += '<option value="alle"' + (ui.soortFilter === "alle" ? " selected" : "") + '>Alle soorten</option>';
+      soorten.forEach(function (x) {
+        var n = organisaties.filter(function (o) { return o.soort === x; }).length;
+        html += '<option value="' + escapeHtml(x) + '"' + (ui.soortFilter === x ? " selected" : "") + '>' + escapeHtml(x) + ' (' + n + ')</option>';
+      });
+      var zonder = organisaties.filter(function (o) { return !o.soort; }).length;
+      html += '<option value="geen"' + (ui.soortFilter === "geen" ? " selected" : "") + '>Nog geen soort (' + zonder + ')</option>';
+      html += '</select>';
+      if (magBewerken()) {
+        html += '<button class="filter-btn' + (ui.soortenBeheer ? " active" : "") + '" data-action="toggle-soorten-beheer">Soorten beheren</button>';
+      }
+    }
     html += '</span>';
     html += '</div>';
 
@@ -1184,15 +1221,68 @@
     return html;
   }
 
+  function renderSoortenBeheer() {
+    var html = '<section class="section-card soorten-kaart">';
+    html += '<div class="section-header open"><span class="section-title">Soorten organisaties</span>';
+    html += '<span class="relatie-meta sans">Deze lijst staat in de keuzelijst bij een organisatie</span>';
+    html += '<button class="cancel-btn" data-action="toggle-soorten-beheer">Sluiten</button>';
+    html += '</div>';
+    html += '<div class="section-body">';
+
+    if (soorten.length === 0) {
+      html += '<div class="empty-state">Nog geen soorten.</div>';
+    }
+    soorten.forEach(function (x) {
+      var aantal = organisaties.filter(function (o) { return o.soort === x; }).length;
+      if (ui.bewerkSoort[x]) {
+        html += '<div class="add-form" data-form="soort" data-soort="' + escapeHtml(x) + '">';
+        html += '<div class="form-row">';
+        html += '<input type="text" class="txt-input flex1" data-field="soort-naam" value="' + escapeHtml(x) + '" data-autofocus="1" />';
+        html += '<button class="save-btn" data-action="bewaar-soort" data-soort="' + escapeHtml(x) + '">Opslaan</button>';
+        html += '<button class="cancel-btn" data-action="annuleer-soort" data-soort="' + escapeHtml(x) + '">Annuleren</button>';
+        html += '</div>';
+        if (aantal) html += '<div class="followup-hint">Hernoemen past ' + aantal + ' ' + (aantal === 1 ? 'organisatie' : 'organisaties') + ' mee aan.</div>';
+        html += '</div>';
+        return;
+      }
+      html += '<div class="task-row soort-row">';
+      html += '<div class="task-body"><div class="task-title-row">';
+      html += '<div class="task-title">' + escapeHtml(x) + '</div>';
+      html += '<span class="progress-label sans">' + aantal + '\u00d7</span>';
+      html += '</div></div>';
+      html += '<button class="edit-btn" data-action="bewerk-soort" data-soort="' + escapeHtml(x) + '" aria-label="Soort hernoemen">' + pencilSvg() + '</button>';
+      if (aantal === 0) {
+        html += '<button class="delete-btn" data-action="verwijder-soort" data-soort="' + escapeHtml(x) + '" aria-label="Soort verwijderen" title="Verwijderen">' + xSvg() + '</button>';
+      }
+      html += '</div>';
+    });
+
+    if (ui.nieuwSoort) {
+      html += '<div class="add-form" data-form="soort" data-soort="nieuw">';
+      html += '<div class="form-row">';
+      html += '<input type="text" class="txt-input flex1" data-field="soort-naam" placeholder="Naam van de nieuwe soort" data-autofocus="1" />';
+      html += '<button class="save-btn" data-action="bewaar-soort" data-soort="nieuw">Toevoegen</button>';
+      html += '<button class="cancel-btn" data-action="annuleer-soort" data-soort="nieuw">Annuleren</button>';
+      html += '</div></div>';
+    } else {
+      html += '<button class="add-task-btn" data-action="nieuwe-soort">' + plusSvg() + 'Soort toevoegen</button>';
+    }
+    html += '</div></section>';
+    return html;
+  }
+
   function renderOrganisatiesHtml() {
     var html = "";
     var mag = magBewerken();
+    if (ui.soortenBeheer && mag) html += renderSoortenBeheer();
 
     if (organisaties.length === 0 && !ui.nieuweOrg) {
       html += '<div class="empty-state group-empty-state">Nog geen organisaties. Voeg er hieronder één toe.</div>';
     }
 
     var zichtbaar = organisaties.filter(function (org) {
+      if (ui.soortFilter === "geen" && org.soort) return false;
+      if (ui.soortFilter !== "alle" && ui.soortFilter !== "geen" && org.soort !== ui.soortFilter) return false;
       return relatieZoekFilter([org.naam, org.plaats, org.soort, org.adres, org.postcode, org.email].join(" "));
     });
     if (organisaties.length > 0 && zichtbaar.length === 0) {
@@ -1318,7 +1408,7 @@
   // Dat gebeurt ter plekke, zonder het formulier opnieuw te tekenen, zodat
   // wat er al ingevuld staat niet verloren gaat.
   function soortKeuzelijst(huidig) {
-    var opties = ORGANISATIE_SOORTEN.slice();
+    var opties = soorten.slice();
     // Een bestaande waarde die niet in de lijst staat, blijft gewoon kiesbaar.
     if (huidig && opties.indexOf(huidig) === -1) opties.unshift(huidig);
     var html = '<select class="sel-input" data-field="org-soort">';
@@ -2276,7 +2366,7 @@
       "download-pdf", "uitloggen", "stuur-inloglink",
       "toggle-org", "filter-op-relatie", "filter-op-persoon",
       "toon-relatie", "wis-relatiefilter",
-      "set-relatie-view", "toon-organisatie"
+      "set-relatie-view", "toon-organisatie", "set-soort-filter"
     ];
     if (!magBewerken() && KIJKACTIES.indexOf(action) === -1) return;
 
@@ -2287,6 +2377,35 @@
       var inlogForm = btn.closest('[data-form="inloggen"]');
       var adres = inlogForm.querySelector('[data-field="inlog-email"]').value.trim();
       if (adres) stuurInloglink(adres);
+      return;
+    } else if (action === "toggle-soorten-beheer") {
+      ui.soortenBeheer = !ui.soortenBeheer;
+      render();
+      return;
+    } else if (action === "nieuwe-soort") {
+      ui.nieuwSoort = true; render(); return;
+    } else if (action === "bewerk-soort") {
+      ui.bewerkSoort[btn.getAttribute("data-soort")] = true; render(); return;
+    } else if (action === "annuleer-soort") {
+      var asn = btn.getAttribute("data-soort");
+      if (asn === "nieuw") ui.nieuwSoort = false; else delete ui.bewerkSoort[asn];
+      render(); return;
+    } else if (action === "bewaar-soort") {
+      var oud = btn.getAttribute("data-soort");
+      var sf = btn.closest('[data-form="soort"]');
+      var nieuw = leesVeld(sf, "soort-naam");
+      if (!nieuw) return;
+      if (oud === "nieuw") ui.nieuwSoort = false; else delete ui.bewerkSoort[oud];
+      if (oud !== "nieuw" && oud === nieuw) { render(); return; }
+      if (soorten.indexOf(nieuw) !== -1) {
+        saveError = true; render(); return;   // bestaat al
+      }
+      bewaarSoort(oud === "nieuw" ? null : oud, nieuw);
+      return;
+    } else if (action === "verwijder-soort") {
+      var vs = btn.getAttribute("data-soort");
+      if (!window.confirm("Soort \u201c" + vs + "\u201d verwijderen uit de keuzelijst?")) return;
+      verwijderSoort(vs);
       return;
     } else if (action === "set-relatie-view") {
       ui.relatieView = btn.getAttribute("data-relatieview");
@@ -2590,6 +2709,11 @@
       render();
       return;
     }
+    if (e.target.matches('[data-action="set-soort-filter"]')) {
+      ui.soortFilter = e.target.value;
+      render();
+      return;
+    }
     if (e.target.matches('[data-action="set-action-label-filter"]')) {
       ui.actionLabelFilter = e.target.value;
       render();
@@ -2672,12 +2796,14 @@
       sb.from("acties").select("*").order("volgorde"),
       sb.from("besluiten").select("*"),
       sb.from("organisaties").select("*").order("naam"),
-      sb.from("personen").select("*").order("naam")
+      sb.from("personen").select("*").order("naam"),
+      sb.from("organisatie_soorten").select("*").order("volgorde")
     ]).then(function (r) {
-      r.forEach(function (x) { if (x.error) throw x.error; });
+      r.forEach(function (x, i) { if (x.error && i !== 5) throw x.error; });
       var cats = r[0].data || [], acts = r[1].data || [], bes = r[2].data || [];
       organisaties = r[3].data || [];
       personen = r[4].data || [];
+      soorten = (r[5].data || []).map(function (x) { return x.naam; });
 
       currentSections = cats.map(function (c) {
         return {

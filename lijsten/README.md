@@ -64,10 +64,15 @@ Twee weergaven, met een zoekveld dat op beide werkt:
 - **Personen** — één doorlopende lijst van iedereen, met functie,
   organisatie en contactgegevens.
 
-Het veld *soort* is een keuzelijst. De mogelijke waarden staan bovenin
-`index.html` bij `ORGANISATIE_SOORTEN`; daar pas je ze aan. Staat er iets
-niet bij, dan kun je met *Anders, namelijk…* alsnog zelf iets invullen.
-Een bestaande waarde die niet in de lijst staat, blijft gewoon staan.
+Het veld *soort* is een keuzelijst die je zelf beheert: knop **Soorten
+beheren** bij Organisaties. Daar voeg je een soort toe, hernoem je er een
+(de organisaties die hem gebruiken gaan mee) of verwijder je er een die
+nergens meer in gebruik is. De lijst staat in de tabel
+`organisatie_soorten`. Staat er iets niet bij, dan kun je bij een
+organisatie met *Anders, namelijk…* alsnog zelf iets invullen.
+
+Met de keuzelijst ernaast filter je de organisaties op soort; daar staat
+ook *Nog geen soort*, handig om te zien wat nog ingevuld moet worden.
 
 ## Wie mag een account aanmaken
 
