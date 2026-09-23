@@ -1,5 +1,5 @@
 -- ============================================================
---  MCN Console — database
+--  Mobiel Erfgoed Console — database
 --  Plak dit in Supabase onder "SQL Editor" en klik op Run.
 --  Je mag het meerdere keren draaien: bestaande gegevens
 --  blijven staan.

@@ -234,7 +234,7 @@ In volgorde van belang. Geen van deze punten verhindert het dagelijks beheer.
 
 ---
 
-## 7. MCN Console
+## 7. Mobiel Erfgoed Console
 
 Dit staat **los van de website**. De site blijft statische HTML op TransIP;
 de Console is een aparte applicatie met een eigen database en een eigen inlog.
@@ -280,5 +280,5 @@ actie waar het uit voortkwam is intact.
 |---|---|---|
 | 13-09-2026 | Marinus Kreuze | Handleiding opgesteld; opruimronde (dubbele bestanden, GitHub Pages uit, PDF's teruggezet in `documenten/`). |
 | 14-09-2026 | Marinus Kreuze | `CLAUDE.md` en `tools/preview-server.js` toegevoegd; pushen hing door twee GitHub-accounts op één computer, opgelost met `credential.username`. |
-| 22-09-2026 | Marinus Kreuze | MCN Console opgezet: eigen Supabase-database (Frankfurt) met toegangsregels per rol, en de actie- en besluitenlijst overgezet uit het Claude-artifact (6 categorieën, 41 acties, 1 besluit). Relatielijst met organisaties en personen toegevoegd. |
+| 22-09-2026 | Marinus Kreuze | Mobiel Erfgoed Console opgezet: eigen Supabase-database (Frankfurt) met toegangsregels per rol, en de actie- en besluitenlijst overgezet uit het Claude-artifact (6 categorieën, 41 acties, 1 besluit). Relatielijst met organisaties en personen toegevoegd. |
 | 23-09-2026 | Marinus Kreuze | Console gepubliceerd op Vercel vanaf de tak `mcn-console`. Aanmelden beperkt tot adressen in de tabel `leden` via het Supabase-haakje *Before User Created*. |
