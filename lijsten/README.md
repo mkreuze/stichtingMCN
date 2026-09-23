@@ -55,6 +55,17 @@ De **secret** sleutel (`sb_secret_…`, vroeger *service_role*) is iets
 heel anders: die omzeilt alle toegangsregels. Die geef je nooit door,
 zet je nergens in een pagina en mail je niet.
 
+## Wie mag een account aanmaken
+
+Alleen adressen die in de tabel `leden` staan. Dat wordt afgedwongen door
+het Supabase-haakje **Authentication → Hooks → Before User Created**, dat
+de functie `public.mag_account_aanmaken` aanroept (zie
+`database/06-wie-mag-inloggen.sql`). Iemand anders die het probeert,
+krijgt te lezen dat zijn adres niet op de lijst staat.
+
+Mensen toevoegen, hun rol wijzigen of ze de toegang ontnemen doe je met
+`database/07-leden-beheren.sql`.
+
 ## Wie mag wat
 
 | Rol | Lezen | Wijzigen | Toegang van anderen regelen |
@@ -81,6 +92,7 @@ een bewerker kan zichzelf geen beheerder maken.
 | Tak die live gaat | `mcn-console` |
 | Hoofdmap in Vercel | `lijsten` |
 | Database en inlog | Supabase, Europese server |
+| Adres | https://stichting-mcn.vercel.app |
 
 Die twee Vercel-instellingen staan onder **Settings → Environments →
 Production → Branch Tracking** en **Settings → Build & Deployment →

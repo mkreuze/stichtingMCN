@@ -234,9 +234,51 @@ In volgorde van belang. Geen van deze punten verhindert het dagelijks beheer.
 
 ---
 
-## 7. Beheerlog
+## 7. MCN Console — de actie-, besluiten- en relatielijst
+
+Dit staat **los van de website**. De site blijft statische HTML op TransIP;
+de Console is een aparte applicatie met een eigen database en een eigen inlog.
+Ze delen alleen de GitHub-repo.
+
+| Wat | Waar |
+|---|---|
+| De pagina | `lijsten/index.html`, één bestand, geen bouwstap |
+| Database en inlog | Supabase, Europese server (Frankfurt) |
+| Publicatie | Vercel, vanaf de tak `mcn-console`, hoofdmap `lijsten` |
+| Adres | https://stichting-mcn.vercel.app |
+
+**Wat erin zit:** acties per categorie met labels en datums, een aparte
+besluitenlijst, en een relatielijst met organisaties en de personen die
+erbij horen. Een actie kan aan een organisatie en/of persoon gekoppeld
+worden. Er is een PDF-download.
+
+**Wie erbij mag** staat in de tabel `leden` in Supabase — dat is de enige
+lijst die telt. Wie er niet in staat kan niet eens een account aanmaken.
+Drie rollen: `kijker` (alleen lezen), `bewerker` (lezen en wijzigen),
+`beheerder` (bepaalt ook wie toegang heeft). Iemand toevoegen of
+verwijderen doe je met `lijsten/database/07-leden-beheren.sql` in de
+SQL Editor van Supabase.
+
+**Opnieuw opbouwen** kan met de bestanden in `lijsten/database/`, op
+nummer. Die documentatie staat in `lijsten/README.md`.
+
+**Let op bij de SQL Editor van Supabase:** die knipt een script in stukken
+bij elke puntkomma en struikelt over meerregelige functies met `$$`.
+Alle bestanden zijn daarom geschreven als korte losse opdrachten. Houd dat
+zo als er iets bij komt. Controleer na het plakken altijd of alles is
+meegekomen — een te lange plak wordt stilzwijgend afgekapt.
+
+**Herkomst:** de lijst draaide eerst als Claude-artifact. Die is overgezet
+met behoud van alle kenmerken, dus de koppeling tussen een besluit en de
+actie waar het uit voortkwam is intact.
+
+---
+
+## 8. Beheerlog
 
 | Datum | Wie | Wat |
 |---|---|---|
 | 13-09-2026 | Marinus Kreuze | Handleiding opgesteld; opruimronde (dubbele bestanden, GitHub Pages uit, PDF's teruggezet in `documenten/`). |
 | 14-09-2026 | Marinus Kreuze | `CLAUDE.md` en `tools/preview-server.js` toegevoegd; pushen hing door twee GitHub-accounts op één computer, opgelost met `credential.username`. |
+| 22-09-2026 | Marinus Kreuze | MCN Console opgezet: eigen Supabase-database (Frankfurt) met toegangsregels per rol, en de actie- en besluitenlijst overgezet uit het Claude-artifact (6 categorieën, 41 acties, 1 besluit). Relatielijst met organisaties en personen toegevoegd. |
+| 23-09-2026 | Marinus Kreuze | Console gepubliceerd op Vercel vanaf de tak `mcn-console`. Aanmelden beperkt tot adressen in de tabel `leden` via het Supabase-haakje *Before User Created*. |
