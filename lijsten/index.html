@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Stichting MCN — Actie- en besluitenlijst</title>
+<title>MCN Console — Stichting Mobiele Collectie Nederland</title>
 <style>
   :root {
     --ink: #1E2624;
@@ -523,7 +523,7 @@
       <img class="logo-img" src="logo.png" alt="Logo Stichting MCN" />
       <div>
         <div class="kicker">Stichting Mobiele Collectie Nederland</div>
-        <h1>Actie- en besluitenlijst</h1>
+        <h1>MCN Console</h1>
       </div>
     </div>
     <div id="app"><div class="status-line">Lijst laden…</div></div>
@@ -872,7 +872,7 @@
     var scopeLabel = labelFilter === "alle" ? "alle labels" : labelFilter;
     var html = "";
     html += '<div class="pdf-kicker">Stichting Mobiele Collectie Nederland</div>';
-    html += '<div class="pdf-h1">Actie- en besluitenlijst</div>';
+    html += '<div class="pdf-h1">MCN Console</div>';
     html += '<div class="pdf-scope">Afgedrukt op ' + escapeHtml(formatDateNL(todayISO())) + " — " + escapeHtml(scopeLabel) + '</div>';
 
     visible.forEach(function (section) {
@@ -1067,7 +1067,7 @@
       }
       pdfStatus = "Bestand aanbieden…";
       render();
-      return bewaarBestand(blob, "actielijst-mcn-" + todayISO() + ".pdf").then(function () {
+      return bewaarBestand(blob, "mcn-console-" + todayISO() + ".pdf").then(function () {
         pdfStatus = "Gedownload.";
         render();
       });

@@ -1,5 +1,5 @@
 -- ============================================================
---  Actie-, besluiten- en relatielijst — alles in één keer
+--  MCN Console — alles in één keer
 --
 --  Plak dit volledige bestand in de SQL Editor van Supabase en
 --  klik op Run. Onderaan verschijnt een telling waarmee je kunt
@@ -20,7 +20,7 @@
 -- ############################################################
 
 -- ============================================================
---  Actie-, besluiten- en relatielijst — database
+--  MCN Console — database
 --  Plak dit in Supabase onder "SQL Editor" en klik op Run.
 --  Je mag het meerdere keren draaien: bestaande gegevens
 --  blijven staan.

@@ -234,7 +234,7 @@ In volgorde van belang. Geen van deze punten verhindert het dagelijks beheer.
 
 ---
 
-## 7. MCN Console — de actie-, besluiten- en relatielijst
+## 7. MCN Console
 
 Dit staat **los van de website**. De site blijft statische HTML op TransIP;
 de Console is een aparte applicatie met een eigen database en een eigen inlog.

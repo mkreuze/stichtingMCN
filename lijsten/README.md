@@ -1,4 +1,4 @@
-# Actie-, besluiten- en relatielijst
+# MCN Console
 
 Een gedeelde lijst voor bestuur en projectgroep, met een eigen database en
 een eigen inlog. Dit is de opvolger van de lijst die nu als Claude-artifact

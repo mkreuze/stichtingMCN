@@ -1,5 +1,5 @@
 -- ============================================================
---  Actie-, besluiten- en relatielijst — database
+--  MCN Console — database
 --  Plak dit in Supabase onder "SQL Editor" en klik op Run.
 --  Je mag het meerdere keren draaien: bestaande gegevens
 --  blijven staan.
