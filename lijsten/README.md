@@ -117,7 +117,10 @@ de actie waar het bij hoort.
 ## Kleuren
 
 De acties en besluiten gebruiken het groen van de Console, de relaties
-het blauw van de N uit het logo (#75C3EA). De ruimte voor de schuifbalk
+het blauw van de N uit het logo (#75C3EA). De donkere versie heet
+*antraciet*: neutraal donkergrijs, met hetzelfde groen en blauw als
+accent. Ook de keuzelijsten en de datumkiezer van de browser worden dan
+donker. De ruimte voor de schuifbalk
 wordt altijd vastgehouden, zodat de pagina niet verspringt als je wisselt
 tussen een korte en een lange lijst.
 
@@ -244,7 +247,10 @@ Rechtsboven, naast de **i**, staat een tandwieltje. Daaronder:
   *Alles inklappen* doet ze allemaal tegelijk.
   - *Gebruikers*: wie mag inloggen, met welke rol (kijker, bewerker,
     beheerder). Toevoegen, naam of rol wijzigen, en toegang intrekken.
-    Een nieuwe gebruiker vraagt op het inlogscherm een link aan. Het
+    Een nieuwe gebruiker vraagt op het inlogscherm een link aan. Bij
+    *Gebruiker toevoegen* kun je iemand kiezen uit de contactpersonen
+    van de eigen organisatie; naam en e-mail worden dan overgenomen
+    (wie geen e-mailadres heeft of al gebruiker is, staat uitgegrijsd). Het
     e-mailadres is de sleutel en is niet te wijzigen. Je eigen rol en
     je eigen toegang kun je hier niet wijzigen, zodat je jezelf niet
     buitensluit; de database houdt daarnaast altijd minstens één
@@ -264,7 +270,10 @@ Rechtsboven, naast de **i**, staat een tandwieltje. Daaronder:
   - *Labels bij acties*: elk label met het aantal acties. Hernoemen past
     alle acties aan; hernoem je naar een bestaand label, dan worden ze
     samengevoegd. Verwijderen haalt het label bij alle acties weg; de
-    acties zelf blijven staan.
+    acties zelf blijven staan;
+  - *Huisstijl*: de kleuren van de lichte en de donkere versie naast
+    elkaar, met een klein voorbeeld, de kleurcodes en de kleuren uit het
+    logo.
 
 Een bewerker of kijker ziet alleen *Weergave*. De Console laat hen ook
 buiten het scherm om geen gebruikers, soorten, sectoren of labels
@@ -292,3 +301,4 @@ een regel hieronder.
 | 1.7 | 25-09-2026 | Gebruikers beheren onder het tandwieltje; beheerkaarten in- en uitklapbaar; soorten, sectoren en gebruikers ook in de database alleen door de beheerder te wijzigen. |
 | 1.8 | 25-09-2026 | Rechten per gebruiker (acties per groep, besluiten, relaties), ook in de database; categorieën beheren onder het tandwieltje. |
 | 1.9 | 25-09-2026 | Bij wijzigen verdwijnt de kopregel en schuift het formulier boven in beeld. |
+| 1.10 | 25-09-2026 | Donkere versie antraciet; kaart Huisstijl onder het beheer; bij een nieuwe gebruiker kiezen uit de contactpersonen van MCN. |

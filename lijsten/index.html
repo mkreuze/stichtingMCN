@@ -10,6 +10,7 @@
 </script>
 <style>
   :root {
+    color-scheme: light;
     --ink: #1E2624;
     --ink-soft: #5C6B66;
     --ink-faint: #90A19B;
@@ -37,55 +38,58 @@
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) .relaties-thema {
-      --accent: #75C3EA; --accent-soft: #1B3244; --accent-ink: #A9D8F2; --blok: #0E1821;
+      --accent: #6FC0EA; --accent-soft: #19334A; --accent-ink: #A9D8F2; --blok: #19212A;
     }
     :root:not([data-theme="light"]) {
-      --ink: #EAF2F1;
-      --ink-soft: #9FB0AE;
-      --ink-faint: #6E7D79;
-      --paper: #14201F;
-      --card: #1C2827;
-      --line: #2C3B39;
-      --line-soft: #23312E;
-      --header-bg: #223130;
-      --blok: #0F1918;
-      --blok-kop: #1C2827;
-      --accent: #4FC9B4;
-      --accent-soft: #1E3A34;
-      --accent-ink: #8FE0CE;
-      --danger: #E28FB0;
-      --danger-soft: #3A2430;
+      color-scheme: dark;
+      --ink: #ECEEF0;
+      --ink-soft: #AAB1B7;
+      --ink-faint: #7C848B;
+      --paper: #151719;
+      --card: #23272B;
+      --line: #353A40;
+      --line-soft: #2B3035;
+      --header-bg: #23272B;
+      --blok: #1A2322;
+      --blok-kop: #23272B;
+      --accent: #3FC2AC;
+      --accent-soft: #173A35;
+      --accent-ink: #8FE3D2;
+      --danger: #EF8FB3;
+      --danger-soft: #3A2530;
       --mcn-teal: #4DAE97;
       --mcn-pink: #D890BA;
       --mcn-blue: #6FBCE8;
       --mcn-grey: #97A0AB;
-      --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 28px -20px rgba(0,0,0,.6);
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 14px 28px -20px rgba(0,0,0,.7);
     }
   }
   :root[data-theme="dark"] .relaties-thema {
-    --accent: #75C3EA; --accent-soft: #1B3244; --accent-ink: #A9D8F2; --blok: #0E1821;
+    --accent: #6FC0EA; --accent-soft: #19334A; --accent-ink: #A9D8F2; --blok: #19212A;
   }
+  /* Donker: antraciet, neutraal donkergrijs met groen en blauw als accent. */
   :root[data-theme="dark"] {
-    --ink: #EAF2F1;
-    --ink-soft: #9FB0AE;
-    --ink-faint: #6E7D79;
-    --paper: #14201F;
-    --card: #1C2827;
-    --line: #2C3B39;
-    --line-soft: #23312E;
-    --header-bg: #223130;
-    --blok: #0F1918;
-    --blok-kop: #1C2827;
-    --accent: #4FC9B4;
-    --accent-soft: #1E3A34;
-    --accent-ink: #8FE0CE;
-    --danger: #E28FB0;
-    --danger-soft: #3A2430;
+    color-scheme: dark;
+    --ink: #ECEEF0;
+    --ink-soft: #AAB1B7;
+    --ink-faint: #7C848B;
+    --paper: #151719;
+    --card: #23272B;
+    --line: #353A40;
+    --line-soft: #2B3035;
+    --header-bg: #23272B;
+    --blok: #1A2322;
+    --blok-kop: #23272B;
+    --accent: #3FC2AC;
+    --accent-soft: #173A35;
+    --accent-ink: #8FE3D2;
+    --danger: #EF8FB3;
+    --danger-soft: #3A2530;
     --mcn-teal: #4DAE97;
     --mcn-pink: #D890BA;
     --mcn-blue: #6FBCE8;
     --mcn-grey: #97A0AB;
-    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 28px -20px rgba(0,0,0,.6);
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 14px 28px -20px rgba(0,0,0,.7);
   }
   * { box-sizing: border-box; }
   body {
@@ -765,6 +769,18 @@
   .instel-naam { font-weight: 600; font-size: 14px; }
   .instel-regel .followup-hint { margin: 2px 0 0; }
   .instel-sub .instel-alles { margin-left: auto; }
+  .huis-rij { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+  .huis-paneel { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); padding: 12px 14px; }
+  .huis-naam { font-weight: 700; font-size: 14px; margin-bottom: 8px; }
+  .huis-voorbeeld { border: 1px solid; border-radius: 10px; padding: 10px; display: grid; gap: 8px; margin-bottom: 10px; }
+  .huis-blok { border: 1px solid; border-radius: 8px; padding: 8px; display: flex; align-items: center; gap: 8px; }
+  .huis-regel { flex: 1; font-size: 12px; font-weight: 600; border: 1px solid; border-left-width: 3px; border-radius: 6px; padding: 6px 8px; }
+  .huis-knop { font-size: 11.5px; font-weight: 700; border-radius: 6px; padding: 5px 10px; }
+  .huis-kleur { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink-soft); padding: 2px 0; }
+  .huis-kleur code { margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--ink-faint); }
+  .huis-staal { width: 16px; height: 16px; border-radius: 4px; border: 1px solid var(--line); flex: none; }
+  .huis-logo { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px; margin: 12px 0 6px; }
+  .huis-logo .huis-kleur code { margin-left: 4px; }
   .lid-kop, .actie-regel.lid-regel { grid-template-columns: minmax(130px, 1fr) minmax(0, 1.3fr) minmax(0, 100px) minmax(0, 1.4fr) 56px; padding-left: 13px; }
   .cat-kop, .actie-regel.cat-regel { grid-template-columns: 40px minmax(160px, 1.4fr) minmax(0, 1fr) minmax(0, 100px) 56px; padding-left: 13px; }
   .cat-nr { font-family: 'IBM Plex Mono', monospace; color: var(--ink-faint); }
@@ -924,7 +940,7 @@
         <button type="button" class="versie-knop" aria-label="Versie-informatie" aria-expanded="false">i</button>
         <div class="versie-info" role="tooltip">
           <strong>Mobiel Erfgoed Console</strong>
-          <span>Versie 1.9 &middot; 25 september 2026</span>
+          <span>Versie 1.10 &middot; 25 september 2026</span>
         </div>
       </div>
     </div>
@@ -2210,7 +2226,7 @@
     else document.documentElement.removeAttribute("data-theme");
   }
 
-  var INSTEL_KAARTEN = ["gebruikers", "categorieen", "soort", "sector", "labels"];
+  var INSTEL_KAARTEN = ["gebruikers", "categorieen", "soort", "sector", "labels", "huisstijl"];
   function instelOpen(sleutel) { return !!ui.instelOpen[sleutel]; }
   function instelKop(sleutel, titel, meta, telling) {
     var open = instelOpen(sleutel);
@@ -2251,6 +2267,7 @@
       html += renderCategorieBeheer();
       html += '<div class="relaties-thema">' + renderKeuzelijstBeheer() + '</div>';
       html += renderLabelBeheer();
+      html += renderHuisstijl();
     }
     html += '</div>';
     return html;
@@ -2331,6 +2348,24 @@
     var nieuw = !lid;
     var zelf = !nieuw && isIkZelf(lid.email);
     var html = '<div class="actie-formulier" style="--balk:var(--accent);"><div class="add-form" data-form="lid">';
+    // Bij een nieuwe gebruiker: kies iemand uit de contactpersonen van de
+    // eigen organisatie; naam en e-mail worden dan overgenomen.
+    if (nieuw) {
+      var eigenOrg = eigenOrganisatie();
+      var kandidaten = eigenOrg ? personenBij(eigenOrg.id).slice().sort(opAchternaam) : [];
+      if (kandidaten.length) {
+        var alGebruiker = leden.map(function (x) { return (x.email || "").toLowerCase(); });
+        html += '<div class="form-row"><label class="veld"><span class="followup-hint">Uit de contactpersonen van ' + escapeHtml(eigenOrg.naam) + '</span>';
+        html += '<select class="sel-input" data-field="lid-uit-persoon"><option value="">\u2014 zelf invullen \u2014</option>';
+        kandidaten.forEach(function (x) {
+          var mail = (x.email || "").trim();
+          var al = mail && alGebruiker.indexOf(mail.toLowerCase()) !== -1;
+          html += '<option value="' + escapeHtml(x.id) + '"' + (!mail || al ? " disabled" : "") + '>' + escapeHtml(volledigeNaam(x))
+               + (!mail ? " (geen e-mailadres)" : al ? " (is al gebruiker)" : " \u2014 " + escapeHtml(mail)) + '</option>';
+        });
+        html += '</select></label></div>';
+      }
+    }
     html += '<div class="form-row">';
     html += '<label class="veld"><span class="followup-hint">Naam</span><input type="text" class="txt-input" data-field="lid-naam" value="' + escapeHtml(lid ? (lid.naam || "") : "") + '"' + (nieuw ? ' data-autofocus="1"' : '') + ' /></label>';
     html += '<label class="veld breed"><span class="followup-hint">E-mailadres</span><input type="email" class="txt-input" data-field="lid-email" value="' + escapeHtml(lid ? lid.email : "") + '"' + (nieuw ? '' : ' readonly') + ' /></label>';
@@ -2463,6 +2498,54 @@
     }).catch(function () {
       ui.lidFout = "Verwijderen lukte niet. Probeer het nog eens.";
     }).then(function () { syncing = false; render(); });
+  }
+
+  // ── Huisstijl: de kleuren van de Console, licht en donker ─────────
+  // Naslag voor de beheerder. Dezelfde waarden staan bovenaan in de CSS.
+  var HUISSTIJL = {
+    licht: { achtergrond: "#F3F7F6", blok: "#EDF7F4", kaartje: "#FFFFFF", tekst: "#1E2624", zacht: "#5C6B66", rand: "#DCE6E3",
+             accent: "#1D9C8C", relBlok: "#EEF7FC", relAccent: "#2C88BF" },
+    donker: { achtergrond: "#151719", blok: "#1A2322", kaartje: "#23272B", tekst: "#ECEEF0", zacht: "#AAB1B7", rand: "#353A40",
+              accent: "#3FC2AC", relBlok: "#19212A", relAccent: "#6FC0EA" }
+  };
+  var LOGO_KLEUREN = [["Groen (M)", "#58B8A0"], ["Roze (C)", "#D080B0"], ["Blauw (N)", "#75C3EA"]];
+
+  function huisstijlPaneel(naam, k) {
+    var html = '<div class="huis-paneel">';
+    html += '<div class="huis-naam">' + naam + '</div>';
+    // klein voorbeeld in de eigen kleuren, los van het thema dat nu aan staat
+    html += '<div class="huis-voorbeeld" style="background:' + k.achtergrond + ';border-color:' + k.rand + ';">';
+    html += '<div class="huis-blok" style="background:' + k.blok + ';border-color:' + k.rand + ';">';
+    html += '<div class="huis-regel" style="background:' + k.kaartje + ';border-color:' + k.rand + ';border-left-color:' + k.accent + ';color:' + k.tekst + ';">Actie <span style="color:' + k.zacht + '">\u00b7 Marinus Kreuze</span></div>';
+    html += '<span class="huis-knop" style="background:' + k.accent + ';color:' + (naam === "Licht" ? "#fff" : "#10201D") + ';">Opslaan</span>';
+    html += '</div>';
+    html += '<div class="huis-blok" style="background:' + k.relBlok + ';border-color:' + k.rand + ';">';
+    html += '<div class="huis-regel" style="background:' + k.kaartje + ';border-color:' + k.rand + ';border-left-color:#75C3EA;color:' + k.tekst + ';">Relatie <span style="color:' + k.zacht + '">\u00b7 contactpersoon</span></div>';
+    html += '<span class="huis-knop" style="background:' + k.relAccent + ';color:#fff;">Filter</span>';
+    html += '</div></div>';
+    [["Achtergrond", k.achtergrond], ["Blok acties", k.blok], ["Blok relaties", k.relBlok], ["Kaartje", k.kaartje],
+     ["Tekst", k.tekst], ["Accent acties", k.accent], ["Accent relaties", k.relAccent]].forEach(function (x) {
+      html += '<div class="huis-kleur"><span class="huis-staal" style="background:' + x[1] + ';"></span><span>' + x[0] + '</span><code>' + x[1] + '</code></div>';
+    });
+    html += '</div>';
+    return html;
+  }
+
+  function renderHuisstijl() {
+    var html = '<section class="section-card acties-kaart">';
+    html += instelKop("huisstijl", "Huisstijl", "de kleuren van de Console, licht en donker", "");
+    if (!instelOpen("huisstijl")) return html + '</section>';
+    html += '<div class="section-body acties-body"><div class="huis-rij">';
+    html += huisstijlPaneel("Licht", HUISSTIJL.licht) + huisstijlPaneel("Donker (antraciet)", HUISSTIJL.donker);
+    html += '</div>';
+    html += '<div class="huis-logo"><span class="followup-hint">Kleuren uit het logo:</span>';
+    LOGO_KLEUREN.forEach(function (x) {
+      html += '<span class="huis-kleur"><span class="huis-staal" style="background:' + x[1] + ';"></span><span>' + x[0] + '</span><code>' + x[1] + '</code></span>';
+    });
+    html += '</div>';
+    html += '<div class="followup-hint">Acties en besluiten gebruiken het groen, alles rond relaties het blauw van de N. Welke versie iemand ziet, kiest ieder zelf onder Weergave.</div>';
+    html += '</div></section>';
+    return html;
   }
 
   // Alle labels die bij acties in gebruik zijn, met hoe vaak. Hernoemen
@@ -4345,6 +4428,15 @@
     if (e.target.matches('[data-action="set-label-filter"]')) {
       ui.labelFilter = e.target.value;
       render();
+      return;
+    }
+    if (e.target.matches('[data-field="lid-uit-persoon"]')) {
+      var gekozenP = persoonOp(e.target.value);
+      var lformP = e.target.closest('[data-form="lid"]');
+      if (gekozenP && lformP) {
+        lformP.querySelector('[data-field="lid-naam"]').value = volledigeNaam(gekozenP);
+        lformP.querySelector('[data-field="lid-email"]').value = (gekozenP.email || "").trim().toLowerCase();
+      }
       return;
     }
     if (e.target.matches('[data-field="lid-acties"]') || e.target.matches('[data-field="lid-rol"]')) {
