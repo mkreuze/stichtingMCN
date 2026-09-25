@@ -14,7 +14,6 @@
     --line: #DCE6E3;
     --line-soft: #EDF3F1;
     --header-bg: #EBF3F1;
-    --streep: #EFF5F3;
     --accent: #1D9C8C;
     --accent-soft: #DFF3EF;
     --accent-ink: #0C6358;
@@ -40,7 +39,6 @@
       --line: #2C3B39;
       --line-soft: #23312E;
       --header-bg: #223130;
-      --streep: #232F2E;
       --accent: #4FC9B4;
       --accent-soft: #1E3A34;
       --accent-ink: #8FE0CE;
@@ -62,7 +60,6 @@
     --line: #2C3B39;
     --line-soft: #23312E;
     --header-bg: #223130;
-    --streep: #232F2E;
     --accent: #4FC9B4;
     --accent-soft: #1E3A34;
     --accent-ink: #8FE0CE;
@@ -194,11 +191,25 @@
     font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase;
     color: var(--ink-faint); padding: 6px 0 8px; border-bottom: 1px solid var(--line);
   }
-  /* Afwisselende regelkleur: bij brede regels houdt je oog zo de goede
-     regel vast van links naar rechts. */
-  .actie-regel { padding: 9px 8px; margin: 0 -8px; border-radius: var(--r-sm); font-size: 13px; }
-  .actie-regel:nth-child(even) { background: var(--streep); }
-  .actie-regel:hover { background: var(--accent-soft); }
+  /* Elke actie een eigen kaartje op een rustige ondergrond, met links een
+     smal streepje in de kleur van wie het doet. Dat scheidt de regels en
+     laat meteen zien van wie een actie is. */
+  .acties-tabel { padding: 12px; }
+  .section-card .acties-tabel { background: var(--paper); }
+  .acties-kop { padding: 4px 13px 10px; border-bottom: none; }
+  .actie-regel {
+    font-size: 13px;
+    padding: 11px 13px 11px 10px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--balk, var(--line));
+    border-radius: var(--r-md);
+    margin-bottom: 7px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .actie-regel:last-child { margin-bottom: 0; }
+  .actie-regel:hover { box-shadow: var(--shadow); }
+  .actie-regel.gereed { background: transparent; border-color: var(--line-soft); }
   .acties-tabel.zonder-categorie {
     grid-template-columns: 22px minmax(180px, 2.2fr) minmax(0, 88px) minmax(0, 118px) minmax(0, 1fr) minmax(0, 1fr) auto;
   }
@@ -1446,7 +1457,7 @@
     if (regels.length === 0) {
       return '<div class="empty-state group-empty-state">Geen acties die aan deze selectie voldoen.</div>';
     }
-    return '<section class="section-card">' + renderActieTabel(regels, true) + '</section>';
+    return renderActieTabel(regels, true);
   }
 
   // Dezelfde tabel voor "Alle acties" en voor een uitgeklapte categorie.
@@ -1470,7 +1481,7 @@
       var relatie = relatieNaam(t);
       var verlopen = !t.done && isVerlopen(t.when);
 
-      html += '<div class="actie-regel' + (t.done ? " gereed" : "") + '">';
+      html += '<div class="actie-regel' + (t.done ? " gereed" : "") + '" style="--balk:' + ownerColor(t.owner) + ';">';
       html += '<span class="ak-vink">';
       html += '<button class="check-btn' + (t.done ? " done" : "") + '" data-action="toggle-complete" data-section="' + sec.id + '" data-task="' + t.id + '" aria-label="' + (t.done ? "Weer openzetten" : "Afronden") + '"></button>';
       html += '</span>';

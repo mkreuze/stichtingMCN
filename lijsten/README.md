@@ -65,8 +65,9 @@ Twee weergaven:
   categorie, label en relatie. Verlopen datums kleuren rood.
 
 Een uitgeklapte categorie gebruikt dezelfde tabel, zonder de kolom
-Categorie. Om de regels uit elkaar te houden hebben ze om en om een
-lichte achtergrond.
+Categorie. Elke actie is een eigen kaartje met links een smal streepje
+in de kleur van wie de actie doet, zodat je in één oogopslag ziet van
+wie iets is.
 
 In de kolom Datum staat bij een afgeronde actie de datum waarop hij is
 afgerond, en bij een openstaande de geplande datum. Sorteren op datum
