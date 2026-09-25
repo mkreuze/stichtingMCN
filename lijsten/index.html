@@ -924,7 +924,7 @@
         <button type="button" class="versie-knop" aria-label="Versie-informatie" aria-expanded="false">i</button>
         <div class="versie-info" role="tooltip">
           <strong>Mobiel Erfgoed Console</strong>
-          <span>Versie 1.8 &middot; 25 september 2026</span>
+          <span>Versie 1.9 &middot; 25 september 2026</span>
         </div>
       </div>
     </div>
@@ -2046,11 +2046,19 @@
   function renderActieTabel(regels, toonCategorie) {
     var mag = magBewerken();
     var html = '<div class="section-body acties-tabel' + (toonCategorie ? "" : " zonder-categorie") + '">';
+    // Staat er een actie open om te wijzigen, dan is de kopregel met de
+    // kolomnamen overbodig; hij verdwijnt tot het formulier dicht is.
+    var formulierOpen = regels.some(function (r) {
+      var id = r.taak.id;
+      return ui.editingTask[id] || ui.completing[id] || ui.editingCompletion[id] || ui.reopening[id];
+    });
+    if (!formulierOpen) {
     html += '<div class="acties-kop sans">';
     html += '<span></span><span>Actie</span><span>Wie</span><span>Datum</span>';
     if (toonCategorie) html += '<span>Categorie</span>';
     html += '<span>Label</span><span></span>';
     html += '</div>';
+    }
 
     regels.forEach(function (r) {
       var t = r.taak, sec = r.sectie;
@@ -2775,7 +2783,8 @@
       return '<div class="empty-state group-empty-state">Nog geen besluiten vastgelegd. Bij het afronden van een actie kun je een besluit toevoegen.</div>';
     }
     html += '<section class="section-card acties-kaart"><div class="acties-body">';
-    html += '<div class="acties-kop besluit-kop sans"><span>Besluit</span><span>Datum</span><span>Categorie</span><span>Bij actie</span><span></span></div>';
+    var besluitOpen = decisionList.some(function (d) { return ui.editingDecision[d.id]; });
+    if (!besluitOpen) html += '<div class="acties-kop besluit-kop sans"><span>Besluit</span><span>Datum</span><span>Categorie</span><span>Bij actie</span><span></span></div>';
     decisionList.forEach(function (d) {
       if (ui.editingDecision[d.id]) {
         html += '<div class="actie-formulier" style="--balk:var(--accent);">';
@@ -3467,9 +3476,21 @@
     return html;
   }
 
+  // Na het openen van een formulier schuift de pagina zo dat de bovenkant
+  // van het formulier boven in beeld staat.
+  var schuifNaarFormulier = false;
   function attachAutofocus() {
     var el = document.querySelector('[data-autofocus="1"]');
-    if (el) el.focus();
+    var schuif = schuifNaarFormulier;
+    schuifNaarFormulier = false;
+    if (el) el.focus(schuif ? { preventScroll: true } : undefined);
+    if (!schuif) return;
+    var doel = (el && (el.closest(".actie-formulier") || el.closest(".nieuwe-actie-kaart"))) ||
+               document.querySelector(".actie-formulier, .nieuwe-actie-kaart");
+    if (doel) {
+      var top = doel.getBoundingClientRect().top + window.pageYOffset - 12;
+      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    }
   }
 
   // ---- Mutaties ----
@@ -4074,6 +4095,7 @@
       return;
     } else if (action === "open-nieuwe-actie") {
       ui.nieuweActie = true;
+      schuifNaarFormulier = true;
       render();
       return;
     } else if (action === "annuleer-nieuwe-actie") {
@@ -4139,9 +4161,11 @@
     } else if (action === "toggle-complete") {
       ui.completing[taskId] = !ui.completing[taskId];
       if (!ui.completing[taskId]) delete ui.completingExtra[taskId];
+      else schuifNaarFormulier = true;
       render();
     } else if (action === "ask-uncomplete") {
       ui.reopening[taskId] = true;
+      schuifNaarFormulier = true;
       render();
     } else if (action === "cancel-uncomplete") {
       delete ui.reopening[taskId];
@@ -4151,6 +4175,7 @@
       uncompleteTask(sectionId, taskId);
     } else if (action === "edit-completion") {
       ui.editingCompletion[taskId] = true;
+      schuifNaarFormulier = true;
       render();
     } else if (action === "cancel-complete") {
       delete ui.completing[taskId];
@@ -4225,6 +4250,7 @@
       render();
     } else if (action === "open-edit-task") {
       ui.editingTask[taskId] = true;
+      schuifNaarFormulier = true;
       render();
     } else if (action === "cancel-edit-task") {
       delete ui.editingTask[taskId];

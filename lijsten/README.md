@@ -76,7 +76,9 @@ kaartjes. Links op elk kaartje staat een smal streepje in de kleur van
 wie de actie doet; in de kolom Wie staat een stipje in dezelfde kleur.
 Een afgeronde actie is lichtgrijs. Open je een actie om te bewerken of
 af te ronden, dan wordt dat kaartje op zijn plek een formulier; de
-andere acties blijven staan.
+andere acties blijven staan. Zolang er een formulier open staat,
+verdwijnt de kopregel met de kolomnamen, en de pagina schuift zo dat de
+bovenkant van het formulier boven in beeld staat.
 
 In de kolom Datum staat bij een afgeronde actie de datum waarop hij is
 afgerond, en bij een openstaande de geplande datum. Sorteren op datum
@@ -289,3 +291,4 @@ een regel hieronder.
 | 1.6 | 25-09-2026 | Tandwieltje met instellingen: licht, donker of automatisch voor iedereen; beheer van soorten, sectoren en actielabels voor de beheerder. |
 | 1.7 | 25-09-2026 | Gebruikers beheren onder het tandwieltje; beheerkaarten in- en uitklapbaar; soorten, sectoren en gebruikers ook in de database alleen door de beheerder te wijzigen. |
 | 1.8 | 25-09-2026 | Rechten per gebruiker (acties per groep, besluiten, relaties), ook in de database; categorieën beheren onder het tandwieltje. |
+| 1.9 | 25-09-2026 | Bij wijzigen verdwijnt de kopregel en schuift het formulier boven in beeld. |
