@@ -256,8 +256,11 @@ worden. Er is een PDF-download.
 lijst die telt. Wie er niet in staat kan niet eens een account aanmaken.
 Drie rollen: `kijker` (alleen lezen), `bewerker` (lezen en wijzigen),
 `beheerder` (bepaalt ook wie toegang heeft). Iemand toevoegen of
-verwijderen doe je met `lijsten/database/07-leden-beheren.sql` in de
-SQL Editor van Supabase.
+verwijderen, en de rechten per gebruiker instellen, doet de beheerder in
+de Console zelf: tandwieltje → *Gebruikers*. Een nieuwe gebruiker kies je
+uit de contactpersonen van MCN; die heeft daarvoor een e-mailadres nodig.
+Let op: contactpersonen (bij Relaties) en gebruikers (wie mag inloggen)
+zijn twee aparte lijsten.
 
 **Opnieuw opbouwen** kan met de bestanden in `lijsten/database/`, op
 nummer. Die documentatie staat in `lijsten/README.md`.
@@ -267,6 +270,16 @@ bij elke puntkomma en struikelt over meerregelige functies met `$$`.
 Alle bestanden zijn daarom geschreven als korte losse opdrachten. Houd dat
 zo als er iets bij komt. Controleer na het plakken altijd of alles is
 meegekomen — een te lange plak wordt stilzwijgend afgekapt.
+
+**Later verhuizen naar TransIP (besluit 25-09-2026):** zolang de Console
+nog vaak verandert blijft hij op Vercel. Als hij af is, gaat hij naar
+stichtingmcn.nl/console, zodat alles bij één partij zit. Wat er dan moet
+gebeuren: in `.github/workflows/deploy.yml` bij *Voorbereiden upload-map*
+de map `console/` aanmaken en daarin `lijsten/index.html` en
+`lijsten/logo.png` zetten; de tak `mcn-console` samenvoegen met `main`;
+in Supabase (Authentication → URL Configuration) het nieuwe adres
+toevoegen; daarna het Vercel-project opheffen. Daarna gaat elke wijziging
+aan de Console live via `main`, dus steeds met toestemming.
 
 **Herkomst:** de lijst draaide eerst als Claude-artifact. Die is overgezet
 met behoud van alle kenmerken, dus de koppeling tussen een besluit en de
@@ -291,3 +304,4 @@ actie waar het uit voortkwam is intact.
 | 25-09-2026 | Marinus Kreuze | Console versie 1.8: rechten per gebruiker — acties (alle of bepaalde groepen), besluiten en relaties — in de Console en in de database (`21-rechten-per-gebruiker.sql`). Categorieën beheren alleen nog onder het tandwieltje, door de beheerder. |
 | 25-09-2026 | Marinus Kreuze | Console versie 1.9–1.10: bij wijzigen verdwijnt de kopregel en schuift het formulier in beeld; donkere versie *antraciet*; kaart *Huisstijl* onder het beheer; nieuwe gebruiker kiezen uit de contactpersonen van MCN. |
 | 25-09-2026 | Marinus Kreuze | Console versie 1.11: de beheerder stelt onder *Huisstijl* zelf de kleuren van de lichte en de donkere versie in; ze gelden voor iedereen. Database: `22-instellingen-huisstijl.sql` (tabel `instellingen`). |
+| 25-09-2026 | Marinus Kreuze | Besluit: de Console blijft voorlopig op Vercel en verhuist later naar TransIP (stichtingmcn.nl/console); stappen staan in hoofdstuk 7. Gebruikers beheren gaat nu via het tandwieltje in de Console. |
