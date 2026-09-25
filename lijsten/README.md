@@ -94,8 +94,30 @@ Boven de lijst staan de vijf weergaven als tabbladen. Daaronder:
 - rechts de **volgorde** (niet bij Agenda, die staat altijd op datum) en
   bij *Per categorie* **Alles inklappen**.
 
+Het filterpaneel heeft ook **Wie**: een persoon, een organisatie (met al
+haar mensen) of een oude losse naam.
+
 Filters gelden in alle weergaven. Klik je in een regel op een label, dan
 wordt dat het filter. Vanuit de lijst klik je door naar de categorie.
+
+De Console opent op **Alle acties**. Met **+ Nieuwe actie** rechts in de
+balk voeg je vanuit elke weergave een actie toe; je kiest daar ook de
+categorie. Ontbreekt de titel of wie het doet, dan krijgt dat veld een
+rood randje. **Alles inklappen / uitklappen** staat bij elke weergave met
+groepen.
+
+## Besluiten
+
+Besluiten staan in dezelfde vorm als de acties: een kaart met een blok en
+elk besluit als wit kaartje, met de kolommen Besluit, Datum, Categorie en
+de actie waar het bij hoort.
+
+## Kleuren
+
+De acties en besluiten gebruiken het groen van de Console, de relaties
+het blauw van de N uit het logo (#75C3EA). De ruimte voor de schuifbalk
+wordt altijd vastgehouden, zodat de pagina niet verspringt als je wisselt
+tussen een korte en een lange lijst.
 
 ## Wie doet een actie
 
