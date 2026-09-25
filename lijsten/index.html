@@ -461,6 +461,42 @@
   .sort-select:hover { border-color: var(--accent); }
   .sort-select.filter-on { border-color: var(--accent); color: var(--accent); }
   .toolbar-selects { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+  /* Weergaven als tabbladen; daaronder Tonen, Filter en Volgorde. */
+  .subtabs { display: flex; gap: 18px; flex-wrap: wrap; margin: 0 0 12px; }
+  .subtab {
+    font-family: inherit; font-size: 13.5px; font-weight: 600; color: var(--ink-soft);
+    background: none; border: none; border-bottom: 2px solid transparent; padding: 3px 0; cursor: pointer;
+  }
+  .subtab:hover { color: var(--accent); }
+  .subtab.active { color: var(--accent-ink); border-bottom-color: var(--accent); }
+  .filter-knop { display: inline-flex; align-items: center; gap: 6px; }
+  .filter-aantal {
+    background: var(--accent); color: var(--card); border-radius: var(--r-pill);
+    font-size: 10.5px; line-height: 16px; padding: 0 6px;
+  }
+  .filter-knop.active .filter-aantal { background: var(--card); color: var(--accent); }
+  .toolbar-rechts { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .link-btn {
+    font-family: inherit; font-size: 12.5px; color: var(--ink-faint); background: none;
+    border: none; padding: 0; cursor: pointer;
+  }
+  .link-btn:hover { color: var(--accent); text-decoration: underline; }
+  .filter-paneel {
+    display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end;
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
+    padding: 14px; margin: -6px 0 14px; box-shadow: var(--shadow);
+  }
+  .filter-paneel .link-btn { padding-bottom: 9px; }
+  .filter-chips { display: flex; gap: 6px; flex-wrap: wrap; margin: -4px 0 14px; }
+  .filter-chip {
+    display: inline-flex; align-items: center; gap: 4px; font-size: 12px;
+    color: var(--accent-ink); background: var(--accent-soft); border-radius: var(--r-pill); padding: 3px 6px 3px 11px;
+  }
+  .filter-chip button {
+    font-family: inherit; font-size: 14px; line-height: 1; color: inherit; background: none;
+    border: none; padding: 0 3px; cursor: pointer;
+  }
   .sort-select:hover { border-color: var(--accent); color: var(--accent); }
   .collapse-toggle-btn { margin-left: 6px; }
 
@@ -690,7 +726,7 @@
   @media print {
     @page { margin: 14mm 12mm; }
     body { background: #fff; padding: 0; }
-    .filter-row, .view-tabs, .add-task-btn, .add-section-btn, .edit-btn, .delete-btn, .footnote { display: none !important; }
+    .filter-row, .subtabs, .filter-paneel, .filter-chips, .view-tabs, .add-task-btn, .add-section-btn, .edit-btn, .delete-btn, .footnote { display: none !important; }
     .totals, .section-card { box-shadow: none; break-inside: avoid; }
     .task-row { break-inside: avoid; }
   }
@@ -809,6 +845,7 @@
     relatieView: "organisaties", // organisaties | personen
     actieView: "categorie",      // categorie | alle | persoon | organisatie | agenda
     groepDicht: {},              // "weergave|groep" -> true als ingeklapt
+    filterOpen: false,           // het filterpaneel onder de knop Filter
     relatieZoek: "",   // zoektekst in de relatielijst
     soortFilter: "alle",   // "alle", een soort, of "geen"
     sectorFilter: "alle",  // idem voor sector
@@ -2292,65 +2329,92 @@
       }).length;
     });
 
-    html += '<div class="filter-row">';
-    html += '<span class="seg">';
+    // ── Weergaven als tabbladen ────────────────────────────────
+    html += '<div class="subtabs">';
     [["categorie", "Per categorie"], ["alle", "Alle acties"], ["persoon", "Per persoon"],
      ["organisatie", "Per organisatie"], ["agenda", "Agenda"]].forEach(function (v) {
-      html += '<button class="filter-btn' + (ui.actieView === v[0] ? " active" : "") + '" data-action="set-actie-view" data-actieview="' + v[0] + '">' + v[1] + '</button>';
+      html += '<button class="subtab' + (ui.actieView === v[0] ? " active" : "") + '" data-action="set-actie-view" data-actieview="' + v[0] + '">' + v[1] + '</button>';
     });
-    html += '</span>';
+    html += '</div>';
+
+    // ── Tonen, Filter en Volgorde ──────────────────────────────
+    // Categoriegroep, label en datum staan achter de knop Filter. Wat er
+    // aan staat, zie je aan het getal op de knop en aan de labels eronder.
+    var DATUMFILTERS = [["alle", "Alle datums"], ["verlopen", "Datum verstreken"], ["week", "Binnen 7 dagen"],
+                        ["maand", "Binnen 30 dagen"], ["geen", "Geen vaste datum"]];
+    var actieveFilters = [];
+    if (ui.labelFilter !== "alle") actieveFilters.push({ soort: "groep", tekst: "Categoriegroep: " + ui.labelFilter });
+    if (actieLabelFilter) actieveFilters.push({ soort: "label", tekst: "Label: " + actieLabelFilter });
+    if (ui.dateFilter !== "alle") {
+      var dfNaam = DATUMFILTERS.filter(function (d) { return d[0] === ui.dateFilter; })[0];
+      actieveFilters.push({ soort: "datum", tekst: "Datum: " + (dfNaam ? dfNaam[1] : ui.dateFilter) });
+    }
+    if (ui.relatieFilter !== "alle") {
+      var fNaam = relFilterPersoon
+        ? (volledigeNaam(persoonOp(relFilterPersoon)) || "deze persoon")
+        : ((organisatieOp(relFilterOrg) || {}).naam || "deze organisatie");
+      actieveFilters.push({ soort: "relatie", tekst: "Van: " + fNaam });
+    }
+
+    html += '<div class="filter-row">';
     html += '<span class="seg">';
     [["todo", "Te doen"], ["done", "Afgerond"], ["alle", "Alle"]].forEach(function (f) {
       html += '<button class="filter-btn' + (ui.filter === f[0] ? " active" : "") + '" data-action="set-filter" data-filter="' + f[0] + '">' + f[1] + '</button>';
     });
     html += '</span>';
+    html += '<button class="filter-btn filter-knop' + (ui.filterOpen ? " active" : "") + '" data-action="toggle-filterpaneel" aria-expanded="' + (ui.filterOpen ? "true" : "false") + '">Filter'
+         + (actieveFilters.length ? '<span class="filter-aantal">' + actieveFilters.length + '</span>' : '') + '</button>';
+    html += '<span class="toolbar-rechts">';
     if (ui.actieView === "categorie") {
-      html += '<button class="filter-btn" data-action="toggle-collapse-all">' + (allCollapsed ? "Alles uitklappen" : "Alles inklappen") + '</button>';
+      html += '<button class="link-btn" data-action="toggle-collapse-all">' + (allCollapsed ? "Alles uitklappen" : "Alles inklappen") + '</button>';
     }
-
-    html += '<span class="toolbar-selects">';
-
-    if (labelsInUse.length) {
-      html += '<select class="sort-select" data-action="set-label-filter" title="Toon alleen categorie\u00ebn van deze groep">';
-      html += '<option value="alle"' + (ui.labelFilter === "alle" ? " selected" : "") + '>Alle groepen</option>';
-      labelsInUse.forEach(function (l) {
-        html += '<option value="' + escapeHtml(l) + '"' + (ui.labelFilter === l ? " selected" : "") + '>' + escapeHtml(l) + '</option>';
+    // De agenda staat altijd op datum; daar heeft een volgorde geen zin.
+    if (ui.actieView !== "agenda") {
+      html += '<select class="sort-select" data-action="set-sort" title="Volgorde van de lijst">';
+      [["standaard", "Standaard volgorde"], ["datum", "Op datum"], ["label", "Op label"]].forEach(function (o) {
+        html += '<option value="' + o[0] + '"' + (ui.sortMode === o[0] ? " selected" : "") + '>' + o[1] + '</option>';
       });
       html += '</select>';
     }
-
-    if (taskLabelsInUse.length) {
-      html += '<select class="sort-select' + (ui.actionLabelFilter !== "alle" ? " filter-on" : "") + '" data-action="set-action-label-filter" title="Toon alleen acties met dit label">';
-      html += '<option value="alle"' + (ui.actionLabelFilter === "alle" ? " selected" : "") + '>Alle labels</option>';
-      taskLabelsInUse.forEach(function (l) {
-        html += '<option value="' + escapeHtml(l) + '"' + (ui.actionLabelFilter === l ? " selected" : "") + '>' + escapeHtml(l) + '</option>';
-      });
-      html += '</select>';
-    }
-
-    html += '<select class="sort-select' + (ui.dateFilter !== "alle" ? " filter-on" : "") + '" data-action="set-date-filter" title="Filter op actiedatum">';
-    [["alle", "Alle datums"], ["verlopen", "Datum verstreken"], ["week", "Binnen 7 dagen"], ["maand", "Binnen 30 dagen"], ["geen", "Geen vaste datum"]].forEach(function (o) {
-      html += '<option value="' + o[0] + '"' + (ui.dateFilter === o[0] ? " selected" : "") + '>' + o[1] + '</option>';
-    });
-    html += '</select>';
-
-    html += '<select class="sort-select" data-action="set-sort" title="Volgorde van de lijst">';
-    [["standaard", "Standaard volgorde"], ["label", "Sorteer op label"], ["datum", "Sorteer op datum"]].forEach(function (o) {
-      html += '<option value="' + o[0] + '"' + (ui.sortMode === o[0] ? " selected" : "") + '>' + o[1] + '</option>';
-    });
-    html += '</select>';
-
     html += '</span>';
     html += '</div>';
 
-    if (ui.relatieFilter !== "alle") {
-      var fNaam = relFilterPersoon
-        ? (volledigeNaam(persoonOp(relFilterPersoon)) || "deze persoon")
-        : ((organisatieOp(relFilterOrg) || {}).naam || "deze organisatie");
-      html += '<div class="label-filter-bar">';
-      html += '<span>Alleen acties van</span>';
-      html += '<span class="relatie-chip" style="pointer-events:none;">' + personSvg() + escapeHtml(fNaam) + '</span>';
-      html += '<button class="cancel-btn" data-action="wis-relatiefilter">Toon alles</button>';
+    if (ui.filterOpen) {
+      html += '<div class="filter-paneel">';
+      if (labelsInUse.length) {
+        html += '<label class="veld"><span class="followup-hint">Categoriegroep</span>';
+        html += '<select class="sel-input" data-action="set-label-filter">';
+        html += '<option value="alle"' + (ui.labelFilter === "alle" ? " selected" : "") + '>Alle categoriegroepen</option>';
+        labelsInUse.forEach(function (l) {
+          html += '<option value="' + escapeHtml(l) + '"' + (ui.labelFilter === l ? " selected" : "") + '>' + escapeHtml(l) + '</option>';
+        });
+        html += '</select></label>';
+      }
+      if (taskLabelsInUse.length) {
+        html += '<label class="veld"><span class="followup-hint">Label</span>';
+        html += '<select class="sel-input" data-action="set-action-label-filter">';
+        html += '<option value="alle"' + (ui.actionLabelFilter === "alle" ? " selected" : "") + '>Alle labels</option>';
+        taskLabelsInUse.forEach(function (l) {
+          html += '<option value="' + escapeHtml(l) + '"' + (ui.actionLabelFilter === l ? " selected" : "") + '>' + escapeHtml(l) + '</option>';
+        });
+        html += '</select></label>';
+      }
+      html += '<label class="veld"><span class="followup-hint">Datum</span>';
+      html += '<select class="sel-input" data-action="set-date-filter">';
+      DATUMFILTERS.forEach(function (o) {
+        html += '<option value="' + o[0] + '"' + (ui.dateFilter === o[0] ? " selected" : "") + '>' + o[1] + '</option>';
+      });
+      html += '</select></label>';
+      if (actieveFilters.length) html += '<button class="link-btn" data-action="wis-filters">Filters wissen</button>';
+      html += '</div>';
+    }
+
+    if (actieveFilters.length) {
+      html += '<div class="filter-chips">';
+      actieveFilters.forEach(function (f) {
+        html += '<span class="filter-chip">' + escapeHtml(f.tekst)
+             + '<button data-action="wis-filter" data-filtersoort="' + f.soort + '" title="Filter weghalen" aria-label="Filter weghalen">\u00d7</button></span>';
+      });
       html += '</div>';
     }
 
@@ -3109,7 +3173,7 @@
       "download-pdf", "download-adressen", "download-mailing",
       "uitloggen", "stuur-inloglink",
       "toggle-org", "filter-op-relatie", "filter-op-persoon",
-      "toon-relatie", "wis-relatiefilter",
+      "toon-relatie", "wis-relatiefilter", "toggle-filterpaneel", "wis-filter", "wis-filters",
       "set-relatie-view", "toon-organisatie", "set-keuze-filter",
       "set-actie-view", "toon-categorie", "set-action-label-filter-knop", "toggle-groep"
     ];
@@ -3289,6 +3353,23 @@
       return;
     } else if (action === "wis-relatiefilter") {
       ui.relatieFilter = "alle";
+      render();
+      return;
+    } else if (action === "toggle-filterpaneel") {
+      ui.filterOpen = !ui.filterOpen;
+      render();
+      return;
+    } else if (action === "wis-filter") {
+      var fs = btn.getAttribute("data-filtersoort");
+      if (fs === "groep") ui.labelFilter = "alle";
+      else if (fs === "label") ui.actionLabelFilter = "alle";
+      else if (fs === "datum") ui.dateFilter = "alle";
+      else if (fs === "relatie") ui.relatieFilter = "alle";
+      render();
+      return;
+    } else if (action === "wis-filters") {
+      ui.labelFilter = "alle"; ui.actionLabelFilter = "alle";
+      ui.dateFilter = "alle"; ui.relatieFilter = "alle";
       render();
       return;
     }

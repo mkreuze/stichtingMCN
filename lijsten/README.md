@@ -82,8 +82,20 @@ In de kolom Datum staat bij een afgeronde actie de datum waarop hij is
 afgerond, en bij een openstaande de geplande datum. Sorteren op datum
 gebruikt diezelfde waarde.
 
-De filters bovenin werken in alle weergaven. Vanuit de lijst klik je door
-naar de categorie.
+Boven de lijst staan de vijf weergaven als tabbladen. Daaronder:
+
+- **Te doen / Afgerond / Alle**;
+- **Filter** — klapt een paneel open met *Categoriegroep*, *Label* en
+  *Datum*. Staat er een filter aan, dan staat het aantal op de knop en
+  verschijnt eronder een label zoals *Label: Leveranciers ×*; met het
+  kruisje haal je dat filter weg, met *Filters wissen* alles tegelijk.
+  Ook "alleen acties van deze organisatie" vanuit de relatielijst staat
+  daar als label;
+- rechts de **volgorde** (niet bij Agenda, die staat altijd op datum) en
+  bij *Per categorie* **Alles inklappen**.
+
+Filters gelden in alle weergaven. Klik je in een regel op een label, dan
+wordt dat het filter. Vanuit de lijst klik je door naar de categorie.
 
 ## Wie doet een actie
 
