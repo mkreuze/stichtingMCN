@@ -57,23 +57,31 @@ zet je nergens in een pagina en mail je niet.
 
 ## De actielijst
 
-Twee weergaven:
+Vijf weergaven:
 
 - **Per categorie** — kaarten die je open- en dichtklapt, met de voortgang
   per categorie.
 - **Alle acties** — één doorlopende lijst met kolommen: actie, wie, datum,
   categorie, label en relatie. Verlopen datums kleuren rood.
+- **Per persoon** — een kaart per actiehouder: eerst de mensen van de eigen
+  organisatie, dan personen van buiten, dan losse namen zoals Sectoren.
+- **Per relatie** — een kaart per organisatie waaraan acties gekoppeld
+  zijn, met een knop naar die organisatie in de relatielijst.
+- **Agenda** — Datum verstreken, Binnen 7 dagen, Binnen 30 dagen, Later,
+  Geen vaste datum en Afgerond, binnen elke kaart op datum.
 
-Een uitgeklapte categorie gebruikt dezelfde tabel, zonder de kolom
-Categorie. Elke actie is een eigen kaartje met links een smal streepje
-in de kleur van wie de actie doet, zodat je in één oogopslag ziet van
-wie iets is.
+Elke kaart heeft een witte kop en een mint blok met de acties als witte
+kaartjes. Links op elk kaartje staat een smal streepje in de kleur van
+wie de actie doet; in de kolom Wie staat een stipje in dezelfde kleur.
+Een afgeronde actie is lichtgrijs. Open je een actie om te bewerken of
+af te ronden, dan wordt dat kaartje op zijn plek een formulier; de
+andere acties blijven staan.
 
 In de kolom Datum staat bij een afgeronde actie de datum waarop hij is
 afgerond, en bij een openstaande de geplande datum. Sorteren op datum
 gebruikt diezelfde waarde.
 
-De filters bovenin werken in beide weergaven. Vanuit de lijst klik je door
+De filters bovenin werken in alle weergaven. Vanuit de lijst klik je door
 naar de categorie of naar de relatie.
 
 ## Wie doet een actie
