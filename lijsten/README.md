@@ -246,7 +246,16 @@ Rechtsboven, naast de **i**, staat een tandwieltje. Daaronder:
     e-mailadres is de sleutel en is niet te wijzigen. Je eigen rol en
     je eigen toegang kun je hier niet wijzigen, zodat je jezelf niet
     buitensluit; de database houdt daarnaast altijd minstens één
-    beheerder over;
+    beheerder over. Per gebruiker stel je ook de **toegang** in:
+    *Acties* (alle groepen, of alleen bijvoorbeeld *Projectgroep*),
+    *Besluiten* en *Relaties*. De rol bepaalt of iemand mag wijzigen,
+    de toegang wat iemand ziet. Wie de relaties niet ziet, ziet bij
+    acties wel de namen van organisaties en personen maar geen adres,
+    e-mail of telefoon. Een categorie zonder groep is alleen zichtbaar
+    voor wie alle groepen ziet. Een beheerder ziet altijd alles;
+  - *Categorieën*: naam, volgnummer en groepen (bijvoorbeeld Bestuur,
+    Projectgroep). Toevoegen, en verwijderen als er geen acties meer in
+    staan. Dit gebeurt alleen nog hier, niet meer in de actielijst;
   - *Soorten organisaties* en *Sectoren*: toevoegen, hernoemen (de
     organisaties gaan mee) en verwijderen als er geen organisatie meer
     bij hoort;
@@ -279,3 +288,4 @@ een regel hieronder.
 | 1.5 | 25-09-2026 | Filterbalk met knop Filter en labels; Nieuwe actie vanuit elke weergave; filter op Wie; besluiten en relaties in kaartstijl, relaties in het blauw van het logo; formulieren voor organisatie en contactpersoon met kopjes; versieknopje. |
 | 1.6 | 25-09-2026 | Tandwieltje met instellingen: licht, donker of automatisch voor iedereen; beheer van soorten, sectoren en actielabels voor de beheerder. |
 | 1.7 | 25-09-2026 | Gebruikers beheren onder het tandwieltje; beheerkaarten in- en uitklapbaar; soorten, sectoren en gebruikers ook in de database alleen door de beheerder te wijzigen. |
+| 1.8 | 25-09-2026 | Rechten per gebruiker (acties per groep, besluiten, relaties), ook in de database; categorieën beheren onder het tandwieltje. |

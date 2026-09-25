@@ -765,12 +765,25 @@
   .instel-naam { font-weight: 600; font-size: 14px; }
   .instel-regel .followup-hint { margin: 2px 0 0; }
   .instel-sub .instel-alles { margin-left: auto; }
-  .lid-kop, .actie-regel.lid-regel { grid-template-columns: minmax(140px, 1fr) minmax(0, 1.4fr) minmax(0, 120px) 56px; padding-left: 13px; }
+  .lid-kop, .actie-regel.lid-regel { grid-template-columns: minmax(130px, 1fr) minmax(0, 1.3fr) minmax(0, 100px) minmax(0, 1.4fr) 56px; padding-left: 13px; }
+  .cat-kop, .actie-regel.cat-regel { grid-template-columns: 40px minmax(160px, 1.4fr) minmax(0, 1fr) minmax(0, 100px) 56px; padding-left: 13px; }
+  .cat-nr { font-family: 'IBM Plex Mono', monospace; color: var(--ink-faint); }
+  .rechten { border-top: 1px solid var(--line); margin-top: 10px; padding-top: 10px; }
+  .rechten-kop { margin: 0 0 6px; }
+  .rechten-regel { display: flex; align-items: center; gap: 6px 14px; flex-wrap: wrap; padding: 3px 0; }
+  .rechten-regel .followup-hint { margin: 0; }
+  .rechten-groepen { display: inline-flex; gap: 12px; flex-wrap: wrap; padding-left: 14px; border-left: 1px solid var(--line); }
+  .rechten-vink { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink); cursor: pointer; border-radius: 4px; }
+  .rechten-vink input:disabled + * , .rechten-vink:has(input:disabled) { color: var(--ink-faint); cursor: default; }
+  .rechten-vink.veld-fout { outline: 2px solid var(--danger); outline-offset: 2px; }
   .rol-uitleg b { color: var(--ink-soft); font-weight: 600; }
   .lid-fout { color: var(--danger); font-size: 12.5px; font-weight: 600; margin: 4px 0 8px; }
   input[readonly].txt-input { color: var(--ink-faint); }
   @media (max-width: 980px) {
-    .actie-regel.lid-regel { grid-template-columns: 1fr auto; padding: 12px 13px; }
+    .actie-regel.lid-regel, .actie-regel.cat-regel { grid-template-columns: 1fr auto; padding: 12px 13px; }
+    .cat-regel .ak-titel { grid-row: 1; grid-column: 1; }
+    .cat-regel .ak-knoppen { grid-row: 1 / span 4; grid-column: 2; }
+    .cat-regel .ak-veld { grid-column: 1; }
     .lid-regel .ak-titel { grid-row: 1; grid-column: 1; }
     .lid-regel .ak-knoppen { grid-row: 1 / span 3; grid-column: 2; }
     .lid-regel .ak-veld { grid-column: 1; }
@@ -911,7 +924,7 @@
         <button type="button" class="versie-knop" aria-label="Versie-informatie" aria-expanded="false">i</button>
         <div class="versie-info" role="tooltip">
           <strong>Mobiel Erfgoed Console</strong>
-          <span>Versie 1.7 &middot; 25 september 2026</span>
+          <span>Versie 1.8 &middot; 25 september 2026</span>
         </div>
       </div>
     </div>
@@ -976,6 +989,10 @@
   var sessie = null;        // wie is er ingelogd
   var mijnRol = null;       // kijker | bewerker | beheerder | null
   var leden = [];           // de ledenlijst: wie mag inloggen, met welke rol
+  // Wat mag ik zien? Na 21-rechten-per-gebruiker.sql per gebruiker in te
+  // stellen; daarvoor ziet iedereen alles. Een beheerder ziet altijd alles.
+  var heeftRechten = false;
+  var mijnRechten = { acties: true, groepen: [], besluiten: true, relaties: true };
   var inlogStatus = "";     // melding op het inlogscherm
   var opstartFout = "";     // als de verbinding niet lukt
   var organisaties = [];
@@ -2014,7 +2031,7 @@
       html += '</span>';
       html += chevronSvg(dicht);
       html += '</button>';
-      if (g.orgId) {
+      if (g.orgId && magRelaties()) {
         html += '<button class="ak-link groep-link" data-action="toon-relatie" data-org="' + escapeHtml(g.orgId) + '" data-persoon="">Naar relatie</button>';
       }
       html += '</div>';
@@ -2185,7 +2202,7 @@
     else document.documentElement.removeAttribute("data-theme");
   }
 
-  var INSTEL_KAARTEN = ["gebruikers", "soort", "sector", "labels"];
+  var INSTEL_KAARTEN = ["gebruikers", "categorieen", "soort", "sector", "labels"];
   function instelOpen(sleutel) { return !!ui.instelOpen[sleutel]; }
   function instelKop(sleutel, titel, meta, telling) {
     var open = instelOpen(sleutel);
@@ -2223,6 +2240,7 @@
       html += '<h3 class="instel-sub">Beheer <span class="relatie-meta sans">alleen voor de beheerder</span>'
            + '<button class="filter-btn instel-alles" data-action="toggle-instel-alle">' + (allesOpen ? "Alles inklappen" : "Alles uitklappen") + '</button></h3>';
       html += renderGebruikersBeheer();
+      html += renderCategorieBeheer();
       html += '<div class="relaties-thema">' + renderKeuzelijstBeheer() + '</div>';
       html += renderLabelBeheer();
     }
@@ -2230,10 +2248,75 @@
     return html;
   }
 
+  // ── Categorieen: naam, volgorde en groepen (alleen beheerder) ─────
+  function alleGroepen() {
+    var set = {};
+    (currentSections || []).forEach(function (s) { sectionLabels(s).forEach(function (l) { set[l] = true; }); });
+    return Object.keys(set).sort(function (a, b) { return a.localeCompare(b, "nl"); });
+  }
+
+  function categorieFormulier(sec) {
+    var nieuw = !sec;
+    var huidige = sec ? sectionLabels(sec) : [];
+    var suggesties = alleGroepen().filter(function (l) { return huidige.indexOf(l) === -1; });
+    var html = '<div class="actie-formulier" style="--balk:var(--accent);"><div class="add-form' + (nieuw ? ' add-section-card' : '') + '" data-form="' + (nieuw ? "add-section" : "edit-section") + '"' + (nieuw ? '' : ' data-section="' + sec.id + '"') + '>';
+    html += '<div class="form-row">';
+    if (!nieuw) html += '<label class="veld smal"><span class="followup-hint">Volgnummer</span><input type="number" class="txt-input" data-field="section-nr" min="1" max="' + currentSections.length + '" value="' + (sec.nr || 1) + '" /></label>';
+    html += '<label class="veld breed"><span class="followup-hint">Naam</span><input type="text" class="txt-input" data-field="section-title" value="' + escapeHtml(sec ? sec.title : "") + '" data-autofocus="1" /></label>';
+    html += '</div>';
+    html += '<div class="form-row single"><span class="followup-hint">Groepen</span>';
+    html += '<input type="text" class="txt-input" data-field="section-labels" value="' + escapeHtml(huidige.join(", ")) + '" placeholder="Bijv. Bestuur, Projectgroep \u2014 meerdere mag, gescheiden door komma\'s" />';
+    if (suggesties.length) {
+      html += '<div class="label-suggests">';
+      suggesties.forEach(function (l) {
+        html += '<button type="button" class="label-suggest" data-action="add-label-suggestion" data-label="' + escapeHtml(l) + '" style="color:' + labelColor(l) + ';">+ ' + escapeHtml(l) + '</button>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+    html += '<div class="followup-hint">De groepen bepalen wie de categorie ziet: een gebruiker die alleen bepaalde groepen mag zien, ziet alleen categorie\u00ebn met een van die groepen.</div>';
+    html += '<div class="form-actions">';
+    if (nieuw) {
+      html += '<button class="save-btn" data-action="submit-add-section">Toevoegen</button>';
+      html += '<button class="cancel-btn" data-action="cancel-add-section">Annuleren</button>';
+    } else {
+      html += '<button class="save-btn" data-action="submit-edit-section" data-section="' + sec.id + '">Opslaan</button>';
+      html += '<button class="cancel-btn" data-action="cancel-edit-section" data-section="' + sec.id + '">Annuleren</button>';
+    }
+    html += '</div></div></div>';
+    return html;
+  }
+
+  function renderCategorieBeheer() {
+    var lijst = (currentSections || []).slice().sort(function (a, b) { return (a.nr || 0) - (b.nr || 0); });
+    var html = '<section class="section-card acties-kaart">';
+    html += instelKop("categorieen", "Categorie\u00ebn", "naam, volgorde en groepen", lijst.length + (lijst.length === 1 ? " categorie" : " categorie\u00ebn"));
+    if (!instelOpen("categorieen")) return html + '</section>';
+    html += '<div class="section-body acties-body">';
+    if (lijst.length) html += '<div class="acties-kop cat-kop sans"><span>Nr</span><span>Naam</span><span>Groepen</span><span>Acties</span><span></span></div>';
+    lijst.forEach(function (sec) {
+      if (ui.editingSection[sec.id]) { html += categorieFormulier(sec); return; }
+      var n = sec.tasks.length;
+      html += '<div class="actie-regel cat-regel" style="--balk:var(--accent);">';
+      html += '<span class="ak-veld cat-nr">' + String(sec.nr || 0).padStart(2, "0") + '</span>';
+      html += '<span class="ak-titel">' + escapeHtml(sec.title) + '</span>';
+      html += '<span class="ak-veld">' + escapeHtml(sectionLabels(sec).join(", ") || "\u2014 geen groep \u2014") + '</span>';
+      html += '<span class="ak-veld">' + n + (n === 1 ? " actie" : " acties") + '</span>';
+      html += '<span class="ak-knoppen">';
+      html += '<button class="edit-btn" data-action="open-edit-section" data-section="' + sec.id + '" aria-label="Categorie bewerken" title="Naam, volgnummer of groepen wijzigen">' + pencilSvg() + '</button>';
+      if (n === 0) html += '<button class="delete-btn" data-action="delete-section" data-section="' + sec.id + '" aria-label="Lege categorie verwijderen" title="Verwijderen">' + xSvg() + '</button>';
+      html += '</span></div>';
+    });
+    if (ui.addingSection) html += categorieFormulier(null);
+    else html += '<button class="add-task-btn" data-action="open-add-section">' + plusSvg() + 'Categorie toevoegen</button>';
+    html += '</div></section>';
+    return html;
+  }
+
   // ── Gebruikers: wie mag inloggen, met welke rol ─────────────────
-  var ROLLEN = [["kijker", "Kijker", "kan alles lezen, niets wijzigen"],
-                ["bewerker", "Bewerker", "kan acties, besluiten en relaties lezen en wijzigen"],
-                ["beheerder", "Beheerder", "kan daarnaast gebruikers, soorten, sectoren en labels beheren"]];
+  var ROLLEN = [["kijker", "Kijker", "kan lezen, niets wijzigen"],
+                ["bewerker", "Bewerker", "kan lezen en wijzigen"],
+                ["beheerder", "Beheerder", "ziet alles en beheert gebruikers, categorie\u00ebn, soorten, sectoren en labels"]];
   function isIkZelf(email) { return (email || "").toLowerCase() === (sessie.user.email || "").toLowerCase(); }
 
   function renderLidFormulier(lid) {
@@ -2251,6 +2334,7 @@
     html += '</select></label>';
     html += '</div>';
     html += '<div class="followup-hint rol-uitleg">' + ROLLEN.map(function (r) { return '<b>' + r[1] + '</b> ' + r[2]; }).join(' \u00b7 ') + '</div>';
+    html += rechtenBlok(lid);
     if (zelf) html += '<div class="followup-hint">Je eigen rol kun je hier niet wijzigen, zodat je jezelf niet per ongeluk buitensluit.</div>';
     if (nieuw) html += '<div class="followup-hint">Daarna kan deze persoon op het inlogscherm een link per e-mail aanvragen. Een wachtwoord is niet nodig.</div>';
     else html += '<div class="followup-hint">Het e-mailadres is de sleutel en kun je niet wijzigen. Klopt het niet, verwijder de gebruiker dan en voeg hem opnieuw toe.</div>';
@@ -2259,6 +2343,54 @@
     html += '<button class="cancel-btn" data-action="annuleer-lid">Annuleren</button></div>';
     html += '</div></div>';
     return html;
+  }
+
+  // Wat mag deze gebruiker zien: acties (eventueel alleen bepaalde
+  // groepen), besluiten en relaties. Een beheerder ziet altijd alles.
+  function rechtenBlok(lid) {
+    if (!heeftRechten) {
+      return '<div class="followup-hint">Rechten per gebruiker (acties, besluiten, relaties) kun je instellen nadat 21-rechten-per-gebruiker.sql is gedraaid.</div>';
+    }
+    var beh = lid ? lid.rol === "beheerder" : false;
+    var r = {
+      acties: !lid || lid.toegang_acties !== false,
+      groepen: (lid && lid.acties_groepen) || [],
+      besluiten: !lid || lid.toegang_besluiten !== false,
+      relaties: !lid || lid.toegang_relaties !== false
+    };
+    var groepen = alleGroepen();
+    var uit = beh ? ' disabled' : '';
+    function vink(veld, aan, tekst, extra) {
+      return '<label class="rechten-vink"><input type="checkbox" data-field="' + veld + '"' + (aan || beh ? " checked" : "") + uit + (extra || "") + ' /> ' + tekst + '</label>';
+    }
+    var html = '<div class="rechten" data-rechten="1">';
+    html += '<div class="followup-hint rechten-kop">Toegang</div>';
+    html += '<div class="rechten-regel">' + vink("lid-acties", r.acties, "<b>Acties</b>");
+    if (groepen.length) {
+      html += '<span class="rechten-groepen">';
+      groepen.forEach(function (g) {
+        var aan = r.groepen.length === 0 || r.groepen.indexOf(g) !== -1;
+        html += '<label class="rechten-vink"><input type="checkbox" data-field="lid-groep" value="' + escapeHtml(g) + '"' + (aan || beh ? " checked" : "") + (beh || !r.acties ? " disabled" : "") + ' /> ' + escapeHtml(g) + '</label>';
+      });
+      html += '</span>';
+    }
+    html += '</div>';
+    html += '<div class="rechten-regel">' + vink("lid-besluiten", r.besluiten, "<b>Besluiten</b>") + '</div>';
+    html += '<div class="rechten-regel">' + vink("lid-relaties", r.relaties, "<b>Relaties</b>")
+         + '<span class="followup-hint">zonder relaties ziet iemand bij acties alleen de namen, geen adres, e-mail of telefoon</span></div>';
+    html += '<div class="followup-hint rechten-uitleg">' + (beh ? "Een beheerder ziet altijd alles."
+         : "Staan alle groepen aan, dan ziet deze gebruiker ook groepen die er later bij komen.") + '</div>';
+    html += '</div>';
+    return html;
+  }
+
+  function rechtenSamenvatting(l) {
+    if (l.rol === "beheerder" || !heeftRechten) return "Alles";
+    var delen = [];
+    if (l.toegang_acties !== false) delen.push("Acties" + ((l.acties_groepen || []).length ? " (" + l.acties_groepen.join(", ") + ")" : ""));
+    if (l.toegang_besluiten !== false) delen.push("Besluiten");
+    if (l.toegang_relaties !== false) delen.push("Relaties");
+    return delen.length ? delen.join(" \u00b7 ") : "Niets";
   }
 
   function renderGebruikersBeheer() {
@@ -2270,7 +2402,7 @@
     if (!instelOpen("gebruikers")) return html + '</section>';
     html += '<div class="section-body acties-body">';
     if (ui.lidFout && ui.bewerkLid === null) html += '<div class="lid-fout">' + escapeHtml(ui.lidFout) + '</div>';
-    html += '<div class="acties-kop lid-kop sans"><span>Naam</span><span>E-mail</span><span>Rol</span><span></span></div>';
+    html += '<div class="acties-kop lid-kop sans"><span>Naam</span><span>E-mail</span><span>Rol</span><span>Toegang</span><span></span></div>';
     lijst.forEach(function (l) {
       if (ui.bewerkLid === l.email) { html += renderLidFormulier(l); return; }
       var zelf = isIkZelf(l.email);
@@ -2278,6 +2410,8 @@
       html += '<span class="ak-titel">' + escapeHtml(l.naam || "\u2014") + (zelf ? ' <span class="relatie-meta sans">(jij)</span>' : '') + '</span>';
       html += '<span class="ak-veld" title="' + escapeHtml(l.email) + '">' + escapeHtml(l.email) + '</span>';
       html += '<span class="ak-veld">' + escapeHtml((ROLLEN.filter(function (r) { return r[0] === l.rol; })[0] || [0, l.rol])[1]) + '</span>';
+      var sam = rechtenSamenvatting(l);
+      html += '<span class="ak-veld" title="' + escapeHtml(sam) + '">' + escapeHtml(sam) + '</span>';
       html += '<span class="ak-knoppen">';
       html += '<button class="edit-btn" data-action="bewerk-lid" data-lid="' + escapeHtml(l.email) + '" aria-label="Gebruiker bewerken" title="Naam of rol wijzigen">' + pencilSvg() + '</button>';
       if (!zelf) html += '<button class="delete-btn" data-action="verwijder-lid" data-lid="' + escapeHtml(l.email) + '" aria-label="Gebruiker verwijderen" title="Toegang intrekken">' + xSvg() + '</button>';
@@ -2292,13 +2426,17 @@
   function bewaarLid(rij, nieuw) {
     ui.lidFout = "";
     syncing = true; render();
+    var wijz = { naam: rij.naam, rol: rij.rol };
+    if (heeftRechten) ["toegang_acties", "acties_groepen", "toegang_besluiten", "toegang_relaties"].forEach(function (k) {
+      if (k in rij) wijz[k] = rij[k];
+    });
     var q = nieuw ? sb.from("leden").insert(rij)
-                  : sb.from("leden").update({ naam: rij.naam, rol: rij.rol }).eq("email", rij.email);
+                  : sb.from("leden").update(wijz).eq("email", rij.email);
     controleer(q).then(function () {
       if (nieuw) leden.push(rij);
       else {
         var l = leden.filter(function (x) { return x.email === rij.email; })[0];
-        if (l) { l.naam = rij.naam; l.rol = rij.rol; }
+        if (l) Object.keys(wijz).forEach(function (k) { l[k] = wijz[k]; });
       }
       ui.bewerkLid = null;
     }).catch(function (e) {
@@ -2722,10 +2860,12 @@
     var besluitenAantal = (currentDecisions || []).length;
     app.classList.toggle("alleen-lezen", !magBewerken());
 
+    var mijnViews = toegestaneViews();
+    if (ui.view !== "instellingen" && mijnViews.indexOf(ui.view) === -1) ui.view = mijnViews[0] || "geen";
     html += '<div class="view-tabs">';
     [["acties", "Acties", totalCount],
      ["besluiten", "Besluiten", besluitenAantal],
-     ["relaties", "Relaties", organisaties.length]].forEach(function (v) {
+     ["relaties", "Relaties", organisaties.length]].filter(function (v) { return mijnViews.indexOf(v[0]) !== -1; }).forEach(function (v) {
       html += '<button class="view-tab' + (ui.view === v[0] ? " active" : "") + '" data-action="set-view" data-view="' + v[0] + '">' + v[1] + '<span class="view-tab-count">' + v[2] + '</span></button>';
     });
     html += '<span class="toolbar-actions">';
@@ -2739,6 +2879,12 @@
     html += '<button class="pdf-download-btn" data-action="uitloggen" title="' + escapeHtml(sessie.user.email) + (mijnRol === "kijker" ? " — je kunt meekijken, niet wijzigen" : "") + '">' + escapeHtml(sessie.user.email.split("@")[0]) + (mijnRol === "kijker" ? " (meekijken)" : "") + '</button>';
     html += '</span>';
     html += '</div>';
+
+    if (ui.view === "geen") {
+      html += '<div class="empty-state group-empty-state">Je hebt nog geen toegang tot de acties, besluiten of relaties. Vraag de beheerder om je toegang te geven.</div>';
+      app.innerHTML = html;
+      return;
+    }
 
     if (ui.view === "instellingen") {
       html += renderInstellingenHtml();
@@ -2967,34 +3113,6 @@
 
       html += '<section class="section-card acties-kaart">';
 
-      if (ui.editingSection[section.id]) {
-        var eigenLabels = sectionLabels(section);
-        var suggesties = labelsInUse.filter(function (l) { return eigenLabels.indexOf(l) === -1; });
-        html += '<div class="section-header section-edit-form" data-form="edit-section" data-section="' + section.id + '">';
-        html += '<div class="form-row" style="width:100%;">';
-        html += '<input type="text" class="txt-input flex1" data-field="section-title" value="' + escapeHtml(section.title) + '" placeholder="Naam van de categorie" data-autofocus="1" />';
-        html += '<input type="number" class="txt-input nr-field" data-field="section-nr" min="1" max="' + sections.length + '" value="' + (section.nr || 1) + '" title="Volgnummer — bepaalt de volgorde in de lijst" />';
-        html += '</div>';
-        html += '<div class="form-row single" style="width:100%;">';
-        html += '<div class="followup-hint">Labels — meerdere mag, gescheiden door komma\'s</div>';
-        html += '<input type="text" class="txt-input" data-field="section-labels" value="' + escapeHtml(eigenLabels.join(", ")) + '" placeholder="Bijv. Bestuur, MCN Platform" />';
-        if (suggesties.length) {
-          html += '<div class="label-suggests">';
-          suggesties.forEach(function (l) {
-            html += '<button type="button" class="label-suggest" data-action="add-label-suggestion" data-label="' + escapeHtml(l) + '" style="color:' + labelColor(l) + ';">+ ' + escapeHtml(l) + '</button>';
-          });
-          html += '</div>';
-        }
-        html += '</div>';
-        html += '<div class="form-actions" style="width:100%;">';
-        html += '<button class="save-btn" data-action="submit-edit-section" data-section="' + section.id + '">Opslaan</button>';
-        html += '<button class="cancel-btn" data-action="cancel-edit-section" data-section="' + section.id + '">Annuleren</button>';
-        html += '</div>';
-        html += '</div>';
-        html += '</section>';
-        return;
-      }
-
       html += '<div class="section-header' + (collapsed ? "" : " open") + '">';
       html += '<button class="section-header-btn" data-action="toggle-collapse" data-section="' + section.id + '">';
       html += '<span class="section-nr">' + String(section.nr).padStart(2, "0") + '</span>';
@@ -3009,10 +3127,6 @@
         var c = labelColor(l);
         html += '<button class="label-chip" data-action="set-label-filter" data-label="' + escapeHtml(l) + '" title="Toon alleen categorieën met dit label" style="color:' + c + ';background:' + lightenHex(c, 0.14) + ';">' + escapeHtml(l) + '</button>';
       });
-      html += '<button class="edit-btn" data-action="open-edit-section" data-section="' + section.id + '" aria-label="Categorie bewerken" title="Naam, volgnummer of labels wijzigen">' + pencilSvg() + '</button>';
-      if (total === 0) {
-        html += '<button class="delete-btn" data-action="delete-section" data-section="' + section.id + '" aria-label="Verwijder lege categorie" title="Lege categorie verwijderen">' + xSvg() + '</button>';
-      }
       html += '</div>';
 
       if (!collapsed) {
@@ -3054,11 +3168,6 @@
       html += '</section>';
     });
 
-    if (ui.addingSection) {
-      html += renderAddSectionForm();
-    } else {
-      html += '<button class="add-section-btn" data-action="open-add-section">' + plusSvg() + 'Nieuwe categorie toevoegen</button>';
-    }
 
     html += '<p class="footnote">Deze lijst is gedeeld: iedereen die deze pagina opent ziet dezelfde taken, en wijzigingen worden bewaard en direct bijgewerkt bij alle geopende vensters.</p>';
 
@@ -3066,20 +3175,7 @@
     attachAutofocus();
   }
 
-  function renderAddSectionForm() {
-    var html = '<div class="section-card add-section-card">';
-    html += '<div class="add-section-body">';
-    html += '<div class="form-row single"><input type="text" class="txt-input" data-field="section-title" placeholder="Naam van de nieuwe categorie…" data-autofocus="1" /></div>';
-    html += '<div class="form-row single">';
-    html += '<div class="followup-hint">Labels (optioneel) — meerdere mag, gescheiden door komma\'s</div>';
-    html += '<input type="text" class="txt-input" data-field="section-labels" placeholder="Bijv. Bestuur, MCN Platform" />';
-    html += '</div>';
-    html += '<div class="form-actions">';
-    html += '<button class="save-btn" data-action="submit-add-section">Categorie aanmaken</button>';
-    html += '<button class="cancel-btn" data-action="cancel-add-section">Annuleren</button>';
-    html += '</div></div></div>';
-    return html;
-  }
+
 
   function chevronSvg(collapsed) {
     var rot = collapsed ? ' style="transform:rotate(-90deg)"' : "";
@@ -3228,7 +3324,7 @@
     html += '<div class="form-row single"><textarea class="txt-input" rows="3" data-field="note" placeholder="Commentaar bij afronding (optioneel)" data-autofocus="1">' + escapeHtml(note) + '</textarea></div>';
 
     if (!showExtra) {
-      html += '<button type="button" class="completion-extra-toggle" data-action="toggle-completing-extra" data-task="' + task.id + '">' + plusSvg() + 'Vervolgtaak of besluit toevoegen</button>';
+      html += '<button type="button" class="completion-extra-toggle" data-action="toggle-completing-extra" data-task="' + task.id + '">' + plusSvg() + (magBesluiten() ? 'Vervolgtaak of besluit toevoegen' : 'Vervolgtaak toevoegen') + '</button>';
       html += '<input type="hidden" data-field="followup-title" value="" />';
       html += '<input type="hidden" data-field="decision-text" value="" />';
     } else {
@@ -3237,10 +3333,14 @@
       html += '<div class="followup-hint">Vervolgtaak — wordt toegevoegd aan hetzelfde onderdeel</div>';
       html += '<input type="text" class="txt-input" data-field="followup-title" placeholder="Titel van de vervolgtaak…" />';
       html += '</div>';
-      html += '<div class="form-row single">';
-      html += '<div class="followup-hint">Besluit — komt op de besluitenlijst</div>';
-      html += '<textarea class="txt-input" rows="2" data-field="decision-text" placeholder="Omschrijving van het besluit…">' + escapeHtml(decisionText) + '</textarea>';
-      html += '</div>';
+      if (magBesluiten()) {
+        html += '<div class="form-row single">';
+        html += '<div class="followup-hint">Besluit — komt op de besluitenlijst</div>';
+        html += '<textarea class="txt-input" rows="2" data-field="decision-text" placeholder="Omschrijving van het besluit…">' + escapeHtml(decisionText) + '</textarea>';
+        html += '</div>';
+      } else {
+        html += '<input type="hidden" data-field="decision-text" value="" />';
+      }
       html += '</div>';
     }
 
@@ -3698,6 +3798,8 @@
     // Soorten, sectoren en labels beheren is voor de beheerder.
     var BEHEERACTIES = ["bewerk-label", "annuleer-label", "bewaar-label", "verwijder-label",
       "nieuw-lid", "bewerk-lid", "annuleer-lid", "bewaar-lid", "verwijder-lid",
+      "open-edit-section", "cancel-edit-section", "submit-edit-section", "delete-section",
+      "open-add-section", "cancel-add-section", "submit-add-section", "add-label-suggestion",
       "bewerk-soort", "annuleer-soort", "bewaar-soort", "verwijder-soort", "nieuwe-soort"];
     if (BEHEERACTIES.indexOf(action) !== -1 && mijnRol !== "beheerder") return;
 
@@ -3801,11 +3903,28 @@
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(adres)) { lidEmail.classList.add("veld-fout"); lidEmail.focus(); return; }
       var bestaand = lidNieuw ? null : leden.filter(function (x) { return x.email === btn.getAttribute("data-lid"); })[0];
       var rolVeld = lf.querySelector('[data-field="lid-rol"]');
-      bewaarLid({
+      var lidRij = {
         email: lidNieuw ? adres : bestaand.email,
         naam: lf.querySelector('[data-field="lid-naam"]').value.trim(),
         rol: rolVeld.disabled && bestaand ? bestaand.rol : rolVeld.value
-      }, lidNieuw);
+      };
+      if (heeftRechten && lidRij.rol !== "beheerder") {
+        var vakAan = function (veld) { var x = lf.querySelector('[data-field="' + veld + '"]'); return !x || x.checked; };
+        var groepVakken = [].slice.call(lf.querySelectorAll('[data-field="lid-groep"]'));
+        var aanGroepen = groepVakken.filter(function (x) { return x.checked; }).map(function (x) { return x.value; });
+        lidRij.toegang_acties = vakAan("lid-acties");
+        if (lidRij.toegang_acties && groepVakken.length && !aanGroepen.length) {
+          groepVakken.forEach(function (x) { x.parentNode.classList.add("veld-fout"); });
+          return;
+        }
+        lidRij.acties_groepen = aanGroepen.length === groepVakken.length ? [] : aanGroepen;
+        lidRij.toegang_besluiten = vakAan("lid-besluiten");
+        lidRij.toegang_relaties = vakAan("lid-relaties");
+      } else if (heeftRechten) {
+        lidRij.toegang_acties = true; lidRij.acties_groepen = [];
+        lidRij.toegang_besluiten = true; lidRij.toegang_relaties = true;
+      }
+      bewaarLid(lidRij, lidNieuw);
       return;
     } else if (action === "verwijder-lid") {
       var wegAdres = btn.getAttribute("data-lid");
@@ -4083,7 +4202,7 @@
       delete ui.editingSection[sectionId];
       updateSection(sectionId, newTitle, isNaN(newNr) ? 1 : newNr, newLabels);
     } else if (action === "add-label-suggestion") {
-      var labelForm = btn.closest('[data-form="edit-section"]');
+      var labelForm = btn.closest('[data-form="edit-section"], [data-form="add-section"]');
       var labelInput = labelForm.querySelector('[data-field="section-labels"]');
       var huidige = parseLabels(labelInput.value);
       var nieuwLabel = btn.getAttribute("data-label");
@@ -4202,6 +4321,21 @@
       render();
       return;
     }
+    if (e.target.matches('[data-field="lid-acties"]') || e.target.matches('[data-field="lid-rol"]')) {
+      var lform = e.target.closest('[data-form="lid"]');
+      if (lform) {
+        var isBeh = lform.querySelector('[data-field="lid-rol"]').value === "beheerder";
+        var actiesVak = lform.querySelector('[data-field="lid-acties"]');
+        lform.querySelectorAll('.rechten input').forEach(function (x) {
+          x.disabled = isBeh || (x.getAttribute("data-field") === "lid-groep" && actiesVak && !actiesVak.checked);
+          if (isBeh) x.checked = true;
+        });
+        var uitleg = lform.querySelector(".rechten-uitleg");
+        if (uitleg) uitleg.textContent = isBeh ? "Een beheerder ziet altijd alles."
+          : "Staan alle groepen aan, dan ziet deze gebruiker ook groepen die er later bij komen.";
+      }
+      return;
+    }
     if (e.target.matches('[data-action="set-wie-filter"]')) {
       ui.relatieFilter = e.target.value;
       render();
@@ -4300,8 +4434,10 @@
       sb.from("categorieen").select("*").order("nr"),
       sb.from("acties").select("*").order("volgorde"),
       sb.from("besluiten").select("*"),
-      sb.from("organisaties").select("*").order("naam"),
-      sb.from("personen").select("*"),
+      // Wie de acties wel maar de relaties niet ziet, krijgt alleen de namen
+      // (nodig om bij een actie te kiezen wie het doet).
+      (!magRelaties() && magActies()) ? sb.rpc("namen_organisaties") : sb.from("organisaties").select("*").order("naam"),
+      (!magRelaties() && magActies()) ? sb.rpc("namen_personen") : sb.from("personen").select("*"),
       sb.from("organisatie_soorten").select("*").order("volgorde"),
       sb.from("organisatie_sectoren").select("*").order("volgorde")
     ]).then(function (r) {
@@ -4352,14 +4488,28 @@
   }
 
   function bepaalRol() {
-    return sb.from("leden").select("email,naam,rol").then(function (r) {
+    return sb.from("leden").select("*").then(function (r) {
       if (r.error) { mijnRol = null; return; }
       leden = r.data || [];
+      heeftRechten = leden.length > 0 && Object.prototype.hasOwnProperty.call(leden[0], "toegang_acties");
       var eigen = (r.data || []).find(function (l) {
         return (l.email || "").toLowerCase() === (sessie.user.email || "").toLowerCase();
       });
       mijnRol = eigen ? eigen.rol : null;
+      mijnRechten = {
+        acties: !heeftRechten || !eigen || eigen.toegang_acties !== false,
+        groepen: (heeftRechten && eigen && eigen.acties_groepen) || [],
+        besluiten: !heeftRechten || !eigen || eigen.toegang_besluiten !== false,
+        relaties: !heeftRechten || !eigen || eigen.toegang_relaties !== false
+      };
     });
+  }
+  function magActies() { return mijnRol === "beheerder" || mijnRechten.acties; }
+  function magBesluiten() { return mijnRol === "beheerder" || mijnRechten.besluiten; }
+  function magRelaties() { return mijnRol === "beheerder" || mijnRechten.relaties; }
+  function toegestaneViews() {
+    return [["acties", magActies()], ["besluiten", magBesluiten()], ["relaties", magRelaties()]]
+      .filter(function (x) { return x[1]; }).map(function (x) { return x[0]; });
   }
 
   function naInloggen() {
