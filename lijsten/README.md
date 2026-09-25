@@ -62,11 +62,12 @@ Vijf weergaven:
 - **Per categorie** — kaarten die je open- en dichtklapt, met de voortgang
   per categorie.
 - **Alle acties** — één doorlopende lijst met kolommen: actie, wie, datum,
-  categorie, label en relatie. Verlopen datums kleuren rood.
+  categorie en label. Verlopen datums kleuren rood.
 - **Per persoon** — een kaart per actiehouder: eerst de mensen van de eigen
   organisatie, dan personen van buiten, dan losse namen zoals Sectoren.
-- **Per relatie** — een kaart per organisatie waaraan acties gekoppeld
-  zijn, met een knop naar die organisatie in de relatielijst.
+- **Per organisatie** — een kaart per organisatie van de actiehouder:
+  eerst de eigen organisatie, dan de andere op naam. Met een knop naar
+  die organisatie in de relatielijst.
 - **Agenda** — Datum verstreken, Binnen 7 dagen, Binnen 30 dagen, Later,
   Geen vaste datum en Afgerond, binnen elke kaart op datum.
 
@@ -82,24 +83,31 @@ afgerond, en bij een openstaande de geplande datum. Sorteren op datum
 gebruikt diezelfde waarde.
 
 De filters bovenin werken in alle weergaven. Vanuit de lijst klik je door
-naar de categorie of naar de relatie.
+naar de categorie.
 
 ## Wie doet een actie
 
-De actiehouder verwijst naar een persoon uit de relatielijst, zodat
-jullie eigen mensen maar één keer in het systeem staan. De keuzelijst bij
-een actie heeft drie lagen:
+Bij *Wie* kies je eerst de **organisatie** en daarna **wie** daar de
+actie doet. De organisatie staat standaard op de organisatie waarbij
+*Dit is onze eigen organisatie* is aangevinkt. De tweede keuzelijst
+toont dan:
 
-1. **Onze mensen** — de personen van de organisatie waarbij *Dit is onze
-   eigen organisatie* is aangevinkt.
-2. **Namen zonder persoon** — wat er in gebruik is en geen persoon is,
-   zoals Sectoren of Allen.
-3. **Iemand van een andere organisatie** — eerst de organisatie, dan de
-   contactpersoon. Zo iemand komt niet in de vaste keuzelijst terecht;
-   de koppeling zit alleen op die ene actie.
+- **Contactpersonen** van die organisatie, op achternaam;
+- **Hele organisatie**, als niet één persoon de actie doet;
+- **Andere namen** (alleen bij de eigen organisatie): namen die geen
+  persoon zijn, zoals Sectoren of Allen;
+- **+ Andere naam…** voor een losse naam die nog niet bestaat.
 
-Bij iemand van buiten staat de naam van zijn organisatie klein onder de
-naam, zodat je ziet dat het werk buiten de deur ligt.
+Kies je een andere organisatie, dan verschijnen de contactpersonen van
+die organisatie. Bij iemand van buiten staat de naam van zijn organisatie
+klein onder de naam, zodat je ziet dat het werk buiten de deur ligt.
+
+Er is geen apart veld *Relatie* meer: de organisatie van de actiehouder
+is de relatie. Het aantal acties bij een organisatie of persoon in de
+relatielijst, en het filter *acties van deze organisatie*, gaan daarom
+over de acties waar die organisatie of persoon de actiehouder is.
+Relaties die vroeger bij een actie waren ingevuld, zijn in de database
+bewaard maar niet meer zichtbaar.
 
 ## De relatielijst
 

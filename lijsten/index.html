@@ -176,8 +176,8 @@
 
   .eigenaar-houder { display: flex; min-width: 0; }
   .eigenaar-houder > * { flex: 1; min-width: 0; }
-  .extern-kiezer { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; width: 100%; }
-  .extern-kiezer select { flex: 1 1 140px; min-width: 0; }
+  .wie-kiezer { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; width: 100%; }
+  .wie-kiezer select { flex: 1 1 160px; min-width: 0; }
   .wie-extern { display: block; font-size: 9.5px; font-weight: 600; opacity: 0.75; margin-top: -1px; }
 
   .soort-holder { display: flex; }
@@ -205,7 +205,7 @@
   .acties-tabel { padding: 6px 18px 12px; }
   .acties-kop, .actie-regel {
     display: grid;
-    grid-template-columns: 22px minmax(180px, 2.2fr) minmax(0, 88px) minmax(0, 118px) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+    grid-template-columns: 22px minmax(180px, 2.4fr) minmax(0, 1.3fr) minmax(0, 118px) minmax(0, 1fr) minmax(0, 1fr) auto;
     align-items: center;
     column-gap: 12px;
   }
@@ -266,19 +266,19 @@
   .ak-stip { width: 7px; height: 7px; border-radius: 50%; flex: none; }
   .ak-wie-naam { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ak-wie .wie-extern { color: var(--ink-faint); font-weight: 500; }
-  .ak-label, .ak-relatie {
+  .ak-label {
     font-family: inherit; font-size: 11.5px; color: var(--ink-faint);
     background: none; border: none; padding: 0; cursor: pointer; text-align: left;
     max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .ak-label + .ak-label { margin-left: 8px; }
-  .ak-label:hover, .ak-relatie:hover { color: var(--accent); text-decoration: underline; }
+  .ak-label:hover { color: var(--accent); text-decoration: underline; }
   .acties-tabel.zonder-categorie {
-    grid-template-columns: 22px minmax(180px, 2.2fr) minmax(0, 88px) minmax(0, 118px) minmax(0, 1fr) minmax(0, 1fr) auto;
+    grid-template-columns: 22px minmax(180px, 2.4fr) minmax(0, 1.3fr) minmax(0, 118px) minmax(0, 1fr) auto;
   }
   .acties-tabel.zonder-categorie .acties-kop,
   .acties-tabel.zonder-categorie .actie-regel {
-    grid-template-columns: 22px minmax(180px, 2.2fr) minmax(0, 88px) minmax(0, 118px) minmax(0, 1fr) minmax(0, 1fr) auto;
+    grid-template-columns: 22px minmax(180px, 2.4fr) minmax(0, 1.3fr) minmax(0, 118px) minmax(0, 1fr) auto;
   }
   .ak-note {
     display: block; font-size: 11.5px; font-weight: 400; color: var(--ink-faint);
@@ -782,6 +782,9 @@
   var inlogStatus = "";     // melding op het inlogscherm
   var opstartFout = "";     // als de verbinding niet lukt
   var organisaties = [];
+  // Pas na 17-wie-organisatie.sql bestaat acties.eigenaar_organisatie_id.
+  // Tot die tijd schrijven we het veld niet mee, anders mislukt opslaan.
+  var heeftWieOrg = false;
   var personen = [];
 
   // De lijst komt volledig uit de database; er is geen startlijst in de pagina.
@@ -795,7 +798,7 @@
     nieuwPersoonBij: {},// organisatie-id -> true
     relatieFilter: "alle", // "alle" of een organisatie-id
     relatieView: "organisaties", // organisaties | personen
-    actieView: "categorie",      // categorie | alle | persoon | relatie | agenda
+    actieView: "categorie",      // categorie | alle | persoon | organisatie | agenda
     groepDicht: {},              // "weergave|groep" -> true als ingeklapt
     relatieZoek: "",   // zoektekst in de relatielijst
     soortFilter: "alle",   // "alle", een soort, of "geen"
@@ -890,11 +893,25 @@
   function personenBij(orgId) {
     return personen.filter(function (x) { return x.organisatie_id === orgId; });
   }
+  // Bij welke organisatie hoort de actiehouder? Die van de persoon, of de
+  // organisatie die als geheel is gekozen.
+  function wieOrgId(taak) {
+    if (taak.eigenaarPersoonId) {
+      var p = persoonOp(taak.eigenaarPersoonId);
+      if (p) return p.organisatie_id || "";
+    }
+    return taak.eigenaarOrgId || "";
+  }
+  function eigenOrganisatie() {
+    return organisaties.filter(function (o) { return o.eigen; })[0] || null;
+  }
+
+  // De acties van een organisatie of persoon: waar die de actiehouder is.
   function actiesBij(orgId, persoonId) {
     var uit = [];
     (currentSections || []).forEach(function (sec) {
       sec.tasks.forEach(function (t) {
-        if (persoonId ? t.persoonId === persoonId : t.organisatieId === orgId) {
+        if (persoonId ? t.eigenaarPersoonId === persoonId : wieOrgId(t) === orgId) {
           uit.push({ sectie: sec, taak: t });
         }
       });
@@ -907,6 +924,10 @@
     if (taak.eigenaarPersoonId) {
       var p = persoonOp(taak.eigenaarPersoonId);
       if (p) return volledigeNaam(p);
+    }
+    if (taak.eigenaarOrgId) {
+      var o = organisatieOp(taak.eigenaarOrgId);
+      if (o) return o.naam;
     }
     return taak.owner || "";
   }
@@ -932,20 +953,12 @@
     var set = {};
     (currentSections || []).forEach(function (sec) {
       sec.tasks.forEach(function (t) {
-        if (!t.eigenaarPersoonId && t.owner) set[t.owner] = true;
+        if (!t.eigenaarPersoonId && !t.eigenaarOrgId && t.owner) set[t.owner] = true;
       });
     });
     return Object.keys(set).sort(function (a, b) { return a.localeCompare(b, "nl"); });
   }
 
-  function relatieNaam(taak) {
-    var pers = taak.persoonId ? persoonOp(taak.persoonId) : null;
-    var org = taak.organisatieId ? organisatieOp(taak.organisatieId) : null;
-    if (pers && org) return volledigeNaam(pers) + " · " + org.naam;
-    if (pers) return volledigeNaam(pers);
-    if (org) return org.naam;
-    return "";
-  }
   function nieuwId(voorvoegsel) {
     return voorvoegsel + "-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
   }
@@ -1044,19 +1057,24 @@
     return LABEL_HUES[Math.abs(hash) % LABEL_HUES.length];
   }
 
-  // De keuzelijst levert "p:<persoon-id>" of "n:<naam>"; het losse
-  // tekstveld levert gewoon een naam.
+  // De keuzelijst levert "p:<persoon-id>", "o:<organisatie-id>" (de hele
+  // organisatie) of "n:<naam>"; het losse tekstveld levert gewoon een naam.
   function leesEigenaar(form) {
+    var leeg = { naam: "", persoonId: "", orgId: "" };
     var eigen = form.querySelector('[data-field="owner-custom"]');
-    if (eigen) return { naam: eigen.value.trim(), persoonId: "" };
+    if (eigen) return { naam: eigen.value.trim(), persoonId: "", orgId: "" };
     var keuze = form.querySelector('[data-field="owner-keuze"]');
     var w = keuze ? keuze.value : "";
     if (w.indexOf("p:") === 0) {
       var p = persoonOp(w.slice(2));
-      return { naam: p ? volledigeNaam(p) : "", persoonId: w.slice(2) };
+      return p ? { naam: volledigeNaam(p), persoonId: p.id, orgId: p.organisatie_id || "" } : leeg;
     }
-    if (w.indexOf("n:") === 0) return { naam: w.slice(2), persoonId: "" };
-    return { naam: "", persoonId: "" };
+    if (w.indexOf("o:") === 0) {
+      var o = organisatieOp(w.slice(2));
+      return o ? { naam: o.naam, persoonId: "", orgId: o.id } : leeg;
+    }
+    if (w.indexOf("n:") === 0) return { naam: w.slice(2), persoonId: "", orgId: "" };
+    return leeg;
   }
 
   function leesVeld(form, naam) {
@@ -1660,18 +1678,18 @@
                  kleur: ownerColor(eigenaarNaam(t)), rang: eigen ? 0 : 1,
                  sorteer: (p.achternaam || p.naam || "") + " " + (p.voornaam || "") };
       }
+      var ho = t.eigenaarOrgId ? organisatieOp(t.eigenaarOrgId) : null;
+      if (ho) return { sleutel: "o:" + ho.id, titel: ho.naam, sub: "hele organisatie",
+                       kleur: ownerColor(eigenaarNaam(t)), rang: ho.eigen ? 0.5 : 1.5, sorteer: ho.naam };
       if (t.owner) return { sleutel: "n:" + t.owner, titel: t.owner, kleur: ownerColor(t.owner), rang: 2, sorteer: t.owner };
       return { sleutel: "_geen", titel: "Zonder actiehouder", rang: 3, sorteer: "" };
     }
-    // Per relatie: gegroepeerd op organisatie. Is alleen een persoon
-    // gekoppeld, dan telt de organisatie van die persoon.
-    var orgId = t.organisatieId || "";
-    var rp = t.persoonId ? persoonOp(t.persoonId) : null;
-    if (!orgId && rp) orgId = rp.organisatie_id || "";
-    var ro = orgId ? organisatieOp(orgId) : null;
-    if (ro) return { sleutel: "o:" + ro.id, titel: ro.naam, orgId: ro.id, rang: 0, sorteer: ro.naam };
-    if (rp) return { sleutel: "p:" + rp.id, titel: volledigeNaam(rp), rang: 0, sorteer: volledigeNaam(rp) };
-    return { sleutel: "_geen", titel: "Zonder relatie", rang: 1, sorteer: "" };
+    // Per organisatie: de organisatie van de actiehouder. De eigen
+    // organisatie eerst, dan de rest op naam, losse namen als laatste.
+    var oid = wieOrgId(t);
+    var o = oid ? organisatieOp(oid) : null;
+    if (o) return { sleutel: "o:" + o.id, titel: o.naam, orgId: o.id, rang: o.eigen ? 0 : 1, sorteer: o.naam };
+    return { sleutel: "_geen", titel: "Zonder organisatie", rang: 2, sorteer: "" };
   }
 
   // In de agenda altijd op datum; afgeronde acties de laatst afgeronde eerst.
@@ -1735,7 +1753,7 @@
     html += '<div class="acties-kop sans">';
     html += '<span></span><span>Actie</span><span>Wie</span><span>Datum</span>';
     if (toonCategorie) html += '<span>Categorie</span>';
-    html += '<span>Label</span><span>Relatie</span><span></span>';
+    html += '<span>Label</span><span></span>';
     html += '</div>';
 
     regels.forEach(function (r) {
@@ -1745,7 +1763,6 @@
         return;
       }
       var labels = taskLabels(t);
-      var relatie = relatieNaam(t);
       var verlopen = !t.done && isVerlopen(t.when);
 
       html += '<div class="actie-regel' + (t.done ? " gereed" : "") + '" style="--balk:' + ownerColor(eigenaarNaam(t)) + ';">';
@@ -1772,8 +1789,6 @@
         html += '<button class="ak-label" data-action="set-action-label-filter-knop" data-label="' + escapeHtml(l) + '" title="' + escapeHtml(l) + '">' + escapeHtml(l) + '</button>';
       });
       html += '</span>';
-      html += '<span class="ak-veld">' + (relatie
-        ? '<button class="ak-relatie" data-action="toon-relatie" data-org="' + escapeHtml(t.organisatieId || "") + '" data-persoon="' + escapeHtml(t.persoonId || "") + '" title="' + escapeHtml(relatie) + '">' + escapeHtml(relatie) + '</button>' : '') + '</span>';
       html += '<span class="ak-knoppen">';
       if (mag) {
         html += '<button class="edit-btn" data-action="open-edit-task" data-section="' + sec.id + '" data-task="' + t.id + '" aria-label="Actie bewerken">' + pencilSvg() + '</button>';
@@ -2270,8 +2285,8 @@
       else relFilterOrg = ui.relatieFilter;
     }
     function relatieOk(t) {
-      if (relFilterPersoon) return t.persoonId === relFilterPersoon;
-      if (relFilterOrg) return t.organisatieId === relFilterOrg;
+      if (relFilterPersoon) return t.eigenaarPersoonId === relFilterPersoon;
+      if (relFilterOrg) return wieOrgId(t) === relFilterOrg;
       return true;
     }
     var dateFilterActief = ui.dateFilter !== "alle" || !!actieLabelFilter || ui.relatieFilter !== "alle";
@@ -2288,7 +2303,7 @@
     html += '<div class="filter-row">';
     html += '<span class="seg">';
     [["categorie", "Per categorie"], ["alle", "Alle acties"], ["persoon", "Per persoon"],
-     ["relatie", "Per relatie"], ["agenda", "Agenda"]].forEach(function (v) {
+     ["organisatie", "Per organisatie"], ["agenda", "Agenda"]].forEach(function (v) {
       html += '<button class="filter-btn' + (ui.actieView === v[0] ? " active" : "") + '" data-action="set-actie-view" data-actieview="' + v[0] + '">' + v[1] + '</button>';
     });
     html += '</span>';
@@ -2359,7 +2374,7 @@
       return statusOk && labelOk && relatieOk(t) && matchesDateFilter(t);
     }
 
-    if (ui.actieView === "persoon" || ui.actieView === "relatie" || ui.actieView === "agenda") {
+    if (ui.actieView === "persoon" || ui.actieView === "organisatie" || ui.actieView === "agenda") {
       html += renderGroepenHtml(visibleSections, hoortErbij, ui.actieView);
       html += '<p class="footnote">Deze lijst is gedeeld: iedereen die deze pagina opent ziet dezelfde acties, en wijzigingen worden bewaard en direct bijgewerkt bij alle geopende vensters.</p>';
       app.innerHTML = html;
@@ -2552,8 +2567,7 @@
     } else {
       html += '<div class="task-title">' + escapeHtml(task.title) + '</div>';
       var eigenTaakLabels = taskLabels(task);
-      var relatie = relatieNaam(task);
-      if (task.when || task.note || eigenTaakLabels.length || relatie) {
+      if (task.when || task.note || eigenTaakLabels.length) {
         html += '<div class="task-meta">';
         if (eigenTaakLabels.length) {
           html += '<div class="task-labels">';
@@ -2562,9 +2576,6 @@
             html += '<button class="label-chip" data-action="set-task-label-filter" data-section="' + section.id + '" data-label="' + escapeHtml(l) + '" title="Toon alleen acties met dit label" style="color:' + lc + ';background:' + lightenHex(lc, 0.14) + ';">' + escapeHtml(l) + '</button>';
           });
           html += '</div>';
-        }
-        if (relatie) {
-          html += '<button class="relatie-chip" data-action="toon-relatie" data-org="' + escapeHtml(task.organisatieId || "") + '" data-persoon="' + escapeHtml(task.persoonId || "") + '" title="Naar de relatielijst">' + personSvg() + escapeHtml(relatie) + '</button>';
         }
         if (task.when) html += '<div class="when">' + escapeHtml(formatDateNL(task.when)) + '</div>';
         if (task.note) html += '<div class="note">' + escapeHtml(task.note) + '</div>';
@@ -2607,7 +2618,7 @@
   }
 
   function renderEditTaskForm(section, task, owners) {
-    var useCustom = !!ui.editCustomOwner[task.id] || owners.indexOf(task.owner) === -1;
+    var useCustom = !!ui.editCustomOwner[task.id];
     var html = '<div class="add-form" data-form="edit-task" data-section="' + section.id + '" data-task="' + task.id + '" style="border-top:none;padding-top:0;">';
     html += '<div class="form-row single"><input type="text" class="txt-input" data-field="title" value="' + escapeHtml(task.title) + '" data-autofocus="1" /></div>';
     html += '<div class="form-row">';
@@ -2631,7 +2642,6 @@
     html += '</div>';
     html += '<div class="form-row single"><textarea class="txt-input note-area" data-field="note" placeholder="Toelichting (optioneel)" rows="3">' + escapeHtml(task.note || "") + '</textarea></div>';
     html += renderTaskLabelField(section, taskLabels(task));
-    html += renderRelatieVeld(task);
     html += '<div class="form-row single">';
     html += '<div class="followup-hint">Categorie</div>';
     html += '<select class="sel-input" data-field="section-target">';
@@ -2700,7 +2710,6 @@
     html += '</div>';
     html += '<div class="form-row single"><textarea class="txt-input note-area" data-field="note" placeholder="Toelichting (optioneel)" rows="3"></textarea></div>';
     html += renderTaskLabelField(section, []);
-    html += renderRelatieVeld(null);
     html += '<div class="form-actions">';
     html += '<button class="save-btn" data-action="submit-add" data-section="' + section.id + '">Taak toevoegen</button>';
     html += '<button class="cancel-btn" data-action="cancel-add" data-section="' + section.id + '">Annuleren</button>';
@@ -2708,99 +2717,66 @@
     return html;
   }
 
-  // Wie doet het? Drie lagen: onze eigen mensen, losse namen die geen
-  // persoon zijn, en iemand van een andere organisatie.
+  // Wie doet het? Eerst de organisatie, standaard de eigen organisatie,
+  // daarna een contactpersoon daarvan. Ook de hele organisatie is te
+  // kiezen, en bij de eigen organisatie de losse namen zoals "Sectoren".
+  function wieWaarde(taak) {
+    if (!taak) return "";
+    if (taak.eigenaarPersoonId) return "p:" + taak.eigenaarPersoonId;
+    if (taak.eigenaarOrgId) return "o:" + taak.eigenaarOrgId;
+    if (taak.owner) return "n:" + taak.owner;
+    return "";
+  }
+
   function renderEigenaarVeld(taak) {
-    var gekozenPersoon = (taak && taak.eigenaarPersoonId) || "";
-    var gekozenNaam = (taak && !gekozenPersoon && taak.owner) || "";
-    var onsVolk = eigenMensen();
-    var namen = losseNamen();
-    var extern = null;
-    if (gekozenPersoon) {
-      var pp = persoonOp(gekozenPersoon);
-      if (pp && onsVolk.indexOf(pp) === -1) extern = pp;
-    }
+    var orgId = taak ? wieOrgId(taak) : "";
+    if (!orgId) orgId = (eigenOrganisatie() || {}).id || "";
+    return '<span class="eigenaar-houder flex1">' + wieKiezer(orgId, wieWaarde(taak)) + '</span>';
+  }
 
-    var html = '<span class="eigenaar-houder flex1">';
-    html += '<select class="sel-input" data-field="owner-keuze">';
-    if (!gekozenPersoon && !gekozenNaam) html += '<option value="" selected>— wie doet het? —</option>';
+  function wieKiezer(orgId, waarde) {
+    var org = orgId ? organisatieOp(orgId) : null;
+    var lijst = organisaties.slice().sort(function (a, b) {
+      if (!!a.eigen !== !!b.eigen) return a.eigen ? -1 : 1;
+      return a.naam.localeCompare(b.naam, "nl");
+    });
+    var html = '<div class="wie-kiezer">';
+    html += '<select class="sel-input" data-field="wie-org" title="Organisatie">';
+    if (!lijst.length) html += '<option value="">— nog geen organisaties —</option>';
+    else if (!org) html += '<option value="" selected>— kies organisatie —</option>';
+    lijst.forEach(function (o) {
+      html += '<option value="' + escapeHtml(o.id) + '"' + (o.id === orgId ? " selected" : "") + '>' + escapeHtml(o.naam) + '</option>';
+    });
+    html += '</select>';
 
-    if (onsVolk.length) {
-      html += '<optgroup label="Onze mensen">';
-      onsVolk.forEach(function (x) {
-        html += '<option value="p:' + escapeHtml(x.id) + '"' + (x.id === gekozenPersoon ? " selected" : "") + '>' + escapeHtml(volledigeNaam(x)) + '</option>';
+    html += '<select class="sel-input" data-field="owner-keuze" title="Wie">';
+    html += '<option value=""' + (waarde === "" ? " selected" : "") + '>— kies wie —</option>';
+    var mensen = org ? personenBij(org.id).slice().sort(opAchternaam) : [];
+    if (mensen.length) {
+      html += '<optgroup label="Contactpersonen">';
+      mensen.forEach(function (x) {
+        var w = "p:" + x.id;
+        html += '<option value="' + escapeHtml(w) + '"' + (w === waarde ? " selected" : "") + '>' + escapeHtml(volledigeNaam(x)) + '</option>';
       });
       html += '</optgroup>';
     }
-    if (namen.length) {
-      html += '<optgroup label="Namen zonder persoon">';
+    if (org) {
+      var wo = "o:" + org.id;
+      html += '<option value="' + escapeHtml(wo) + '"' + (wo === waarde ? " selected" : "") + '>Hele organisatie</option>';
+    }
+    var namen = losseNamen();
+    var gekozenNaam = waarde.indexOf("n:") === 0 ? waarde.slice(2) : "";
+    if (gekozenNaam && namen.indexOf(gekozenNaam) === -1) namen.push(gekozenNaam);
+    if ((!org || org.eigen || gekozenNaam) && namen.length) {
+      html += '<optgroup label="Andere namen">';
       namen.forEach(function (n) {
         html += '<option value="n:' + escapeHtml(n) + '"' + (n === gekozenNaam ? " selected" : "") + '>' + escapeHtml(n) + '</option>';
       });
       html += '</optgroup>';
     }
-    if (extern) {
-      var eOrg = organisatieOp(extern.organisatie_id);
-      html += '<optgroup label="Van buiten">';
-      html += '<option value="p:' + escapeHtml(extern.id) + '" selected>' + escapeHtml(volledigeNaam(extern)) + (eOrg ? " \u00b7 " + escapeHtml(eOrg.naam) : "") + '</option>';
-      html += '</optgroup>';
-    }
-    html += '<option value="__extern__">+ Iemand van een andere organisatie…</option>';
     html += '<option value="__eigennaam__">+ Andere naam…</option>';
     html += '</select>';
-    html += '</span>';
-    return html;
-  }
-
-  // Het uitklapveld voor iemand van buiten: eerst de organisatie, dan de persoon.
-  function externKiezer(orgId) {
-    var html = '<div class="extern-kiezer">';
-    html += '<select class="sel-input" data-field="extern-org">';
-    html += '<option value="">— organisatie kiezen —</option>';
-    organisaties.filter(function (o) { return !o.eigen; }).forEach(function (o) {
-      html += '<option value="' + escapeHtml(o.id) + '"' + (o.id === orgId ? " selected" : "") + '>' + escapeHtml(o.naam) + '</option>';
-    });
-    html += '</select>';
-    html += '<select class="sel-input" data-field="owner-keuze">';
-    var lijst = orgId ? personenBij(orgId) : [];
-    if (!lijst.length) {
-      html += '<option value="">' + (orgId ? "— deze organisatie heeft nog geen personen —" : "— eerst een organisatie —") + '</option>';
-    } else {
-      html += '<option value="">— persoon kiezen —</option>';
-      lijst.forEach(function (x) {
-        html += '<option value="p:' + escapeHtml(x.id) + '">' + escapeHtml(volledigeNaam(x)) + '</option>';
-      });
-    }
-    html += '</select>';
-    html += '<button type="button" class="icon-btn small" data-action="terug-naar-eigenaarlijst" title="Terug naar de keuzelijst">' + xSvg(14) + '</button>';
     html += '</div>';
-    return html;
-  }
-
-  function renderRelatieVeld(taak) {
-    var orgId = (taak && taak.organisatieId) || "";
-    var persId = (taak && taak.persoonId) || "";
-    // Staat er een persoon maar geen organisatie, dan die van de persoon tonen.
-    if (persId && !orgId) {
-      var pp = persoonOp(persId);
-      if (pp) orgId = pp.organisatie_id || "";
-    }
-    var html = '<div class="form-row single">';
-    html += '<div class="followup-hint">Relatie (optioneel)</div>';
-    html += '<div class="form-row" style="margin:0;">';
-    html += '<select class="sel-input flex1" data-field="actie-org">';
-    html += '<option value="">— geen organisatie —</option>';
-    organisaties.forEach(function (o) {
-      html += '<option value="' + escapeHtml(o.id) + '"' + (o.id === orgId ? " selected" : "") + '>' + escapeHtml(o.naam) + '</option>';
-    });
-    html += '</select>';
-    html += '<select class="sel-input flex1" data-field="actie-persoon">';
-    html += '<option value="">— geen persoon —</option>';
-    (orgId ? personenBij(orgId) : personen).forEach(function (x) {
-      html += '<option value="' + escapeHtml(x.id) + '"' + (x.id === persId ? " selected" : "") + '>' + escapeHtml(volledigeNaam(x)) + '</option>';
-    });
-    html += '</select>';
-    html += '</div></div>';
     return html;
   }
 
@@ -2841,7 +2817,7 @@
     var rijen = [];
     (secties || []).forEach(function (s) {
       s.tasks.forEach(function (t, i) {
-        rijen.push({
+        var rij = {
           id: t.id, categorie_id: s.id, titel: t.title,
           eigenaar: t.owner || "", eigenaar_persoon_id: t.eigenaarPersoonId || null,
           wanneer: t.when || "", notitie: t.note || "",
@@ -2852,7 +2828,9 @@
           gereed_op: isoDatumOfNull(t.completedDate),
           gereed_notitie: t.completedNote || "",
           volgorde: i
-        });
+        };
+        if (heeftWieOrg) rij.eigenaar_organisatie_id = t.eigenaarOrgId || null;
+        rijen.push(rij);
       });
     });
     return rijen;
@@ -3036,6 +3014,7 @@
     task.organisatieId = task.organisatieId || "";
     task.persoonId = task.persoonId || "";
     task.eigenaarPersoonId = task.eigenaarPersoonId || "";
+    task.eigenaarOrgId = task.eigenaarOrgId || "";
     s.tasks.push(task);
     persist(next);
   }
@@ -3049,9 +3028,11 @@
     t.when = patch.when;
     t.note = patch.note;
     t.labels = patch.labels || [];
-    t.organisatieId = patch.organisatieId || "";
-    t.persoonId = patch.persoonId || "";
+    // De oude relatie staat niet meer in het formulier; die laten we staan.
+    if ("organisatieId" in patch) t.organisatieId = patch.organisatieId || "";
+    if ("persoonId" in patch) t.persoonId = patch.persoonId || "";
     t.eigenaarPersoonId = patch.eigenaarPersoonId || "";
+    t.eigenaarOrgId = patch.eigenaarOrgId || "";
 
     if (patch.sectionId && patch.sectionId !== sectionId) {
       var from = next.find(function (s) { return s.id === sectionId; });
@@ -3351,8 +3332,7 @@
       if (!title || (!owner && !wieKeuze.persoonId)) return;
       var labels = parseLabels(form.querySelector('[data-field="task-labels"]').value);
       addTask(sectionId, { title: title, owner: owner, eigenaarPersoonId: wieKeuze.persoonId,
-        when: when, note: note, labels: labels,
-        organisatieId: leesVeld(form, "actie-org"), persoonId: leesVeld(form, "actie-persoon") });
+        eigenaarOrgId: wieKeuze.orgId, when: when, note: note, labels: labels });
       delete ui.adding[sectionId];
       delete ui.customOwner[sectionId];
     } else if (action === "toggle-complete") {
@@ -3466,8 +3446,7 @@
       delete ui.editCustomOwner[taskId];
       var elabels = parseLabels(eform.querySelector('[data-field="task-labels"]').value);
       updateTask(sectionId, taskId, { title: etitle, owner: eowner, eigenaarPersoonId: eWie.persoonId,
-        when: ewhen, note: enote, sectionId: etarget, labels: elabels,
-        organisatieId: leesVeld(eform, "actie-org"), persoonId: leesVeld(eform, "actie-persoon") });
+        eigenaarOrgId: eWie.orgId, when: ewhen, note: enote, sectionId: etarget, labels: elabels });
     } else if (action === "toggle-collapse-all") {
       var visibleForCollapse = filterSectionsByLabel(currentSections, ui.labelFilter);
       var shouldCollapse = !visibleForCollapse.every(function (s) { return !!ui.collapsed[s.id]; });
@@ -3547,22 +3526,13 @@
       }
       return;
     }
-    if (e.target.matches('[data-field="extern-org"]')) {
-      var kiezer = e.target.closest(".extern-kiezer");
-      if (kiezer) {
-        var houder = kiezer.parentNode;
-        houder.innerHTML = externKiezer(e.target.value);
-        var nieuwVeld = houder.querySelector('[data-field="extern-org"]');
-        if (nieuwVeld) nieuwVeld.focus();
-      }
-      return;
-    }
-    if (e.target.matches('[data-field="owner-keuze"]') && e.target.value === "__extern__") {
-      var wieHouder = e.target.closest(".eigenaar-houder");
-      if (wieHouder) {
-        wieHouder.innerHTML = externKiezer("");
-        var orgVeld = wieHouder.querySelector('[data-field="extern-org"]');
-        if (orgVeld) orgVeld.focus();
+    if (e.target.matches('[data-field="wie-org"]')) {
+      var wieKiezerEl = e.target.closest(".wie-kiezer");
+      if (wieKiezerEl) {
+        var wieOuder = wieKiezerEl.parentNode;
+        wieOuder.innerHTML = wieKiezer(e.target.value, "");
+        var persVeld = wieOuder.querySelector('[data-field="owner-keuze"]');
+        if (persVeld) persVeld.focus();
       }
       return;
     }
@@ -3642,6 +3612,7 @@
     ]).then(function (r) {
       r.forEach(function (x, i) { if (x.error && i < 5) throw x.error; });
       var cats = r[0].data || [], acts = r[1].data || [], bes = r[2].data || [];
+      heeftWieOrg = acts.length > 0 && Object.prototype.hasOwnProperty.call(acts[0], "eigenaar_organisatie_id");
       organisaties = r[3].data || [];
       personen = (r[4].data || []).sort(opAchternaam);
       soorten = (r[5].data || []).map(function (x) { return x.naam; });
@@ -3657,6 +3628,7 @@
               note: a.notitie || "", labels: a.labels || [],
               organisatieId: a.organisatie_id || "", persoonId: a.persoon_id || "",
               eigenaarPersoonId: a.eigenaar_persoon_id || "",
+              eigenaarOrgId: a.eigenaar_organisatie_id || "",
               done: !!a.gereed, completedDate: a.gereed_op || "",
               completedNote: a.gereed_notitie || ""
             };
