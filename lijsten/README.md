@@ -64,6 +64,14 @@ Twee weergaven:
 - **Alle acties** — één doorlopende lijst met kolommen: actie, wie, datum,
   categorie, label en relatie. Verlopen datums kleuren rood.
 
+Een uitgeklapte categorie gebruikt dezelfde tabel, zonder de kolom
+Categorie. Om de regels uit elkaar te houden hebben ze om en om een
+lichte achtergrond.
+
+In de kolom Datum staat bij een afgeronde actie de datum waarop hij is
+afgerond, en bij een openstaande de geplande datum. Sorteren op datum
+gebruikt diezelfde waarde.
+
 De filters bovenin werken in beide weergaven. Vanuit de lijst klik je door
 naar de categorie of naar de relatie.
 
