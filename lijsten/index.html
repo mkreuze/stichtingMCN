@@ -310,8 +310,11 @@
     background: none; border-radius: 0; border-top: 1px solid var(--line);
     padding: 12px 0 2px; max-width: none;
   }
-  /* Een nieuwe actie toevoegen: hetzelfde witte kaartje, onder de lijst. */
-  .acties-body .add-form {
+  /* Een nieuwe actie toevoegen: hetzelfde witte kaartje, onder de lijst.
+     Alleen het formulier dat direct in het blok staat; het bewerkformulier
+     gebruikt dezelfde klasse maar zit al in een kaartje. */
+  .actie-formulier .add-form { border-top: none; padding-top: 4px; }
+  .acties-body > .add-form {
     background: var(--card); border: 1px solid var(--line);
     border-left: 3px solid var(--accent); border-radius: var(--r-md);
     margin-top: 7px; padding: 14px 14px 10px 12px; box-shadow: var(--shadow);
