@@ -76,6 +76,23 @@ gebruikt diezelfde waarde.
 De filters bovenin werken in beide weergaven. Vanuit de lijst klik je door
 naar de categorie of naar de relatie.
 
+## Wie doet een actie
+
+De actiehouder verwijst naar een persoon uit de relatielijst, zodat
+jullie eigen mensen maar één keer in het systeem staan. De keuzelijst bij
+een actie heeft drie lagen:
+
+1. **Onze mensen** — de personen van de organisatie waarbij *Dit is onze
+   eigen organisatie* is aangevinkt.
+2. **Namen zonder persoon** — wat er in gebruik is en geen persoon is,
+   zoals Sectoren of Allen.
+3. **Iemand van een andere organisatie** — eerst de organisatie, dan de
+   contactpersoon. Zo iemand komt niet in de vaste keuzelijst terecht;
+   de koppeling zit alleen op die ene actie.
+
+Bij iemand van buiten staat de naam van zijn organisatie klein onder de
+naam, zodat je ziet dat het werk buiten de deur ligt.
+
 ## De relatielijst
 
 Twee weergaven, met een zoekveld dat op beide werkt:
