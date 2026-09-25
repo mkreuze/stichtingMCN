@@ -14,6 +14,8 @@
     --line: #DCE6E3;
     --line-soft: #EDF3F1;
     --header-bg: #EBF3F1;
+    --blok: #E8EFED;
+    --blok-kop: #DFE8E5;
     --accent: #1D9C8C;
     --accent-soft: #DFF3EF;
     --accent-ink: #0C6358;
@@ -39,6 +41,8 @@
       --line: #2C3B39;
       --line-soft: #23312E;
       --header-bg: #223130;
+      --blok: #0F1918;
+      --blok-kop: #223130;
       --accent: #4FC9B4;
       --accent-soft: #1E3A34;
       --accent-ink: #8FE0CE;
@@ -60,6 +64,8 @@
     --line: #2C3B39;
     --line-soft: #23312E;
     --header-bg: #223130;
+    --blok: #0F1918;
+    --blok-kop: #223130;
     --accent: #4FC9B4;
     --accent-soft: #1E3A34;
     --accent-ink: #8FE0CE;
@@ -211,7 +217,13 @@
      smal streepje in de kleur van wie het doet. Dat scheidt de regels en
      laat meteen zien van wie een actie is. */
   .acties-tabel { padding: 12px; }
-  .section-card .acties-tabel { background: var(--paper); }
+  /* Het blok onder de acties loopt van rand tot rand van de kaart en heeft
+     een eigen kleur, anders dan het scherm. Zo ook bij Alle acties. */
+  .acties-kaart .acties-body { background: var(--blok); padding: 12px 12px 14px; }
+  .acties-body .acties-tabel { background: transparent; padding: 0; }
+  .acties-kaart > .section-header.open { background: var(--blok-kop); }
+  .acties-body .add-task-btn { border-top-color: var(--line); margin-top: 12px; padding: 12px 4px 0; }
+  .acties-body .empty-state { padding: 6px 4px 4px; }
   .acties-kop { padding: 4px 13px 10px; border-bottom: none; }
   .actie-regel {
     font-size: 13px;
@@ -230,9 +242,9 @@
      titel. Een doorzichtige achtergrond maakte er een gat van, en zette
      tegelijk het kleurbalkje uit. */
   .actie-regel.gereed {
-    background: var(--header-bg);
-    border-color: var(--line-soft);
-    border-left-color: color-mix(in srgb, var(--balk, var(--line)) 45%, var(--header-bg));
+    background: var(--paper);
+    border-color: var(--line);
+    border-left-color: color-mix(in srgb, var(--balk, var(--line)) 45%, var(--paper));
   }
   .actie-regel.gereed .ak-veld { color: var(--ink-faint); }
   .actie-regel.gereed .ak-stip { opacity: 0.45; }
@@ -1573,7 +1585,8 @@
     if (regels.length === 0) {
       return '<div class="empty-state group-empty-state">Geen acties die aan deze selectie voldoen.</div>';
     }
-    return renderActieTabel(regels, true);
+    return '<section class="section-card acties-kaart"><div class="acties-body">'
+         + renderActieTabel(regels, true) + '</div></section>';
   }
 
   // Dezelfde tabel voor "Alle acties" en voor een uitgeklapte categorie.
@@ -2231,7 +2244,7 @@
       }
       var collapsed = dateFilterActief ? false : !!ui.collapsed[section.id];
 
-      html += '<section class="section-card">';
+      html += '<section class="section-card acties-kaart">';
 
       if (ui.editingSection[section.id]) {
         var eigenLabels = sectionLabels(section);
@@ -2282,7 +2295,7 @@
       html += '</div>';
 
       if (!collapsed) {
-        html += '<div class="section-body">';
+        html += '<div class="section-body acties-body">';
 
         if (taakLabelFilter) {
           var fc = labelColor(taakLabelFilter);
