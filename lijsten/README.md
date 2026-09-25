@@ -101,7 +101,8 @@ kiest. Moet iemand een actie krijgen die nog niet in de relatielijst
 staat, voeg hem dan eerst als contactpersoon toe.
 
 Elk veld in het formulier heeft een kopje: Actie, Organisatie, Wie,
-Datum, Toelichting, Label en (bij bewerken) Categorie.
+Datum, Toelichting, Label en (bij bewerken) Categorie. Organisatie, Wie
+en Datum staan op een regel, net als Label en Categorie.
 
 Kies je een andere organisatie, dan verschijnen de contactpersonen van
 die organisatie. Bij iemand van buiten staat de naam van zijn organisatie

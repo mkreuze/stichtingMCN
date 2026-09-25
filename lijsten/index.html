@@ -183,6 +183,9 @@
   .veld select, .veld input { width: 100%; }
   .datum-veld { flex: 0 0 150px; }
   .datum-veld .date-field { flex: none; width: 100%; }
+  .form-row.naast-elkaar { align-items: flex-start; }
+  .naast-elkaar .veld > .form-row { margin-bottom: 0; }
+  .naast-elkaar .veld > .form-row > .followup-hint { margin: 0 0 4px; }
   .add-form .form-row.single > .followup-hint { margin: 0 0 4px; }
   .wie-extern { display: block; font-size: 9.5px; font-weight: 600; opacity: 0.75; margin-top: -1px; }
 
@@ -2632,14 +2635,15 @@
     html += '</label>';
     html += '</div>';
     html += '<div class="form-row single"><span class="followup-hint">Toelichting</span><textarea class="txt-input note-area" data-field="note" rows="3">' + escapeHtml(task.note || "") + '</textarea></div>';
-    html += renderTaskLabelField(section, taskLabels(task));
-    html += '<div class="form-row single">';
-    html += '<div class="followup-hint">Categorie</div>';
+    // Label en Categorie naast elkaar.
+    html += '<div class="form-row naast-elkaar">';
+    html += '<div class="veld">' + renderTaskLabelField(section, taskLabels(task)) + '</div>';
+    html += '<label class="veld"><span class="followup-hint">Categorie</span>';
     html += '<select class="sel-input" data-field="section-target">';
     (currentSections || []).forEach(function (s) {
       html += '<option value="' + escapeHtml(s.id) + '"' + (s.id === section.id ? " selected" : "") + '>' + escapeHtml(s.title) + '</option>';
     });
-    html += '</select>';
+    html += '</select></label>';
     html += '</div>';
     html += '<div class="form-actions">';
     html += '<button class="save-btn" data-action="submit-edit-task" data-section="' + section.id + '" data-task="' + task.id + '">Opslaan</button>';
