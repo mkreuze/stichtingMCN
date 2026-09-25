@@ -273,7 +273,14 @@ Rechtsboven, naast de **i**, staat een tandwieltje. Daaronder:
     acties zelf blijven staan;
   - *Huisstijl*: de kleuren van de lichte en de donkere versie naast
     elkaar, met een klein voorbeeld, de kleurcodes en de kleuren uit het
-    logo.
+    logo. Met *Kleuren aanpassen* kies je per versie zeven kleuren
+    (achtergrond, blok acties, blok relaties, kaartje, tekst, accent
+    acties, accent relaties) met een kleurkiezer of een kleurcode. Het
+    voorbeeld en de Console kleuren direct mee, eerst alleen bij jou;
+    *Opslaan voor iedereen* legt ze vast in de tabel `instellingen` (na
+    `22-instellingen-huisstijl.sql`). Zachtere tinten, zoals de vulling
+    achter een accent, rekent de Console zelf uit. Met *Terug naar de
+    standaardkleuren* haal je alles weg.
 
 Een bewerker of kijker ziet alleen *Weergave*. De Console laat hen ook
 buiten het scherm om geen gebruikers, soorten, sectoren of labels
@@ -302,3 +309,4 @@ een regel hieronder.
 | 1.8 | 25-09-2026 | Rechten per gebruiker (acties per groep, besluiten, relaties), ook in de database; categorieën beheren onder het tandwieltje. |
 | 1.9 | 25-09-2026 | Bij wijzigen verdwijnt de kopregel en schuift het formulier boven in beeld. |
 | 1.10 | 25-09-2026 | Donkere versie antraciet; kaart Huisstijl onder het beheer; bij een nieuwe gebruiker kiezen uit de contactpersonen van MCN. |
+| 1.11 | 25-09-2026 | Huisstijl instelbaar door de beheerder: zeven kleuren per versie, licht en donker, voor iedereen. |

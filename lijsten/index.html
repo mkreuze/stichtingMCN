@@ -781,6 +781,10 @@
   .huis-staal { width: 16px; height: 16px; border-radius: 4px; border: 1px solid var(--line); flex: none; }
   .huis-logo { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px; margin: 12px 0 6px; }
   .huis-logo .huis-kleur code { margin-left: 4px; }
+  .huis-kiezer { width: 26px; height: 22px; padding: 0; border: 1px solid var(--line); border-radius: 5px; background: none; cursor: pointer; flex: none; }
+  .huis-code { margin-left: auto; width: 92px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 4px 8px; }
+  .huis-anders { font-size: 10.5px; color: var(--accent-ink); background: var(--accent-soft); border-radius: 99px; padding: 1px 7px; margin-left: 4px; }
+  .huis-standaard { margin-left: auto; }
   .lid-kop, .actie-regel.lid-regel { grid-template-columns: minmax(130px, 1fr) minmax(0, 1.3fr) minmax(0, 100px) minmax(0, 1.4fr) 56px; padding-left: 13px; }
   .cat-kop, .actie-regel.cat-regel { grid-template-columns: 40px minmax(160px, 1.4fr) minmax(0, 1fr) minmax(0, 100px) 56px; padding-left: 13px; }
   .cat-nr { font-family: 'IBM Plex Mono', monospace; color: var(--ink-faint); }
@@ -922,6 +926,11 @@
   #pdf-export-root .pdf-note { font-size: 10.5px; color: var(--pis); line-height: 1.45; }
   #pdf-export-root .pdf-besluiten-heading { font-family: "Baloo 2", sans-serif; font-weight: 700; font-size: 17px; margin: 22px 0 10px; color: var(--pi); }
 </style>
+<script>
+  // De huisstijl zoals de beheerder die instelde, bewaard van het vorige
+  // bezoek. Staat bewust ná de standaardkleuren, anders winnen die.
+  try { var h = localStorage.getItem("mec-huisstijl"); if (h) { var st = document.createElement("style"); st.id = "huisstijl-eigen"; st.textContent = h; document.head.appendChild(st); } } catch (e) {}
+</script>
 </head>
 <body>
   <div class="container">
@@ -940,7 +949,7 @@
         <button type="button" class="versie-knop" aria-label="Versie-informatie" aria-expanded="false">i</button>
         <div class="versie-info" role="tooltip">
           <strong>Mobiel Erfgoed Console</strong>
-          <span>Versie 1.10 &middot; 25 september 2026</span>
+          <span>Versie 1.11 &middot; 25 september 2026</span>
         </div>
       </div>
     </div>
@@ -1035,6 +1044,8 @@
     instelOpen: { weergave: true }, // welke kaarten onder Instellingen open staan
     bewerkLid: null,             // e-mailadres van de gebruiker die wordt bewerkt, of "nieuw"
     lidFout: "",                 // melding bij het opslaan van een gebruiker
+    huisConcept: null,           // kleuren die de beheerder aan het uitproberen is
+    huisFout: "",
     groepDicht: {},              // "weergave|groep" -> true als ingeklapt
     filterOpen: false,           // het filterpaneel onder de knop Filter
     relatieZoek: "",   // zoektekst in de relatielijst
@@ -2502,48 +2513,144 @@
 
   // ── Huisstijl: de kleuren van de Console, licht en donker ─────────
   // Naslag voor de beheerder. Dezelfde waarden staan bovenaan in de CSS.
+  // De standaardkleuren; dezelfde waarden staan bovenaan in de CSS.
   var HUISSTIJL = {
-    licht: { achtergrond: "#F3F7F6", blok: "#EDF7F4", kaartje: "#FFFFFF", tekst: "#1E2624", zacht: "#5C6B66", rand: "#DCE6E3",
+    licht: { achtergrond: "#F3F7F6", blok: "#EDF7F4", kaartje: "#FFFFFF", tekst: "#1E2624",
              accent: "#1D9C8C", relBlok: "#EEF7FC", relAccent: "#2C88BF" },
-    donker: { achtergrond: "#151719", blok: "#1A2322", kaartje: "#23272B", tekst: "#ECEEF0", zacht: "#AAB1B7", rand: "#353A40",
+    donker: { achtergrond: "#151719", blok: "#1A2322", kaartje: "#23272B", tekst: "#ECEEF0",
               accent: "#3FC2AC", relBlok: "#19212A", relAccent: "#6FC0EA" }
   };
+  var HUIS_VELDEN = [["achtergrond", "Achtergrond"], ["blok", "Blok acties"], ["relBlok", "Blok relaties"],
+                     ["kaartje", "Kaartje"], ["tekst", "Tekst"], ["accent", "Accent acties"], ["relAccent", "Accent relaties"]];
+  var heeftInstellingen = false;   // bestaat de tabel instellingen al (22-...sql)?
+  var eigenHuisstijl = null;       // wat de beheerder heeft ingesteld, of null
+
+  function huisstijlNu(bron) {
+    var eigen = bron || eigenHuisstijl || {};
+    var uit = {};
+    ["licht", "donker"].forEach(function (t) {
+      uit[t] = {};
+      HUIS_VELDEN.forEach(function (f) {
+        var w = eigen[t] && eigen[t][f[0]];
+        uit[t][f[0]] = /^#[0-9a-fA-F]{6}$/.test(w || "") ? w.toUpperCase() : HUISSTIJL[t][f[0]];
+      });
+    });
+    return uit;
+  }
+
+  // Maakt CSS voor alleen de kleuren die afwijken van de standaard. Wat
+  // ervan afhangt (zachte tint van het accent, zachtere tekst) rekent de
+  // browser zelf uit met color-mix.
+  function huisstijlCss(h) {
+    function regels(t) {
+      var k = h[t], d = HUISSTIJL[t], r = "", rel = "";
+      if (k.achtergrond !== d.achtergrond) r += "--paper:" + k.achtergrond + ";";
+      if (k.blok !== d.blok) r += "--blok:" + k.blok + ";";
+      if (k.kaartje !== d.kaartje) r += "--card:" + k.kaartje + ";--blok-kop:" + k.kaartje + ";";
+      if (k.tekst !== d.tekst) r += "--ink:" + k.tekst + ";--ink-soft:color-mix(in srgb," + k.tekst + " 70%," + k.kaartje + ");--ink-faint:color-mix(in srgb," + k.tekst + " 50%," + k.kaartje + ");";
+      if (k.accent !== d.accent) r += "--accent:" + k.accent + ";--accent-soft:color-mix(in srgb," + k.accent + " 16%," + k.kaartje + ");--accent-ink:color-mix(in srgb," + k.accent + " 65%," + k.tekst + ");";
+      if (k.relBlok !== d.relBlok) rel += "--blok:" + k.relBlok + ";";
+      if (k.relAccent !== d.relAccent) rel += "--accent:" + k.relAccent + ";--accent-soft:color-mix(in srgb," + k.relAccent + " 16%," + k.kaartje + ");--accent-ink:color-mix(in srgb," + k.relAccent + " 65%," + k.tekst + ");";
+      return { r: r, rel: rel };
+    }
+    var l = regels("licht"), d = regels("donker"), css = "";
+    if (l.r) css += ":root{" + l.r + "}\n";
+    if (l.rel) css += ".relaties-thema{" + l.rel + "}\n";
+    if (d.r || d.rel) {
+      css += "@media (prefers-color-scheme: dark){" + (d.r ? ':root:not([data-theme="light"]){' + d.r + "}" : "")
+           + (d.rel ? ':root:not([data-theme="light"]) .relaties-thema{' + d.rel + "}" : "") + "}\n";
+      if (d.r) css += ':root[data-theme="dark"]{' + d.r + "}\n";
+      if (d.rel) css += ':root[data-theme="dark"] .relaties-thema{' + d.rel + "}\n";
+    }
+    return css;
+  }
+
+  function pasHuisstijlToe(bron) {
+    var css = huisstijlCss(huisstijlNu(bron));
+    var st = document.getElementById("huisstijl-eigen");
+    if (!st) { st = document.createElement("style"); st.id = "huisstijl-eigen"; }
+    st.textContent = css;
+    document.head.appendChild(st);   // altijd als laatste, na de standaardkleuren
+    try { if (!bron) { if (css) localStorage.setItem("mec-huisstijl", css); else localStorage.removeItem("mec-huisstijl"); } } catch (e) {}
+  }
+
+  function bewaarHuisstijl(waarde) {
+    syncing = true; render();
+    var q = waarde ? sb.from("instellingen").upsert({ sleutel: "huisstijl", waarde: waarde, bijgewerkt: new Date().toISOString() })
+                   : sb.from("instellingen").delete().eq("sleutel", "huisstijl");
+    controleer(q).then(function () {
+      eigenHuisstijl = waarde;
+      ui.huisConcept = null;
+      ui.huisFout = "";
+      pasHuisstijlToe();
+    }).catch(function () {
+      ui.huisFout = "Opslaan lukte niet. Probeer het nog eens.";
+    }).then(function () { syncing = false; render(); });
+  }
+
   var LOGO_KLEUREN = [["Groen (M)", "#58B8A0"], ["Roze (C)", "#D080B0"], ["Blauw (N)", "#75C3EA"]];
 
-  function huisstijlPaneel(naam, k) {
-    var html = '<div class="huis-paneel">';
+  function huisstijlPaneel(naam, thema, k, bewerk) {
+    var d = HUISSTIJL[thema];
+    var zacht = "color-mix(in srgb," + k.tekst + " 60%," + k.kaartje + ")";
+    var rand = "color-mix(in srgb," + k.tekst + " 14%," + k.kaartje + ")";
+    var html = '<div class="huis-paneel" data-thema="' + thema + '">';
     html += '<div class="huis-naam">' + naam + '</div>';
     // klein voorbeeld in de eigen kleuren, los van het thema dat nu aan staat
-    html += '<div class="huis-voorbeeld" style="background:' + k.achtergrond + ';border-color:' + k.rand + ';">';
-    html += '<div class="huis-blok" style="background:' + k.blok + ';border-color:' + k.rand + ';">';
-    html += '<div class="huis-regel" style="background:' + k.kaartje + ';border-color:' + k.rand + ';border-left-color:' + k.accent + ';color:' + k.tekst + ';">Actie <span style="color:' + k.zacht + '">\u00b7 Marinus Kreuze</span></div>';
-    html += '<span class="huis-knop" style="background:' + k.accent + ';color:' + (naam === "Licht" ? "#fff" : "#10201D") + ';">Opslaan</span>';
+    html += '<div class="huis-voorbeeld" style="background:' + k.achtergrond + ';border-color:' + rand + ';">';
+    html += '<div class="huis-blok" style="background:' + k.blok + ';border-color:' + rand + ';">';
+    html += '<div class="huis-regel" style="background:' + k.kaartje + ';border-color:' + rand + ';border-left-color:' + k.accent + ';color:' + k.tekst + ';">Actie <span style="color:' + zacht + '">\u00b7 Marinus Kreuze</span></div>';
+    html += '<span class="huis-knop" style="background:' + k.accent + ';color:' + k.kaartje + ';">Opslaan</span>';
     html += '</div>';
-    html += '<div class="huis-blok" style="background:' + k.relBlok + ';border-color:' + k.rand + ';">';
-    html += '<div class="huis-regel" style="background:' + k.kaartje + ';border-color:' + k.rand + ';border-left-color:#75C3EA;color:' + k.tekst + ';">Relatie <span style="color:' + k.zacht + '">\u00b7 contactpersoon</span></div>';
-    html += '<span class="huis-knop" style="background:' + k.relAccent + ';color:#fff;">Filter</span>';
+    html += '<div class="huis-blok" style="background:' + k.relBlok + ';border-color:' + rand + ';">';
+    html += '<div class="huis-regel" style="background:' + k.kaartje + ';border-color:' + rand + ';border-left-color:' + k.relAccent + ';color:' + k.tekst + ';">Relatie <span style="color:' + zacht + '">\u00b7 contactpersoon</span></div>';
+    html += '<span class="huis-knop" style="background:' + k.relAccent + ';color:' + k.kaartje + ';">Filter</span>';
     html += '</div></div>';
-    [["Achtergrond", k.achtergrond], ["Blok acties", k.blok], ["Blok relaties", k.relBlok], ["Kaartje", k.kaartje],
-     ["Tekst", k.tekst], ["Accent acties", k.accent], ["Accent relaties", k.relAccent]].forEach(function (x) {
-      html += '<div class="huis-kleur"><span class="huis-staal" style="background:' + x[1] + ';"></span><span>' + x[0] + '</span><code>' + x[1] + '</code></div>';
+    HUIS_VELDEN.forEach(function (f) {
+      var w = k[f[0]], anders = w !== d[f[0]];
+      html += '<div class="huis-kleur">';
+      if (bewerk) {
+        html += '<input type="color" class="huis-kiezer" data-huis="' + thema + '|' + f[0] + '" value="' + w.toLowerCase() + '" aria-label="' + f[1] + ' ' + naam + '" />';
+      } else {
+        html += '<span class="huis-staal" style="background:' + w + ';"></span>';
+      }
+      html += '<span>' + f[1] + (anders ? ' <span class="huis-anders" title="Standaard: ' + d[f[0]] + '">aangepast</span>' : '') + '</span>';
+      if (bewerk) html += '<input type="text" class="txt-input huis-code" data-huis-code="' + thema + '|' + f[0] + '" value="' + w + '" maxlength="7" spellcheck="false" />';
+      else html += '<code>' + w + '</code>';
+      html += '</div>';
     });
     html += '</div>';
     return html;
   }
 
   function renderHuisstijl() {
+    var bewerk = !!ui.huisConcept;
+    var h = bewerk ? ui.huisConcept : huisstijlNu();
+    var aangepast = !!eigenHuisstijl;
     var html = '<section class="section-card acties-kaart">';
-    html += instelKop("huisstijl", "Huisstijl", "de kleuren van de Console, licht en donker", "");
+    html += instelKop("huisstijl", "Huisstijl", "de kleuren van de Console, licht en donker", aangepast ? "aangepast" : "standaard");
     if (!instelOpen("huisstijl")) return html + '</section>';
-    html += '<div class="section-body acties-body"><div class="huis-rij">';
-    html += huisstijlPaneel("Licht", HUISSTIJL.licht) + huisstijlPaneel("Donker (antraciet)", HUISSTIJL.donker);
-    html += '</div>';
+    html += '<div class="section-body acties-body huisstijl-body">';
+    html += '<div class="huis-rij">' + huisstijlPaneel("Licht", "licht", h.licht, bewerk) + huisstijlPaneel("Donker (antraciet)", "donker", h.donker, bewerk) + '</div>';
     html += '<div class="huis-logo"><span class="followup-hint">Kleuren uit het logo:</span>';
     LOGO_KLEUREN.forEach(function (x) {
       html += '<span class="huis-kleur"><span class="huis-staal" style="background:' + x[1] + ';"></span><span>' + x[0] + '</span><code>' + x[1] + '</code></span>';
     });
     html += '</div>';
-    html += '<div class="followup-hint">Acties en besluiten gebruiken het groen, alles rond relaties het blauw van de N. Welke versie iemand ziet, kiest ieder zelf onder Weergave.</div>';
+    if (ui.huisFout) html += '<div class="lid-fout">' + escapeHtml(ui.huisFout) + '</div>';
+    if (!heeftInstellingen) {
+      html += '<div class="followup-hint">De kleuren zelf instellen kan nadat 22-instellingen-huisstijl.sql is gedraaid.</div>';
+    } else if (bewerk) {
+      html += '<div class="followup-hint">Het voorbeeld en de hele Console kleuren direct mee, maar alleen bij jou. Pas na Opslaan geldt het voor iedereen.</div>';
+      html += '<div class="form-actions"><button class="save-btn" data-action="bewaar-huisstijl">Opslaan voor iedereen</button>';
+      html += '<button class="cancel-btn" data-action="annuleer-huisstijl">Annuleren</button>';
+      html += '<button class="link-btn huis-standaard" data-action="huisstijl-standaard">Standaardkleuren terugzetten</button></div>';
+    } else {
+      html += '<div class="form-actions"><button class="filter-btn" data-action="bewerk-huisstijl">Kleuren aanpassen</button>';
+      if (aangepast) html += '<button class="link-btn huis-standaard" data-action="huisstijl-herstel">Terug naar de standaardkleuren</button>';
+      html += '</div>';
+      html += '<div class="followup-hint">Acties en besluiten gebruiken het groen, alles rond relaties het blauw van de N. Welke versie iemand ziet, kiest ieder zelf onder Weergave.</div>';
+    }
     html += '</div></section>';
     return html;
   }
@@ -3902,6 +4009,7 @@
     // Soorten, sectoren en labels beheren is voor de beheerder.
     var BEHEERACTIES = ["bewerk-label", "annuleer-label", "bewaar-label", "verwijder-label",
       "nieuw-lid", "bewerk-lid", "annuleer-lid", "bewaar-lid", "verwijder-lid",
+      "bewerk-huisstijl", "annuleer-huisstijl", "huisstijl-standaard", "bewaar-huisstijl", "huisstijl-herstel",
       "open-edit-section", "cancel-edit-section", "submit-edit-section", "delete-section",
       "open-add-section", "cancel-add-section", "submit-add-section", "add-label-suggestion",
       "bewerk-soort", "annuleer-soort", "bewaar-soort", "verwijder-soort", "nieuwe-soort"];
@@ -3985,7 +4093,22 @@
     } else if (action === "nieuwe-org") {
       ui.nieuweOrg = true; ui.relatieView = "organisaties"; render(); return;
     } else if (action === "sluit-instellingen") {
+      if (ui.huisConcept) { ui.huisConcept = null; pasHuisstijlToe(); }
       ui.view = ui.vorigeView || "acties"; render(); return;
+    } else if (action === "bewerk-huisstijl") {
+      ui.huisConcept = huisstijlNu(); ui.huisFout = ""; render(); return;
+    } else if (action === "annuleer-huisstijl") {
+      ui.huisConcept = null; ui.huisFout = ""; pasHuisstijlToe(); render(); return;
+    } else if (action === "huisstijl-standaard") {
+      ui.huisConcept = huisstijlNu({}); pasHuisstijlToe(ui.huisConcept); render(); return;
+    } else if (action === "bewaar-huisstijl") {
+      var isStandaard = huisstijlCss(ui.huisConcept) === "";
+      bewaarHuisstijl(isStandaard ? null : ui.huisConcept);
+      return;
+    } else if (action === "huisstijl-herstel") {
+      if (!window.confirm("De standaardkleuren terugzetten voor iedereen?")) return;
+      bewaarHuisstijl(null);
+      return;
     } else if (action === "toggle-instel") {
       var ik = btn.getAttribute("data-instel");
       ui.instelOpen[ik] = !ui.instelOpen[ik]; render(); return;
@@ -4391,6 +4514,27 @@
   });
 
   document.getElementById("app").addEventListener("input", function (e) {
+    var huisVeld = e.target.getAttribute && (e.target.getAttribute("data-huis") || e.target.getAttribute("data-huis-code"));
+    if (huisVeld && ui.huisConcept) {
+      var w = e.target.value.trim();
+      if (!/^#[0-9a-fA-F]{6}$/.test(w)) return;          // halve code: nog even wachten
+      var hd = huisVeld.split("|");
+      ui.huisConcept[hd[0]][hd[1]] = w.toUpperCase();
+      pasHuisstijlToe(ui.huisConcept);
+      // alleen het paneel opnieuw tekenen, zodat de kiezer open kan blijven
+      var paneel = e.target.closest(".huis-paneel");
+      var naam = paneel.querySelector(".huis-naam").textContent;
+      var tmp = document.createElement("div");
+      tmp.innerHTML = huisstijlPaneel(naam, hd[0], ui.huisConcept[hd[0]], true);
+      var nieuw = tmp.firstChild;
+      // de kiezer waarmee je bezig bent laten staan
+      var actief = e.target.getAttribute("data-huis") ? '[data-huis="' + huisVeld + '"]' : '[data-huis-code="' + huisVeld + '"]';
+      var oudVeld = paneel.querySelector(actief), nieuwVeld = nieuw.querySelector(actief);
+      if (oudVeld && nieuwVeld) nieuwVeld.parentNode.replaceChild(oudVeld, nieuwVeld);
+      paneel.parentNode.replaceChild(nieuw, paneel);
+      if (e.target.getAttribute("data-huis-code")) { e.target.focus(); }
+      return;
+    }
     if (e.target.matches('[data-field="relatie-zoek"]')) {
       ui.relatieZoek = e.target.value;
       var pos = e.target.selectionStart;
@@ -4402,7 +4546,10 @@
 
   var tandwiel = document.querySelector(".tandwiel-knop");
   if (tandwiel) tandwiel.addEventListener("click", function () {
-    if (ui.view === "instellingen") { ui.view = ui.vorigeView || "acties"; }
+    if (ui.view === "instellingen") {
+      if (ui.huisConcept) { ui.huisConcept = null; pasHuisstijlToe(); }
+      ui.view = ui.vorigeView || "acties";
+    }
     else { ui.vorigeView = ui.view; ui.view = "instellingen"; }
     tandwiel.classList.toggle("actief", ui.view === "instellingen");
     render();
@@ -4429,6 +4576,9 @@
       ui.labelFilter = e.target.value;
       render();
       return;
+    }
+    if (e.target.matches("[data-huis]") || e.target.matches("[data-huis-code]")) {
+      return;   // afgehandeld bij "input"
     }
     if (e.target.matches('[data-field="lid-uit-persoon"]')) {
       var gekozenP = persoonOp(e.target.value);
@@ -4557,7 +4707,8 @@
       (!magRelaties() && magActies()) ? sb.rpc("namen_organisaties") : sb.from("organisaties").select("*").order("naam"),
       (!magRelaties() && magActies()) ? sb.rpc("namen_personen") : sb.from("personen").select("*"),
       sb.from("organisatie_soorten").select("*").order("volgorde"),
-      sb.from("organisatie_sectoren").select("*").order("volgorde")
+      sb.from("organisatie_sectoren").select("*").order("volgorde"),
+      sb.from("instellingen").select("*")
     ]).then(function (r) {
       r.forEach(function (x, i) { if (x.error && i < 5) throw x.error; });
       var cats = r[0].data || [], acts = r[1].data || [], bes = r[2].data || [];
@@ -4566,6 +4717,10 @@
       personen = (r[4].data || []).sort(opAchternaam);
       soorten = (r[5].data || []).map(function (x) { return x.naam; });
       sectoren = (r[6].data || []).map(function (x) { return x.naam; });
+      heeftInstellingen = !r[7].error;
+      var hs = (r[7].data || []).filter(function (x) { return x.sleutel === "huisstijl"; })[0];
+      eigenHuisstijl = hs && hs.waarde ? hs.waarde : null;
+      pasHuisstijlToe();
 
       currentSections = cats.map(function (c) {
         return {
