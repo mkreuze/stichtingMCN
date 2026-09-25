@@ -224,6 +224,16 @@
   .acties-kaart > .section-header.open { background: var(--blok-kop); }
   .acties-body .add-task-btn { border-top-color: var(--line); margin-top: 12px; padding: 12px 4px 0; }
   .acties-body .empty-state { padding: 6px 4px 4px; }
+
+  /* Kop van een groep in de weergaven Per persoon, Per relatie en Agenda. */
+  .groep-stip { width: 9px; height: 9px; }
+  .groep-sub { font-size: 12.5px; color: var(--ink-faint); white-space: nowrap; }
+  .groep-telling {
+    margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px;
+    color: var(--ink-soft); white-space: nowrap;
+  }
+  .groep-verlopen, .section-title.groep-verlopen { color: var(--danger); }
+  .groep-link { flex: 0 0 auto; font-size: 12px; }
   .acties-kop { padding: 4px 13px 10px; border-bottom: none; }
   .actie-regel {
     font-size: 13px;
@@ -763,7 +773,8 @@
     nieuwPersoonBij: {},// organisatie-id -> true
     relatieFilter: "alle", // "alle" of een organisatie-id
     relatieView: "organisaties", // organisaties | personen
-    actieView: "categorie",      // categorie | alle
+    actieView: "categorie",      // categorie | alle | persoon | relatie | agenda
+    groepDicht: {},              // "weergave|groep" -> true als ingeklapt
     relatieZoek: "",   // zoektekst in de relatielijst
     soortFilter: "alle",   // "alle", een soort, of "geen"
     sectorFilter: "alle",  // idem voor sector
@@ -1589,6 +1600,111 @@
          + renderActieTabel(regels, true) + '</div></section>';
   }
 
+  // ── Extra weergaven: dezelfde acties, anders gegroepeerd ─────────
+  // Per persoon (wie doet het), per relatie (met welke organisatie) en
+  // als agenda (wanneer). Elke groep is een kaart, net als een categorie.
+  var AGENDA_GROEPEN = [
+    ["verlopen", "Datum verstreken"],
+    ["week", "Binnen 7 dagen"],
+    ["maand", "Binnen 30 dagen"],
+    ["later", "Later"],
+    ["geen", "Geen vaste datum"],
+    ["af", "Afgerond"]
+  ];
+
+  function agendaGroep(t) {
+    if (t.done) return "af";
+    var d = parseWhenDate(t.when);
+    if (!d) return "geen";
+    var vandaag = todayISO();
+    if (d < vandaag) return "verlopen";
+    if (d <= addDaysISO(vandaag, 7)) return "week";
+    if (d <= addDaysISO(vandaag, 30)) return "maand";
+    return "later";
+  }
+
+  function groepVan(t, soort) {
+    if (soort === "agenda") {
+      var a = agendaGroep(t), rang = 0;
+      AGENDA_GROEPEN.forEach(function (g, i) { if (g[0] === a) rang = i; });
+      return { sleutel: a, titel: AGENDA_GROEPEN[rang][1], rang: rang, sorteer: "" };
+    }
+    if (soort === "persoon") {
+      var p = t.eigenaarPersoonId ? persoonOp(t.eigenaarPersoonId) : null;
+      if (p) {
+        var org = organisatieOp(p.organisatie_id);
+        var eigen = !!(org && org.eigen);
+        return { sleutel: "p:" + p.id, titel: volledigeNaam(p), sub: eigen || !org ? "" : org.naam,
+                 kleur: ownerColor(eigenaarNaam(t)), rang: eigen ? 0 : 1,
+                 sorteer: (p.achternaam || p.naam || "") + " " + (p.voornaam || "") };
+      }
+      if (t.owner) return { sleutel: "n:" + t.owner, titel: t.owner, kleur: ownerColor(t.owner), rang: 2, sorteer: t.owner };
+      return { sleutel: "_geen", titel: "Zonder actiehouder", rang: 3, sorteer: "" };
+    }
+    // Per relatie: gegroepeerd op organisatie. Is alleen een persoon
+    // gekoppeld, dan telt de organisatie van die persoon.
+    var orgId = t.organisatieId || "";
+    var rp = t.persoonId ? persoonOp(t.persoonId) : null;
+    if (!orgId && rp) orgId = rp.organisatie_id || "";
+    var ro = orgId ? organisatieOp(orgId) : null;
+    if (ro) return { sleutel: "o:" + ro.id, titel: ro.naam, orgId: ro.id, rang: 0, sorteer: ro.naam };
+    if (rp) return { sleutel: "p:" + rp.id, titel: volledigeNaam(rp), rang: 0, sorteer: volledigeNaam(rp) };
+    return { sleutel: "_geen", titel: "Zonder relatie", rang: 1, sorteer: "" };
+  }
+
+  // In de agenda altijd op datum; afgeronde acties de laatst afgeronde eerst.
+  function agendaVolgorde(regels, sleutel) {
+    return regels.slice().sort(function (a, b) {
+      if (sleutel === "af") return (b.taak.completedDate || "").localeCompare(a.taak.completedDate || "");
+      var da = parseWhenDate(a.taak.when) || "9999", db = parseWhenDate(b.taak.when) || "9999";
+      return da < db ? -1 : da > db ? 1 : 0;
+    });
+  }
+
+  function renderGroepenHtml(secties, hoort, soort) {
+    var groepen = {}, lijst = [];
+    secties.forEach(function (sec) {
+      sec.tasks.filter(hoort).forEach(function (t) {
+        var g = groepVan(t, soort);
+        if (!groepen[g.sleutel]) { g.regels = []; groepen[g.sleutel] = g; lijst.push(g); }
+        groepen[g.sleutel].regels.push({ sectie: sec, taak: t });
+      });
+    });
+    if (lijst.length === 0) {
+      return '<div class="empty-state group-empty-state">Geen acties die aan deze selectie voldoen.</div>';
+    }
+    lijst.sort(function (a, b) {
+      if (a.rang !== b.rang) return a.rang - b.rang;
+      return (a.sorteer || "").localeCompare(b.sorteer || "", "nl");
+    });
+
+    var html = "";
+    lijst.forEach(function (g) {
+      var regels = soort === "agenda" ? agendaVolgorde(g.regels, g.sleutel) : sorteerRegels(g.regels);
+      var sleutel = soort + "|" + g.sleutel;
+      var dicht = !!ui.groepDicht[sleutel];
+      var verlopen = regels.filter(function (r) { return !r.taak.done && isVerlopen(r.taak.when); }).length;
+      html += '<section class="section-card acties-kaart">';
+      html += '<div class="section-header' + (dicht ? "" : " open") + '">';
+      html += '<button class="section-header-btn" data-action="toggle-groep" data-groep="' + escapeHtml(sleutel) + '">';
+      if (g.kleur) html += '<span class="ak-stip groep-stip" style="background:' + g.kleur + ';"></span>';
+      html += '<span class="section-title' + (g.sleutel === "verlopen" ? " groep-verlopen" : "") + '">' + escapeHtml(g.titel) + '</span>';
+      if (g.sub) html += '<span class="groep-sub">' + escapeHtml(g.sub) + '</span>';
+      html += '<span class="groep-telling">' + regels.length + (regels.length === 1 ? " actie" : " acties");
+      if (verlopen && g.sleutel !== "verlopen") html += ' · <span class="groep-verlopen">' + verlopen + ' verlopen</span>';
+      html += '</span>';
+      html += chevronSvg(dicht);
+      html += '</button>';
+      if (g.orgId) {
+        html += '<button class="ak-link groep-link" data-action="toon-relatie" data-org="' + escapeHtml(g.orgId) + '" data-persoon="">Naar relatie</button>';
+      }
+      html += '</div>';
+      if (!dicht) html += '<div class="section-body acties-body">' + renderActieTabel(regels, true) + '</div>';
+      html += '</section>';
+    });
+    return html;
+  }
+
   // Dezelfde tabel voor "Alle acties" en voor een uitgeklapte categorie.
   // Binnen een categorie is de kolom Categorie overbodig.
   function renderActieTabel(regels, toonCategorie) {
@@ -2149,7 +2265,8 @@
 
     html += '<div class="filter-row">';
     html += '<span class="seg">';
-    [["categorie", "Per categorie"], ["alle", "Alle acties"]].forEach(function (v) {
+    [["categorie", "Per categorie"], ["alle", "Alle acties"], ["persoon", "Per persoon"],
+     ["relatie", "Per relatie"], ["agenda", "Agenda"]].forEach(function (v) {
       html += '<button class="filter-btn' + (ui.actieView === v[0] ? " active" : "") + '" data-action="set-actie-view" data-actieview="' + v[0] + '">' + v[1] + '</button>';
     });
     html += '</span>';
@@ -2214,12 +2331,22 @@
       html += '<div class="empty-state group-empty-state">Geen acties die aan dit datumfilter voldoen.</div>';
     }
 
+    function hoortErbij(t) {
+      var statusOk = ui.filter === "todo" ? !t.done : ui.filter === "done" ? t.done : true;
+      var labelOk = !actieLabelFilter || taskLabels(t).indexOf(actieLabelFilter) !== -1;
+      return statusOk && labelOk && relatieOk(t) && matchesDateFilter(t);
+    }
+
+    if (ui.actieView === "persoon" || ui.actieView === "relatie" || ui.actieView === "agenda") {
+      html += renderGroepenHtml(visibleSections, hoortErbij, ui.actieView);
+      html += '<p class="footnote">Deze lijst is gedeeld: iedereen die deze pagina opent ziet dezelfde acties, en wijzigingen worden bewaard en direct bijgewerkt bij alle geopende vensters.</p>';
+      app.innerHTML = html;
+      attachAutofocus();
+      return;
+    }
+
     if (ui.actieView === "alle") {
-      html += renderAlleActiesHtml(visibleSections, function (t) {
-        var statusOk = ui.filter === "todo" ? !t.done : ui.filter === "done" ? t.done : true;
-        var labelOk = !actieLabelFilter || taskLabels(t).indexOf(actieLabelFilter) !== -1;
-        return statusOk && labelOk && relatieOk(t) && matchesDateFilter(t);
-      });
+      html += renderAlleActiesHtml(visibleSections, hoortErbij);
       html += '<p class="footnote">Deze lijst is gedeeld: iedereen die deze pagina opent ziet dezelfde acties, en wijzigingen worden bewaard en direct bijgewerkt bij alle geopende vensters.</p>';
       app.innerHTML = html;
       attachAutofocus();
@@ -2996,7 +3123,7 @@
       "toggle-org", "filter-op-relatie", "filter-op-persoon",
       "toon-relatie", "wis-relatiefilter",
       "set-relatie-view", "toon-organisatie", "set-keuze-filter",
-      "set-actie-view", "toon-categorie", "set-action-label-filter-knop"
+      "set-actie-view", "toon-categorie", "set-action-label-filter-knop", "toggle-groep"
     ];
     if (!magBewerken() && KIJKACTIES.indexOf(action) === -1) return;
 
@@ -3040,6 +3167,11 @@
       return;
     } else if (action === "set-actie-view") {
       ui.actieView = btn.getAttribute("data-actieview");
+      render();
+      return;
+    } else if (action === "toggle-groep") {
+      var gk = btn.getAttribute("data-groep");
+      ui.groepDicht[gk] = !ui.groepDicht[gk];
       render();
       return;
     } else if (action === "toon-categorie") {
