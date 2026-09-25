@@ -99,8 +99,14 @@ Twee weergaven, met een zoekveld dat op beide werkt:
 
 - **Organisaties** — per organisatie een kaart met adres, website en
   toelichting, en daaronder de personen die erbij horen.
-- **Personen** — één doorlopende lijst van iedereen, met functie,
-  organisatie en contactgegevens.
+- **Personen** — één doorlopende lijst van iedereen, op achternaam
+  gesorteerd, met functie, organisatie en contactgegevens.
+
+Een naam bestaat uit voornaam, tussenvoegsel en achternaam, met
+daarnaast geslacht (vrouw, man, anders, of leeg). Het veld met de
+volledige naam wordt uit die delen samengesteld; sorteren en zoeken gaan
+ook op achternaam. In de Excel-export staan de delen én de volledige
+naam als aparte kolommen.
 
 Het veld *soort* is een keuzelijst die je zelf beheert: knop **Soorten
 beheren** bij Organisaties. Daar voeg je een soort toe, hernoem je er een

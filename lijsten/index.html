@@ -178,6 +178,8 @@
   .soort-holder > * { flex: 1; min-width: 0; }
   .zoek-veld { font-size: 12.5px; padding: 5px 10px; min-width: 200px; }
   .pc-field { flex: 0 0 96px; }
+  .tv-field { flex: 0 0 104px; }
+  .geslacht-veld { flex: 0 0 150px; }
   .org-adres { white-space: pre-line; }
 
   .relatie-chip {
@@ -795,6 +797,23 @@
   function persoonOp(id) {
     return personen.find(function (x) { return x.id === id; }) || null;
   }
+  // De volledige naam uit de drie delen. Staan die niet ingevuld
+  // (bijvoorbeeld bij oudere gegevens), dan blijft het naamveld gelden.
+  function volledigeNaam(p) {
+    if (!p) return "";
+    var delen = [p.voornaam, p.tussenvoegsel, p.achternaam].filter(function (x) { return x && x.trim(); });
+    return delen.length ? delen.join(" ") : (p.naam || "");
+  }
+
+  // Sorteren gaat op achternaam: dat is wat je in een adressenlijst zoekt.
+  function opAchternaam(a, b) {
+    var aa = (a.achternaam || a.naam || ""), bb = (b.achternaam || b.naam || "");
+    var v = aa.localeCompare(bb, "nl");
+    return v !== 0 ? v : (a.voornaam || "").localeCompare(b.voornaam || "", "nl");
+  }
+
+  var GESLACHTEN = [["", "—"], ["vrouw", "Vrouw"], ["man", "Man"], ["anders", "Anders"]];
+
   function adresVan(org) {
     if (!org) return "";
     var regel = [org.adres || "", [org.postcode || "", org.plaats || ""].filter(Boolean).join("  ")]
@@ -821,7 +840,7 @@
   function eigenaarNaam(taak) {
     if (taak.eigenaarPersoonId) {
       var p = persoonOp(taak.eigenaarPersoonId);
-      if (p) return p.naam;
+      if (p) return volledigeNaam(p);
     }
     return taak.owner || "";
   }
@@ -856,8 +875,8 @@
   function relatieNaam(taak) {
     var pers = taak.persoonId ? persoonOp(taak.persoonId) : null;
     var org = taak.organisatieId ? organisatieOp(taak.organisatieId) : null;
-    if (pers && org) return pers.naam + " · " + org.naam;
-    if (pers) return pers.naam;
+    if (pers && org) return volledigeNaam(pers) + " · " + org.naam;
+    if (pers) return volledigeNaam(pers);
     if (org) return org.naam;
     return "";
   }
@@ -872,7 +891,8 @@
     controleer(sb.from(tabel).upsert(rij)).then(function () {
       var i = lokaleLijst.findIndex(function (x) { return x.id === rij.id; });
       if (i === -1) lokaleLijst.push(rij); else lokaleLijst[i] = rij;
-      lokaleLijst.sort(function (a, b) { return (a.naam || "").localeCompare(b.naam || "", "nl"); });
+      lokaleLijst.sort(tabel === "personen" ? opAchternaam
+        : function (a, b) { return (a.naam || "").localeCompare(b.naam || "", "nl"); });
       syncing = false; saveError = false; render();
     }).catch(function () {
       syncing = false; saveError = true; render();
@@ -967,7 +987,7 @@
     var w = keuze ? keuze.value : "";
     if (w.indexOf("p:") === 0) {
       var p = persoonOp(w.slice(2));
-      return { naam: p ? p.naam : "", persoonId: w.slice(2) };
+      return { naam: p ? volledigeNaam(p) : "", persoonId: w.slice(2) };
     }
     if (w.indexOf("n:") === 0) return { naam: w.slice(2), persoonId: "" };
     return { naam: "", persoonId: "" };
@@ -1367,11 +1387,13 @@
       ]);
     });
 
-    var persBlad = [["Naam", "Functie", "Organisatie", "E-mail", "Telefoon", "Openstaande acties"]];
+    var persBlad = [["Voornaam", "Tussenvoegsel", "Achternaam", "Volledige naam", "Geslacht",
+                     "Functie", "Organisatie", "E-mail", "Telefoon", "Openstaande acties"]];
     zichtbarePersonen().forEach(function (x) {
       var org = organisatieOp(x.organisatie_id);
       persBlad.push([
-        x.naam, x.functie || "", org ? org.naam : "", x.email || "", x.telefoon || "",
+        x.voornaam || "", x.tussenvoegsel || "", x.achternaam || "", volledigeNaam(x), x.geslacht || "",
+        x.functie || "", org ? org.naam : "", x.email || "", x.telefoon || "",
         actiesBij(null, x.id).filter(function (y) { return !y.taak.done; }).length
       ]);
     });
@@ -1389,7 +1411,7 @@
     }
     zichtbarePersonen().forEach(function (x) {
       var org = organisatieOp(x.organisatie_id);
-      voegToe(x.naam, org ? org.naam : "", x.email, "persoon");
+      voegToe(volledigeNaam(x), org ? org.naam : "", x.email, "persoon");
     });
     zichtbareOrganisaties().forEach(function (o) {
       voegToe("", o.naam, o.email, "algemeen");
@@ -1483,7 +1505,8 @@
     return personen.filter(function (x) {
       var org = organisatieOp(x.organisatie_id);
       return soortOk(org) &&
-        relatieZoekFilter([x.naam, x.functie, x.email, org ? org.naam : ""].join(" "));
+        relatieZoekFilter([volledigeNaam(x), x.achternaam, x.functie, x.email,
+                           org ? org.naam : ""].join(" "));
     });
   }
 
@@ -1650,7 +1673,7 @@
       var eigenActies = actiesBij(null, pers.id).filter(function (x) { return !x.taak.done; }).length;
 
       html += '<div class="persoon-regel">';
-      html += '<span class="pk-naam">' + escapeHtml(pers.naam) + '</span>';
+      html += '<span class="pk-naam">' + escapeHtml(volledigeNaam(pers)) + '</span>';
       html += '<span class="pk-veld">' + escapeHtml(pers.functie || "") + '</span>';
       html += '<span class="pk-veld">';
       if (org) {
@@ -1798,7 +1821,7 @@
           html += '<div class="task-row persoon-row">';
           html += '<div class="task-body">';
           html += '<div class="task-title-row">';
-          html += '<div class="task-title">' + escapeHtml(pers.naam) + '</div>';
+          html += '<div class="task-title">' + escapeHtml(volledigeNaam(pers)) + '</div>';
           if (pers.functie) html += '<span class="persoon-functie sans">' + escapeHtml(pers.functie) + '</span>';
           html += '</div>';
           html += '<div class="task-meta">';
@@ -1895,7 +1918,17 @@
     var id = pers ? pers.id : "nieuw";
     var html = '<div class="add-form" data-form="persoon" data-persoon="' + id + '" data-org="' + org.id + '">';
     html += '<div class="form-row">';
-    html += '<input type="text" class="txt-input flex1" data-field="p-naam" value="' + escapeHtml(pers ? pers.naam : "") + '" placeholder="Naam" data-autofocus="1" />';
+    html += '<input type="text" class="txt-input flex1" data-field="p-voornaam" value="' + escapeHtml(pers ? (pers.voornaam || "") : "") + '" placeholder="Voornaam" data-autofocus="1" />';
+    html += '<input type="text" class="txt-input tv-field" data-field="p-tussenvoegsel" value="' + escapeHtml(pers ? (pers.tussenvoegsel || "") : "") + '" placeholder="van der" />';
+    html += '<input type="text" class="txt-input flex1" data-field="p-achternaam" value="' + escapeHtml(pers ? (pers.achternaam || "") : "") + '" placeholder="Achternaam" />';
+    html += '</div>';
+    html += '<div class="form-row">';
+    html += '<select class="sel-input geslacht-veld" data-field="p-geslacht">';
+    GESLACHTEN.forEach(function (g) {
+      var gekozen = (pers ? (pers.geslacht || "") : "") === g[0];
+      html += '<option value="' + g[0] + '"' + (gekozen ? " selected" : "") + '>' + (g[0] ? escapeHtml(g[1]) : "— geslacht —") + '</option>';
+    });
+    html += '</select>';
     html += '<input type="text" class="txt-input flex1" data-field="p-functie" value="' + escapeHtml(pers ? pers.functie : "") + '" placeholder="Functie" />';
     html += '</div>';
     html += '<div class="form-row">';
@@ -2131,7 +2164,7 @@
 
     if (ui.relatieFilter !== "alle") {
       var fNaam = relFilterPersoon
-        ? ((persoonOp(relFilterPersoon) || {}).naam || "deze persoon")
+        ? (volledigeNaam(persoonOp(relFilterPersoon)) || "deze persoon")
         : ((organisatieOp(relFilterOrg) || {}).naam || "deze organisatie");
       html += '<div class="label-filter-bar">';
       html += '<span>Alleen acties van</span>';
@@ -2518,7 +2551,7 @@
     if (onsVolk.length) {
       html += '<optgroup label="Onze mensen">';
       onsVolk.forEach(function (x) {
-        html += '<option value="p:' + escapeHtml(x.id) + '"' + (x.id === gekozenPersoon ? " selected" : "") + '>' + escapeHtml(x.naam) + '</option>';
+        html += '<option value="p:' + escapeHtml(x.id) + '"' + (x.id === gekozenPersoon ? " selected" : "") + '>' + escapeHtml(volledigeNaam(x)) + '</option>';
       });
       html += '</optgroup>';
     }
@@ -2532,7 +2565,7 @@
     if (extern) {
       var eOrg = organisatieOp(extern.organisatie_id);
       html += '<optgroup label="Van buiten">';
-      html += '<option value="p:' + escapeHtml(extern.id) + '" selected>' + escapeHtml(extern.naam) + (eOrg ? " \u00b7 " + escapeHtml(eOrg.naam) : "") + '</option>';
+      html += '<option value="p:' + escapeHtml(extern.id) + '" selected>' + escapeHtml(volledigeNaam(extern)) + (eOrg ? " \u00b7 " + escapeHtml(eOrg.naam) : "") + '</option>';
       html += '</optgroup>';
     }
     html += '<option value="__extern__">+ Iemand van een andere organisatie…</option>';
@@ -2558,7 +2591,7 @@
     } else {
       html += '<option value="">— persoon kiezen —</option>';
       lijst.forEach(function (x) {
-        html += '<option value="p:' + escapeHtml(x.id) + '">' + escapeHtml(x.naam) + '</option>';
+        html += '<option value="p:' + escapeHtml(x.id) + '">' + escapeHtml(volledigeNaam(x)) + '</option>';
       });
     }
     html += '</select>';
@@ -2587,7 +2620,7 @@
     html += '<select class="sel-input flex1" data-field="actie-persoon">';
     html += '<option value="">— geen persoon —</option>';
     (orgId ? personenBij(orgId) : personen).forEach(function (x) {
-      html += '<option value="' + escapeHtml(x.id) + '"' + (x.id === persId ? " selected" : "") + '>' + escapeHtml(x.naam) + '</option>';
+      html += '<option value="' + escapeHtml(x.id) + '"' + (x.id === persId ? " selected" : "") + '>' + escapeHtml(volledigeNaam(x)) + '</option>';
     });
     html += '</select>';
     html += '</div></div>';
@@ -3049,12 +3082,21 @@
       ui.bewerkPersoon[persoonId] = true; render(); return;
     } else if (action === "bewaar-persoon") {
       var pf = btn.closest('[data-form="persoon"]');
-      var pnaam = leesVeld(pf, "p-naam");
+      var pdelen = {
+        voornaam: leesVeld(pf, "p-voornaam"),
+        tussenvoegsel: leesVeld(pf, "p-tussenvoegsel"),
+        achternaam: leesVeld(pf, "p-achternaam")
+      };
+      var pnaam = volledigeNaam(pdelen);
       if (!pnaam) return;
       var bestaandP = persoonId === "nieuw" ? null : persoonOp(persoonId);
       var prij = {
         id: bestaandP ? bestaandP.id : nieuwId("pers"),
         organisatie_id: orgId,
+        voornaam: pdelen.voornaam,
+        tussenvoegsel: pdelen.tussenvoegsel,
+        achternaam: pdelen.achternaam,
+        geslacht: leesVeld(pf, "p-geslacht"),
         naam: pnaam,
         functie: leesVeld(pf, "p-functie"),
         email: leesVeld(pf, "p-email"),
@@ -3412,14 +3454,14 @@
       sb.from("acties").select("*").order("volgorde"),
       sb.from("besluiten").select("*"),
       sb.from("organisaties").select("*").order("naam"),
-      sb.from("personen").select("*").order("naam"),
+      sb.from("personen").select("*"),
       sb.from("organisatie_soorten").select("*").order("volgorde"),
       sb.from("organisatie_sectoren").select("*").order("volgorde")
     ]).then(function (r) {
       r.forEach(function (x, i) { if (x.error && i < 5) throw x.error; });
       var cats = r[0].data || [], acts = r[1].data || [], bes = r[2].data || [];
       organisaties = r[3].data || [];
-      personen = r[4].data || [];
+      personen = (r[4].data || []).sort(opAchternaam);
       soorten = (r[5].data || []).map(function (x) { return x.naam; });
       sectoren = (r[6].data || []).map(function (x) { return x.naam; });
 
