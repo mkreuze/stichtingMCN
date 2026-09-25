@@ -4,6 +4,10 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Mobiel Erfgoed Console — Stichting Mobiele Collectie Nederland</title>
+<script>
+  // Licht of donker zoals gekozen onder het tandwieltje; leeg = volg het apparaat.
+  try { var t = localStorage.getItem("mec-thema"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch (e) {}
+</script>
 <style>
   :root {
     --ink: #1E2624;
@@ -110,7 +114,14 @@
   }
   /* Het i-knopje rechtsboven met het versienummer. Bij aanwijzen of
      aantikken verschijnt een kaartje. */
-  .versie-houder { position: relative; margin-left: auto; align-self: flex-start; }
+  .versie-houder { position: relative; align-self: flex-start; }
+  .tandwiel-knop {
+    margin-left: auto; align-self: flex-start; width: 22px; height: 22px; border-radius: 50%;
+    border: 1px solid var(--line); background: var(--card); color: var(--ink-faint); cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; padding: 0;
+  }
+  .tandwiel-knop:hover, .tandwiel-knop.actief { color: var(--accent); border-color: var(--accent); }
+  .masthead-row .tandwiel-knop + .versie-houder { margin-left: -8px; }
   .versie-knop {
     width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--line);
     background: var(--card); color: var(--ink-faint); cursor: pointer;
@@ -125,7 +136,7 @@
   }
   .versie-info strong { display: block; color: var(--ink); font-size: 13px; margin-bottom: 2px; }
   .versie-houder:hover .versie-info, .versie-houder:focus-within .versie-info, .versie-houder.open .versie-info { display: block; }
-  @media print { .versie-houder { display: none; } }
+  @media print { .versie-houder, .tandwiel-knop { display: none; } }
 
   .logo-img {
     width: 78px;
@@ -742,6 +753,25 @@
   }
   .besluit-kop { padding-left: 13px; }
 
+  /* Instellingen */
+  .instel-kop { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin: 4px 0 16px; }
+  .instel-kop .link-btn { margin-left: auto; }
+  .instel-titel { font-size: 19px; margin: 0; }
+  .instel-sub { font-size: 16px; margin: 28px 0 12px; display: flex; gap: 12px; align-items: baseline; }
+  .instel-regel {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: space-between;
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); padding: 12px 14px;
+  }
+  .instel-naam { font-weight: 600; font-size: 14px; }
+  .instel-regel .followup-hint { margin: 2px 0 0; }
+  .label-kop, .actie-regel.label-regel { grid-template-columns: minmax(160px, 1fr) minmax(0, 120px) 56px; padding-left: 13px; }
+  @media (max-width: 980px) {
+    .actie-regel.label-regel { grid-template-columns: 1fr auto; padding: 12px 13px; }
+    .label-regel .ak-titel { grid-row: 1; grid-column: 1; }
+    .label-regel .ak-knoppen { grid-row: 1 / span 2; grid-column: 2; }
+    .label-regel .ak-veld { grid-column: 1; }
+  }
+
   /* Relaties in het blauw van de N uit het logo (#75C3EA); de acties
      houden het groen. Knoppen, tabjes en het blok onder een organisatie
      kleuren mee. */
@@ -863,11 +893,14 @@
       </div>
       <!-- Versienummer: bij elke nieuwe publicatie ophogen, en een regel
            toevoegen onder "Versies" in lijsten/README.md. -->
+      <button type="button" class="tandwiel-knop" aria-label="Instellingen" title="Instellingen">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </button>
       <div class="versie-houder">
         <button type="button" class="versie-knop" aria-label="Versie-informatie" aria-expanded="false">i</button>
         <div class="versie-info" role="tooltip">
           <strong>Mobiel Erfgoed Console</strong>
-          <span>Versie 1.5 &middot; 25 september 2026</span>
+          <span>Versie 1.6 &middot; 25 september 2026</span>
         </div>
       </div>
     </div>
@@ -953,6 +986,7 @@
     actieView: "alle",           // categorie | alle | persoon | organisatie | agenda
     nieuweActie: false,          // het formulier "Nieuwe actie" boven de lijst
     relFilterOpen: false,        // het filterpaneel bij de relaties
+    bewerkLabel: null,           // label dat onder Instellingen wordt hernoemd
     groepDicht: {},              // "weergave|groep" -> true als ingeklapt
     filterOpen: false,           // het filterpaneel onder de knop Filter
     relatieZoek: "",   // zoektekst in de relatielijst
@@ -1775,7 +1809,6 @@
       var zicht = zichtbareOrganisaties();
       var allesDicht = !zicht.some(function (o) { return !!ui.openOrg[o.id]; });
       if (zicht.length) html += '<button class="filter-btn" data-action="toggle-orgs-alle">' + (allesDicht ? "Alles uitklappen" : "Alles inklappen") + '</button>';
-      if (mag) html += '<button class="filter-btn' + (ui.soortenBeheer ? " active" : "") + '" data-action="toggle-soorten-beheer">Soorten beheren</button>';
     }
     if (mag && !ui.nieuweOrg) {
       html += '<button class="filter-btn nieuwe-actie-knop" data-action="nieuwe-org">' + plusSvg() + 'Nieuwe organisatie</button>';
@@ -2124,50 +2157,149 @@
     return html;
   }
 
+  // ── Instellingen (het tandwieltje) ────────────────────────────────
+  // Basis, voor iedereen: licht of donker. Beheer, alleen voor de rol
+  // beheerder: soorten en sectoren van organisaties, en de labels van
+  // acties.
+  function huidigThema() {
+    try { return localStorage.getItem("mec-thema") || ""; } catch (e) { return ""; }
+  }
+  function zetThema(t) {
+    try { if (t) localStorage.setItem("mec-thema", t); else localStorage.removeItem("mec-thema"); } catch (e) {}
+    if (t) document.documentElement.setAttribute("data-theme", t);
+    else document.documentElement.removeAttribute("data-theme");
+  }
+
+  function renderInstellingenHtml() {
+    var html = '<div class="instellingen">';
+    html += '<div class="instel-kop"><h2 class="instel-titel">Instellingen</h2>';
+    html += '<span class="relatie-meta sans">Ingelogd als ' + escapeHtml(sessie.user.email) + ' \u00b7 ' + escapeHtml(mijnRol || "") + '</span>';
+    html += '<button class="link-btn" data-action="sluit-instellingen">Terug</button></div>';
+
+    // Basis
+    var t = huidigThema();
+    html += '<section class="section-card acties-kaart"><div class="section-header open"><span class="section-title">Weergave</span>';
+    html += '<span class="relatie-meta sans">voor iedereen</span></div>';
+    html += '<div class="section-body acties-body"><div class="instel-regel">';
+    html += '<div><div class="instel-naam">Licht of donker</div><div class="followup-hint">Automatisch volgt de instelling van je computer of telefoon. Je keuze geldt op dit apparaat.</div></div>';
+    html += '<span class="seg">';
+    [["", "Automatisch"], ["light", "Licht"], ["dark", "Donker"]].forEach(function (o) {
+      html += '<button class="filter-btn' + (t === o[0] ? " active" : "") + '" data-action="zet-thema" data-thema="' + o[0] + '">' + o[1] + '</button>';
+    });
+    html += '</span></div></div></section>';
+
+    // Beheer
+    if (mijnRol === "beheerder") {
+      html += '<h3 class="instel-sub">Beheer <span class="relatie-meta sans">alleen voor de beheerder</span></h3>';
+      html += '<div class="relaties-thema">' + renderKeuzelijstBeheer() + '</div>';
+      html += renderLabelBeheer();
+    }
+    html += '</div>';
+    return html;
+  }
+
+  // Alle labels die bij acties in gebruik zijn, met hoe vaak. Hernoemen
+  // past alle acties aan; hernoem je naar een label dat al bestaat, dan
+  // worden ze samengevoegd. Verwijderen haalt het label bij alle acties weg.
+  function labelsMetAantal() {
+    var tel = {};
+    (currentSections || []).forEach(function (sec) {
+      sec.tasks.forEach(function (t) { taskLabels(t).forEach(function (l) { tel[l] = (tel[l] || 0) + 1; }); });
+    });
+    return Object.keys(tel).sort(function (a, b) { return a.localeCompare(b, "nl"); })
+                 .map(function (l) { return { naam: l, aantal: tel[l] }; });
+  }
+
+  function renderLabelBeheer() {
+    var lijst = labelsMetAantal();
+    var html = '<section class="section-card acties-kaart"><div class="section-header open"><span class="section-title">Labels bij acties</span>';
+    html += '<span class="relatie-meta sans">een label ontstaat door het bij een actie in te vullen</span></div>';
+    html += '<div class="section-body acties-body">';
+    if (!lijst.length) html += '<div class="empty-state">Er zijn nog geen labels in gebruik.</div>';
+    else html += '<div class="acties-kop label-kop sans"><span>Label</span><span>Acties</span><span></span></div>';
+    lijst.forEach(function (l) {
+      if (ui.bewerkLabel === l.naam) {
+        html += '<div class="actie-formulier" style="--balk:' + labelColor(l.naam) + ';"><div class="add-form" data-form="label">';
+        html += '<div class="form-row"><label class="veld"><span class="followup-hint">Nieuwe naam</span>';
+        html += '<input type="text" class="txt-input" data-field="label-naam" value="' + escapeHtml(l.naam) + '" data-autofocus="1" /></label></div>';
+        html += '<div class="followup-hint">Wordt aangepast bij ' + l.aantal + (l.aantal === 1 ? " actie" : " acties") + '. Kies je een naam die al bestaat, dan worden de twee labels samengevoegd.</div>';
+        html += '<div class="form-actions"><button class="save-btn" data-action="bewaar-label" data-label="' + escapeHtml(l.naam) + '">Opslaan</button>';
+        html += '<button class="cancel-btn" data-action="annuleer-label">Annuleren</button></div>';
+        html += '</div></div>';
+        return;
+      }
+      html += '<div class="actie-regel label-regel" style="--balk:' + labelColor(l.naam) + ';">';
+      html += '<span class="ak-titel">' + escapeHtml(l.naam) + '</span>';
+      html += '<span class="ak-veld">' + l.aantal + (l.aantal === 1 ? " actie" : " acties") + '</span>';
+      html += '<span class="ak-knoppen">';
+      html += '<button class="edit-btn" data-action="bewerk-label" data-label="' + escapeHtml(l.naam) + '" aria-label="Label hernoemen" title="Hernoemen">' + pencilSvg() + '</button>';
+      html += '<button class="delete-btn" data-action="verwijder-label" data-label="' + escapeHtml(l.naam) + '" aria-label="Label verwijderen" title="Bij alle acties weghalen">' + xSvg() + '</button>';
+      html += '</span></div>';
+    });
+    html += '</div></section>';
+    return html;
+  }
+
+  function wijzigLabel(oud, nieuw) {
+    var next = cloneSections();
+    next.forEach(function (sec) {
+      sec.tasks.forEach(function (t) {
+        var l = taskLabels(t);
+        if (l.indexOf(oud) === -1) return;
+        var uit = [];
+        l.forEach(function (x) {
+          var y = x === oud ? nieuw : x;
+          if (y && uit.indexOf(y) === -1) uit.push(y);
+        });
+        t.labels = uit;
+      });
+    });
+    if (ui.actionLabelFilter === oud) ui.actionLabelFilter = nieuw || "alle";
+    persist(next);
+  }
+
   function renderKeuzelijstBeheer() {
     var html = "";
     KEUZELIJSTEN.forEach(function (k) {
       var lijst = k.lees();
-      html += '<section class="section-card soorten-kaart">';
+      html += '<section class="section-card acties-kaart soorten-kaart">';
       html += '<div class="section-header open"><span class="section-title">' + escapeHtml(k.kop) + '</span>';
-      html += '<span class="relatie-meta sans">' + escapeHtml(k.omschrijving) + '</span>';
-      html += '<button class="cancel-btn" data-action="toggle-soorten-beheer">Sluiten</button>';
-      html += '</div><div class="section-body">';
+      html += '<span class="relatie-meta sans">' + escapeHtml(k.omschrijving) + '</span></div>';
+      html += '<div class="section-body acties-body">';
 
       if (lijst.length === 0) html += '<div class="empty-state">Nog niets in deze lijst.</div>';
+      else html += '<div class="acties-kop label-kop sans"><span>Naam</span><span>Organisaties</span><span></span></div>';
 
       lijst.forEach(function (x) {
         var sleutel = k.veld + "|" + x;
         var aantal = organisaties.filter(function (o) { return o[k.veld] === x; }).length;
         if (ui.bewerkSoort[sleutel]) {
-          html += '<div class="add-form" data-form="soort" data-soort="' + escapeHtml(sleutel) + '">';
-          html += '<div class="form-row">';
-          html += '<input type="text" class="txt-input flex1" data-field="soort-naam" value="' + escapeHtml(x) + '" data-autofocus="1" />';
-          html += '<button class="save-btn" data-action="bewaar-soort" data-soort="' + escapeHtml(sleutel) + '">Opslaan</button>';
-          html += '<button class="cancel-btn" data-action="annuleer-soort" data-soort="' + escapeHtml(sleutel) + '">Annuleren</button>';
-          html += '</div>';
+          html += '<div class="actie-formulier" style="--balk:var(--rel-balk);"><div class="add-form" data-form="soort" data-soort="' + escapeHtml(sleutel) + '">';
+          html += '<div class="form-row"><label class="veld"><span class="followup-hint">Nieuwe naam</span>';
+          html += '<input type="text" class="txt-input" data-field="soort-naam" value="' + escapeHtml(x) + '" data-autofocus="1" /></label></div>';
           if (aantal) html += '<div class="followup-hint">Hernoemen past ' + aantal + ' ' + (aantal === 1 ? 'organisatie' : 'organisaties') + ' mee aan.</div>';
-          html += '</div>';
+          html += '<div class="form-actions"><button class="save-btn" data-action="bewaar-soort" data-soort="' + escapeHtml(sleutel) + '">Opslaan</button>';
+          html += '<button class="cancel-btn" data-action="annuleer-soort" data-soort="' + escapeHtml(sleutel) + '">Annuleren</button></div>';
+          html += '</div></div>';
           return;
         }
-        html += '<div class="task-row soort-row">';
-        html += '<div class="task-body"><div class="task-title-row">';
-        html += '<div class="task-title">' + escapeHtml(x) + '</div>';
-        html += '<span class="progress-label sans">' + aantal + '\u00d7</span>';
-        html += '</div></div>';
-        html += '<button class="edit-btn" data-action="bewerk-soort" data-soort="' + escapeHtml(sleutel) + '" aria-label="Hernoemen">' + pencilSvg() + '</button>';
+        html += '<div class="actie-regel label-regel" style="--balk:var(--rel-balk);">';
+        html += '<span class="ak-titel">' + escapeHtml(x) + '</span>';
+        html += '<span class="ak-veld">' + aantal + (aantal === 1 ? " organisatie" : " organisaties") + '</span>';
+        html += '<span class="ak-knoppen">';
+        html += '<button class="edit-btn" data-action="bewerk-soort" data-soort="' + escapeHtml(sleutel) + '" aria-label="Hernoemen" title="Hernoemen">' + pencilSvg() + '</button>';
         if (aantal === 0) {
           html += '<button class="delete-btn" data-action="verwijder-soort" data-soort="' + escapeHtml(sleutel) + '" aria-label="Verwijderen" title="Verwijderen">' + xSvg() + '</button>';
         }
-        html += '</div>';
+        html += '</span></div>';
       });
 
       if (ui.nieuwSoort === k.veld) {
-        html += '<div class="add-form" data-form="soort" data-soort="' + k.veld + '|nieuw">';
-        html += '<div class="form-row">';
-        html += '<input type="text" class="txt-input flex1" data-field="soort-naam" placeholder="Nieuwe naam" data-autofocus="1" />';
-        html += '<button class="save-btn" data-action="bewaar-soort" data-soort="' + k.veld + '|nieuw">Toevoegen</button>';
-        html += '<button class="cancel-btn" data-action="annuleer-soort" data-soort="' + k.veld + '|nieuw">Annuleren</button>';
+        html += '<div class="actie-formulier" style="--balk:var(--rel-balk);"><div class="add-form" data-form="soort" data-soort="' + k.veld + '|nieuw">';
+        html += '<div class="form-row"><label class="veld"><span class="followup-hint">Naam</span>';
+        html += '<input type="text" class="txt-input" data-field="soort-naam" data-autofocus="1" /></label></div>';
+        html += '<div class="form-actions"><button class="save-btn" data-action="bewaar-soort" data-soort="' + k.veld + '|nieuw">Toevoegen</button>';
+        html += '<button class="cancel-btn" data-action="annuleer-soort" data-soort="' + k.veld + '|nieuw">Annuleren</button></div>';
         html += '</div></div>';
       } else {
         html += '<button class="add-task-btn" data-action="nieuwe-soort" data-keuzeveld="' + k.veld + '">' + plusSvg() + 'Toevoegen</button>';
@@ -2177,10 +2309,10 @@
     return html;
   }
 
+
   function renderOrganisatiesHtml() {
     var html = "";
     var mag = magBewerken();
-    if (ui.soortenBeheer && mag) html += renderKeuzelijstBeheer();
 
     if (organisaties.length === 0 && !ui.nieuweOrg) {
       html += '<div class="empty-state group-empty-state">Nog geen organisaties. Voeg er hieronder één toe.</div>';
@@ -2485,6 +2617,13 @@
     html += '<button class="pdf-download-btn" data-action="uitloggen" title="' + escapeHtml(sessie.user.email) + (mijnRol === "kijker" ? " — je kunt meekijken, niet wijzigen" : "") + '">' + escapeHtml(sessie.user.email.split("@")[0]) + (mijnRol === "kijker" ? " (meekijken)" : "") + '</button>';
     html += '</span>';
     html += '</div>';
+
+    if (ui.view === "instellingen") {
+      html += renderInstellingenHtml();
+      app.innerHTML = html;
+      attachAutofocus();
+      return;
+    }
 
     if (!magBewerken()) {
       html += '<p class="meekijk-melding">Je kunt deze lijst bekijken, maar niet wijzigen. ' +
@@ -3430,9 +3569,14 @@
       "toon-relatie", "wis-relatiefilter", "toggle-filterpaneel", "wis-filter", "wis-filters",
       "set-relatie-view", "toon-organisatie", "set-keuze-filter",
       "toggle-relfilter", "wis-relfilter", "wis-relfilters", "toggle-orgs-alle",
+      "sluit-instellingen", "zet-thema",
       "set-actie-view", "toon-categorie", "set-action-label-filter-knop", "toggle-groep", "toggle-groepen-alle"
     ];
     if (!magBewerken() && KIJKACTIES.indexOf(action) === -1) return;
+    // Soorten, sectoren en labels beheren is voor de beheerder.
+    var BEHEERACTIES = ["bewerk-label", "annuleer-label", "bewaar-label", "verwijder-label",
+      "bewerk-soort", "annuleer-soort", "bewaar-soort", "verwijder-soort", "nieuwe-soort"];
+    if (BEHEERACTIES.indexOf(action) !== -1 && mijnRol !== "beheerder") return;
 
     if (action === "uitloggen") {
       uitloggen();
@@ -3511,6 +3655,28 @@
       return;
     } else if (action === "nieuwe-org") {
       ui.nieuweOrg = true; ui.relatieView = "organisaties"; render(); return;
+    } else if (action === "sluit-instellingen") {
+      ui.view = ui.vorigeView || "acties"; render(); return;
+    } else if (action === "zet-thema") {
+      zetThema(btn.getAttribute("data-thema")); render(); return;
+    } else if (action === "bewerk-label") {
+      ui.bewerkLabel = btn.getAttribute("data-label"); render(); return;
+    } else if (action === "annuleer-label") {
+      ui.bewerkLabel = null; render(); return;
+    } else if (action === "bewaar-label") {
+      var oudLabel = btn.getAttribute("data-label");
+      var labelVeld = btn.closest('[data-form="label"]').querySelector('[data-field="label-naam"]');
+      var nieuwLabel = labelVeld.value.trim();
+      if (!nieuwLabel) { labelVeld.classList.add("veld-fout"); labelVeld.focus(); return; }
+      ui.bewerkLabel = null;
+      if (nieuwLabel !== oudLabel) wijzigLabel(oudLabel, nieuwLabel); else render();
+      return;
+    } else if (action === "verwijder-label") {
+      var wegLabel = btn.getAttribute("data-label");
+      var hoeveel = (labelsMetAantal().filter(function (x) { return x.naam === wegLabel; })[0] || {}).aantal || 0;
+      if (!window.confirm("Label \u201c" + wegLabel + "\u201d weghalen bij " + hoeveel + (hoeveel === 1 ? " actie" : " acties") + "? De acties zelf blijven staan.")) return;
+      wijzigLabel(wegLabel, "");
+      return;
     } else if (action === "toggle-relfilter") {
       ui.relFilterOpen = !ui.relFilterOpen; render(); return;
     } else if (action === "wis-relfilter") {
@@ -3848,6 +4014,14 @@
       var opnieuw = document.querySelector('[data-field="relatie-zoek"]');
       if (opnieuw) { opnieuw.focus(); try { opnieuw.setSelectionRange(pos, pos); } catch (x) {} }
     }
+  });
+
+  var tandwiel = document.querySelector(".tandwiel-knop");
+  if (tandwiel) tandwiel.addEventListener("click", function () {
+    if (ui.view === "instellingen") { ui.view = ui.vorigeView || "acties"; }
+    else { ui.vorigeView = ui.view; ui.view = "instellingen"; }
+    tandwiel.classList.toggle("actief", ui.view === "instellingen");
+    render();
   });
 
   document.getElementById("app").addEventListener("change", function (e) {

@@ -230,6 +230,26 @@ uit de mail dood. Zet in Supabase onder **Authentication → URL
 Configuration** het adres van Vercel bij **Site URL**, en zet hetzelfde
 adres met `/**` erachter bij **Redirect URLs**.
 
+## Instellingen (het tandwieltje)
+
+Rechtsboven, naast de **i**, staat een tandwieltje. Daaronder:
+
+- **Weergave** — voor iedereen: *Automatisch*, *Licht* of *Donker*.
+  Automatisch volgt de instelling van de computer of telefoon. De keuze
+  wordt op dat apparaat onthouden.
+- **Beheer** — alleen voor wie in de tabel `leden` de rol *beheerder*
+  heeft:
+  - *Soorten organisaties* en *Sectoren*: toevoegen, hernoemen (de
+    organisaties gaan mee) en verwijderen als er geen organisatie meer
+    bij hoort;
+  - *Labels bij acties*: elk label met het aantal acties. Hernoemen past
+    alle acties aan; hernoem je naar een bestaand label, dan worden ze
+    samengevoegd. Verwijderen haalt het label bij alle acties weg; de
+    acties zelf blijven staan.
+
+Een bewerker ziet alleen *Weergave*. De Console laat een bewerker ook
+buiten het scherm om geen soorten, sectoren of labels beheren.
+
 ## Versies
 
 Rechtsboven in de Console staat een **i**. Wijs je die aan (of tik je
@@ -245,3 +265,4 @@ een regel hieronder.
 | 1.3 | 25-09-2026 | Weergaven Per persoon, Per organisatie en Agenda; een geopende actie blijft een wit kaartje. |
 | 1.4 | 25-09-2026 | Wie is organisatie plus contactpersoon; het veld Relatie en de losse namen vervallen; formulier met kopjes. |
 | 1.5 | 25-09-2026 | Filterbalk met knop Filter en labels; Nieuwe actie vanuit elke weergave; filter op Wie; besluiten en relaties in kaartstijl, relaties in het blauw van het logo; formulieren voor organisatie en contactpersoon met kopjes; versieknopje. |
+| 1.6 | 25-09-2026 | Tandwieltje met instellingen: licht, donker of automatisch voor iedereen; beheer van soorten, sectoren en actielabels voor de beheerder. |
