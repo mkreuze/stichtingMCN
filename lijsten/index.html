@@ -176,8 +176,14 @@
 
   .eigenaar-houder { display: flex; min-width: 0; }
   .eigenaar-houder > * { flex: 1; min-width: 0; }
-  .wie-kiezer { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; width: 100%; }
-  .wie-kiezer select { flex: 1 1 160px; min-width: 0; }
+  /* Organisatie, Wie en Datum naast elkaar, elk met een kopje erboven. */
+  .wie-kiezer { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; width: 100%; }
+  .veld { display: flex; flex-direction: column; flex: 1 1 180px; min-width: 0; }
+  .veld > .followup-hint { margin: 0 0 4px; }
+  .veld select, .veld input { width: 100%; }
+  .datum-veld { flex: 0 0 150px; }
+  .datum-veld .date-field { flex: none; width: 100%; }
+  .add-form .form-row.single > .followup-hint { margin: 0 0 4px; }
   .wie-extern { display: block; font-size: 9.5px; font-weight: 600; opacity: 0.75; margin-top: -1px; }
 
   .soort-holder { display: flex; }
@@ -940,23 +946,6 @@
     var org = organisatieOp(p.organisatie_id);
     if (!org || org.eigen) return "";
     return org.naam;
-  }
-
-  function eigenMensen() {
-    var eigenIds = organisaties.filter(function (o) { return o.eigen; })
-                               .map(function (o) { return o.id; });
-    return personen.filter(function (x) { return eigenIds.indexOf(x.organisatie_id) !== -1; });
-  }
-
-  // Losse namen die in gebruik zijn en geen persoon zijn: Sectoren, Allen.
-  function losseNamen() {
-    var set = {};
-    (currentSections || []).forEach(function (sec) {
-      sec.tasks.forEach(function (t) {
-        if (!t.eigenaarPersoonId && !t.eigenaarOrgId && t.owner) set[t.owner] = true;
-      });
-    });
-    return Object.keys(set).sort(function (a, b) { return a.localeCompare(b, "nl"); });
   }
 
   function nieuwId(voorvoegsel) {
@@ -2620,7 +2609,7 @@
   function renderEditTaskForm(section, task, owners) {
     var useCustom = !!ui.editCustomOwner[task.id];
     var html = '<div class="add-form" data-form="edit-task" data-section="' + section.id + '" data-task="' + task.id + '" style="border-top:none;padding-top:0;">';
-    html += '<div class="form-row single"><input type="text" class="txt-input" data-field="title" value="' + escapeHtml(task.title) + '" data-autofocus="1" /></div>';
+    html += '<div class="form-row single"><span class="followup-hint">Actie</span><input type="text" class="txt-input" data-field="title" value="' + escapeHtml(task.title) + '" data-autofocus="1" /></div>';
     html += '<div class="form-row">';
     html += '<div class="owner-col">';
     if (!useCustom) {
@@ -2634,13 +2623,15 @@
     html += '</div>';
     // Oudere taken hebben een vrije datumtekst ("17 aug"); die past niet in een
     // datumkiezer, dus dan een tekstveld — anders werd de tekst bij bewerken gewist.
+    html += '<label class="veld datum-veld"><span class="followup-hint">Datum</span>';
     if (task.when && !/^\d{4}-\d{2}-\d{2}$/.test(task.when)) {
-      html += '<input type="text" class="txt-input date-field" data-field="when" value="' + escapeHtml(task.when) + '" title="Wanneer (optioneel)" />';
+      html += '<input type="text" class="txt-input date-field" data-field="when" value="' + escapeHtml(task.when) + '" />';
     } else {
-      html += '<input type="date" class="txt-input date-field" data-field="when" value="' + escapeHtml(task.when || "") + '" title="Wanneer (optioneel)" />';
+      html += '<input type="date" class="txt-input date-field" data-field="when" value="' + escapeHtml(task.when || "") + '" />';
     }
+    html += '</label>';
     html += '</div>';
-    html += '<div class="form-row single"><textarea class="txt-input note-area" data-field="note" placeholder="Toelichting (optioneel)" rows="3">' + escapeHtml(task.note || "") + '</textarea></div>';
+    html += '<div class="form-row single"><span class="followup-hint">Toelichting</span><textarea class="txt-input note-area" data-field="note" rows="3">' + escapeHtml(task.note || "") + '</textarea></div>';
     html += renderTaskLabelField(section, taskLabels(task));
     html += '<div class="form-row single">';
     html += '<div class="followup-hint">Categorie</div>';
@@ -2694,7 +2685,7 @@
   function renderAddForm(section, owners) {
     var useCustom = !!ui.customOwner[section.id];
     var html = '<div class="add-form" data-form="add" data-section="' + section.id + '">';
-    html += '<div class="form-row single"><input type="text" class="txt-input" data-field="title" placeholder="Nieuwe taak…" data-autofocus="1" /></div>';
+    html += '<div class="form-row single"><span class="followup-hint">Actie</span><input type="text" class="txt-input" data-field="title" placeholder="Wat moet er gebeuren?" data-autofocus="1" /></div>';
     html += '<div class="form-row">';
     html += '<div class="owner-col">';
     if (!useCustom) {
@@ -2706,9 +2697,11 @@
       html += '</div>';
     }
     html += '</div>';
-    html += '<input type="date" class="txt-input date-field" data-field="when" title="Wanneer (optioneel)" />';
+    html += '<label class="veld datum-veld"><span class="followup-hint">Datum</span>';
+    html += '<input type="date" class="txt-input date-field" data-field="when" />';
+    html += '</label>';
     html += '</div>';
-    html += '<div class="form-row single"><textarea class="txt-input note-area" data-field="note" placeholder="Toelichting (optioneel)" rows="3"></textarea></div>';
+    html += '<div class="form-row single"><span class="followup-hint">Toelichting</span><textarea class="txt-input note-area" data-field="note" rows="3"></textarea></div>';
     html += renderTaskLabelField(section, []);
     html += '<div class="form-actions">';
     html += '<button class="save-btn" data-action="submit-add" data-section="' + section.id + '">Taak toevoegen</button>';
@@ -2718,8 +2711,9 @@
   }
 
   // Wie doet het? Eerst de organisatie, standaard de eigen organisatie,
-  // daarna een contactpersoon daarvan. Ook de hele organisatie is te
-  // kiezen, en bij de eigen organisatie de losse namen zoals "Sectoren".
+  // daarna een contactpersoon daarvan, of de hele organisatie. Losse namen
+  // zijn niet meer te kiezen; een actie die er nog een heeft, houdt hem
+  // tot je iemand anders kiest.
   function wieWaarde(taak) {
     if (!taak) return "";
     if (taak.eigenaarPersoonId) return "p:" + taak.eigenaarPersoonId;
@@ -2741,16 +2735,21 @@
       return a.naam.localeCompare(b.naam, "nl");
     });
     var html = '<div class="wie-kiezer">';
-    html += '<select class="sel-input" data-field="wie-org" title="Organisatie">';
+    html += '<label class="veld"><span class="followup-hint">Organisatie</span>';
+    html += '<select class="sel-input" data-field="wie-org">';
     if (!lijst.length) html += '<option value="">— nog geen organisaties —</option>';
     else if (!org) html += '<option value="" selected>— kies organisatie —</option>';
     lijst.forEach(function (o) {
       html += '<option value="' + escapeHtml(o.id) + '"' + (o.id === orgId ? " selected" : "") + '>' + escapeHtml(o.naam) + '</option>';
     });
-    html += '</select>';
+    html += '</select></label>';
 
-    html += '<select class="sel-input" data-field="owner-keuze" title="Wie">';
+    html += '<label class="veld"><span class="followup-hint">Wie</span>';
+    html += '<select class="sel-input" data-field="owner-keuze">';
     html += '<option value=""' + (waarde === "" ? " selected" : "") + '>— kies wie —</option>';
+    if (waarde.indexOf("n:") === 0) {
+      html += '<option value="' + escapeHtml(waarde) + '" selected>' + escapeHtml(waarde.slice(2)) + ' (oude naam)</option>';
+    }
     var mensen = org ? personenBij(org.id).slice().sort(opAchternaam) : [];
     if (mensen.length) {
       html += '<optgroup label="Contactpersonen">';
@@ -2764,18 +2763,7 @@
       var wo = "o:" + org.id;
       html += '<option value="' + escapeHtml(wo) + '"' + (wo === waarde ? " selected" : "") + '>Hele organisatie</option>';
     }
-    var namen = losseNamen();
-    var gekozenNaam = waarde.indexOf("n:") === 0 ? waarde.slice(2) : "";
-    if (gekozenNaam && namen.indexOf(gekozenNaam) === -1) namen.push(gekozenNaam);
-    if ((!org || org.eigen || gekozenNaam) && namen.length) {
-      html += '<optgroup label="Andere namen">';
-      namen.forEach(function (n) {
-        html += '<option value="n:' + escapeHtml(n) + '"' + (n === gekozenNaam ? " selected" : "") + '>' + escapeHtml(n) + '</option>';
-      });
-      html += '</optgroup>';
-    }
-    html += '<option value="__eigennaam__">+ Andere naam…</option>';
-    html += '</select>';
+    html += '</select></label>';
     html += '</div>';
     return html;
   }
@@ -2783,8 +2771,8 @@
   function renderTaskLabelField(section, huidige) {
     var suggesties = labelsInSection(section).filter(function (l) { return huidige.indexOf(l) === -1; });
     var html = '<div class="form-row single">';
-    html += '<div class="followup-hint">Label (optioneel) — meerdere mag, gescheiden door komma\'s</div>';
-    html += '<input type="text" class="txt-input" data-field="task-labels" value="' + escapeHtml(huidige.join(", ")) + '" placeholder="Bijv. Pica Project" />';
+    html += '<div class="followup-hint">Label</div>';
+    html += '<input type="text" class="txt-input" data-field="task-labels" value="' + escapeHtml(huidige.join(", ")) + '" placeholder="Meerdere mag, gescheiden door komma\'s" />';
     if (suggesties.length) {
       html += '<div class="label-suggests">';
       suggesties.forEach(function (l) {

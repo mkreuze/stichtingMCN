@@ -93,10 +93,15 @@ actie doet. De organisatie staat standaard op de organisatie waarbij
 toont dan:
 
 - **Contactpersonen** van die organisatie, op achternaam;
-- **Hele organisatie**, als niet één persoon de actie doet;
-- **Andere namen** (alleen bij de eigen organisatie): namen die geen
-  persoon zijn, zoals Sectoren of Allen;
-- **+ Andere naam…** voor een losse naam die nog niet bestaat.
+- **Hele organisatie**, als niet één persoon de actie doet.
+
+Losse namen zoals Sectoren of Allen zijn niet meer te kiezen. Een actie
+die er nog een heeft, toont die als *(oude naam)* tot je iemand anders
+kiest. Moet iemand een actie krijgen die nog niet in de relatielijst
+staat, voeg hem dan eerst als contactpersoon toe.
+
+Elk veld in het formulier heeft een kopje: Actie, Organisatie, Wie,
+Datum, Toelichting, Label en (bij bewerken) Categorie.
 
 Kies je een andere organisatie, dan verschijnen de contactpersonen van
 die organisatie. Bij iemand van buiten staat de naam van zijn organisatie
