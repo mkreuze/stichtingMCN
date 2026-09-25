@@ -238,7 +238,15 @@ Rechtsboven, naast de **i**, staat een tandwieltje. Daaronder:
   Automatisch volgt de instelling van de computer of telefoon. De keuze
   wordt op dat apparaat onthouden.
 - **Beheer** — alleen voor wie in de tabel `leden` de rol *beheerder*
-  heeft:
+  heeft. Elke kaart klapt in en uit met de kop; *Alles uitklappen* /
+  *Alles inklappen* doet ze allemaal tegelijk.
+  - *Gebruikers*: wie mag inloggen, met welke rol (kijker, bewerker,
+    beheerder). Toevoegen, naam of rol wijzigen, en toegang intrekken.
+    Een nieuwe gebruiker vraagt op het inlogscherm een link aan. Het
+    e-mailadres is de sleutel en is niet te wijzigen. Je eigen rol en
+    je eigen toegang kun je hier niet wijzigen, zodat je jezelf niet
+    buitensluit; de database houdt daarnaast altijd minstens één
+    beheerder over;
   - *Soorten organisaties* en *Sectoren*: toevoegen, hernoemen (de
     organisaties gaan mee) en verwijderen als er geen organisatie meer
     bij hoort;
@@ -247,8 +255,12 @@ Rechtsboven, naast de **i**, staat een tandwieltje. Daaronder:
     samengevoegd. Verwijderen haalt het label bij alle acties weg; de
     acties zelf blijven staan.
 
-Een bewerker ziet alleen *Weergave*. De Console laat een bewerker ook
-buiten het scherm om geen soorten, sectoren of labels beheren.
+Een bewerker of kijker ziet alleen *Weergave*. De Console laat hen ook
+buiten het scherm om geen gebruikers, soorten, sectoren of labels
+beheren, en na `20-beheer-alleen-beheerder.sql` weigert de database het
+wijzigen van soorten, sectoren en gebruikers ook voor iedereen die geen
+beheerder is. Labels horen bij de acties zelf; die blijft een bewerker
+bij een actie invullen.
 
 ## Versies
 
@@ -266,3 +278,4 @@ een regel hieronder.
 | 1.4 | 25-09-2026 | Wie is organisatie plus contactpersoon; het veld Relatie en de losse namen vervallen; formulier met kopjes. |
 | 1.5 | 25-09-2026 | Filterbalk met knop Filter en labels; Nieuwe actie vanuit elke weergave; filter op Wie; besluiten en relaties in kaartstijl, relaties in het blauw van het logo; formulieren voor organisatie en contactpersoon met kopjes; versieknopje. |
 | 1.6 | 25-09-2026 | Tandwieltje met instellingen: licht, donker of automatisch voor iedereen; beheer van soorten, sectoren en actielabels voor de beheerder. |
+| 1.7 | 25-09-2026 | Gebruikers beheren onder het tandwieltje; beheerkaarten in- en uitklapbaar; soorten, sectoren en gebruikers ook in de database alleen door de beheerder te wijzigen. |
