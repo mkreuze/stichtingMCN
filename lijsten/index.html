@@ -178,6 +178,45 @@
   .relatie-meta { font-size: 12px; color: var(--ink-faint); flex: 1; min-width: 60px; }
   .persoon-row .task-title { font-size: 14px; }
 
+  /* Alle acties als kolommen: vinkje, actie, wie, datum, categorie,
+     label, relatie. Onder 980px klapt het terug naar onder elkaar. */
+  .acties-tabel { padding: 6px 18px 12px; }
+  .acties-kop, .actie-regel {
+    display: grid;
+    grid-template-columns: 22px minmax(180px, 2.2fr) minmax(0, 88px) minmax(0, 118px) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 12px;
+  }
+  .acties-kop {
+    font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--ink-faint); padding: 6px 0 8px; border-bottom: 1px solid var(--line);
+  }
+  .actie-regel { padding: 8px 0; border-top: 1px solid var(--line-soft); font-size: 13px; }
+  .actie-regel:hover { background: var(--line-soft); }
+  .ak-titel { font-weight: 600; color: var(--ink); min-width: 0; }
+  .actie-regel.gereed .ak-titel { color: var(--ink-faint); text-decoration: line-through; text-decoration-color: var(--line); }
+  .ak-veld { color: var(--ink-soft); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+  .ak-veld.verlopen { color: var(--danger); font-weight: 600; }
+  .ak-vink { display: flex; align-items: center; }
+  .ak-knoppen { display: flex; align-items: center; gap: 2px; justify-content: flex-end; }
+  .ak-link {
+    font-family: inherit; font-size: 12px; color: var(--ink-soft); background: none;
+    border: none; padding: 0; cursor: pointer; text-align: left; max-width: 100%;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .ak-link:hover { color: var(--accent); text-decoration: underline; }
+  .actie-formulier { border-top: 1px solid var(--line-soft); padding: 2px 0; }
+
+  @media (max-width: 980px) {
+    .acties-kop { display: none; }
+    .actie-regel { grid-template-columns: 22px 1fr auto; row-gap: 3px; padding: 12px 0; align-items: start; }
+    .actie-regel .ak-vink { grid-row: 1; grid-column: 1; }
+    .actie-regel .ak-titel { grid-row: 1; grid-column: 2; }
+    .actie-regel .ak-knoppen { grid-row: 1; grid-column: 3; }
+    .actie-regel .ak-veld { grid-column: 2; white-space: normal; }
+    .actie-regel .ak-veld:empty { display: none; }
+  }
+
   /* De personenlijst als kolommen: naam, functie, organisatie, e-mail,
      telefoon. Op een smal scherm klapt het terug naar onder elkaar. */
   .personen-tabel { padding: 6px 18px 12px; }
@@ -641,6 +680,7 @@
     nieuwPersoonBij: {},// organisatie-id -> true
     relatieFilter: "alle", // "alle" of een organisatie-id
     relatieView: "organisaties", // organisaties | personen
+    actieView: "categorie",      // categorie | alle
     relatieZoek: "",   // zoektekst in de relatielijst
     soortFilter: "alle",   // "alle", een soort, of "geen"
     sectorFilter: "alle",  // idem voor sector
@@ -1380,6 +1420,86 @@
     return html + (ui.relatieView === "personen" ? renderPersonenHtml() : renderOrganisatiesHtml());
   }
 
+  function renderAlleActiesHtml(secties, hoort) {
+    var regels = [];
+    secties.forEach(function (sec) {
+      sec.tasks.filter(hoort).forEach(function (t) { regels.push({ sectie: sec, taak: t }); });
+    });
+    regels = sorteerRegels(regels);
+
+    if (regels.length === 0) {
+      return '<div class="empty-state group-empty-state">Geen acties die aan deze selectie voldoen.</div>';
+    }
+
+    var mag = magBewerken();
+    var html = '<section class="section-card"><div class="section-body acties-tabel">';
+    html += '<div class="acties-kop sans">';
+    html += '<span></span><span>Actie</span><span>Wie</span><span>Datum</span><span>Categorie</span><span>Label</span><span>Relatie</span><span></span>';
+    html += '</div>';
+
+    regels.forEach(function (r) {
+      var t = r.taak, sec = r.sectie;
+      if (ui.editingTask[t.id] || ui.completing[t.id] || ui.editingCompletion[t.id] || ui.reopening[t.id]) {
+        html += '<div class="actie-formulier">' + renderTaskRow(sec, t, knownOwners(currentSections)) + '</div>';
+        return;
+      }
+      var labels = taskLabels(t);
+      var relatie = relatieNaam(t);
+      var verlopen = !t.done && isVerlopen(t.when);
+
+      html += '<div class="actie-regel' + (t.done ? " gereed" : "") + '">';
+      html += '<span class="ak-vink">';
+      html += '<button class="check-btn' + (t.done ? " done" : "") + '" data-action="toggle-complete" data-section="' + sec.id + '" data-task="' + t.id + '" aria-label="' + (t.done ? "Weer openzetten" : "Afronden") + '"></button>';
+      html += '</span>';
+      html += '<span class="ak-titel">' + escapeHtml(t.title) + '</span>';
+      html += '<span class="ak-veld"><span class="owner-tag" style="color:' + ownerColor(t.owner) + ';background:' + lightenHex(ownerColor(t.owner), 0.14) + ';">' + escapeHtml(t.owner) + '</span></span>';
+      html += '<span class="ak-veld' + (verlopen ? " verlopen" : "") + '">' + escapeHtml(t.when ? formatDateNL(t.when) : "") + '</span>';
+      html += '<span class="ak-veld"><button class="ak-link" data-action="toon-categorie" data-section="' + sec.id + '">' + escapeHtml(sec.title) + '</button></span>';
+      html += '<span class="ak-veld">';
+      labels.forEach(function (l) {
+        var c = labelColor(l);
+        html += '<button class="label-chip" data-action="set-action-label-filter-knop" data-label="' + escapeHtml(l) + '" style="color:' + c + ';background:' + lightenHex(c, 0.14) + ';">' + escapeHtml(l) + '</button>';
+      });
+      html += '</span>';
+      html += '<span class="ak-veld">' + (relatie
+        ? '<button class="relatie-chip" data-action="toon-relatie" data-org="' + escapeHtml(t.organisatieId || "") + '" data-persoon="' + escapeHtml(t.persoonId || "") + '">' + personSvg() + escapeHtml(relatie) + '</button>' : '') + '</span>';
+      html += '<span class="ak-knoppen">';
+      if (mag) {
+        html += '<button class="edit-btn" data-action="open-edit-task" data-section="' + sec.id + '" data-task="' + t.id + '" aria-label="Actie bewerken">' + pencilSvg() + '</button>';
+        html += '<button class="delete-btn" data-action="delete-task" data-section="' + sec.id + '" data-task="' + t.id + '" aria-label="Actie verwijderen">' + xSvg() + '</button>';
+      }
+      html += '</span>';
+      html += '</div>';
+    });
+    html += '</div></section>';
+    return html;
+  }
+
+  // De sortering van de keuzelijst toepassen op de vlakke lijst.
+  function sorteerRegels(regels) {
+    if (ui.sortMode === "datum") {
+      return regels.slice().sort(function (a, b) {
+        var da = parseWhenDate(a.taak.when), db = parseWhenDate(b.taak.when);
+        if (da && db) return da < db ? -1 : da > db ? 1 : 0;
+        if (da && !db) return -1;
+        if (!da && db) return 1;
+        return 0;
+      });
+    }
+    if (ui.sortMode === "label") {
+      return regels.slice().sort(function (a, b) {
+        var la = (taskLabels(a.taak)[0] || "\uffff"), lb = (taskLabels(b.taak)[0] || "\uffff");
+        return la.localeCompare(lb, "nl");
+      });
+    }
+    return regels;   // standaard: op categorie en daarbinnen op volgorde
+  }
+
+  function isVerlopen(wanneer) {
+    var d = parseWhenDate(wanneer);
+    return !!d && d < todayISO();
+  }
+
   function renderPersonenHtml() {
     var html = "";
     var mag = magBewerken();
@@ -1836,11 +1956,18 @@
 
     html += '<div class="filter-row">';
     html += '<span class="seg">';
+    [["categorie", "Per categorie"], ["alle", "Alle acties"]].forEach(function (v) {
+      html += '<button class="filter-btn' + (ui.actieView === v[0] ? " active" : "") + '" data-action="set-actie-view" data-actieview="' + v[0] + '">' + v[1] + '</button>';
+    });
+    html += '</span>';
+    html += '<span class="seg">';
     [["todo", "Te doen"], ["done", "Afgerond"], ["alle", "Alle"]].forEach(function (f) {
       html += '<button class="filter-btn' + (ui.filter === f[0] ? " active" : "") + '" data-action="set-filter" data-filter="' + f[0] + '">' + f[1] + '</button>';
     });
     html += '</span>';
-    html += '<button class="filter-btn" data-action="toggle-collapse-all">' + (allCollapsed ? "Alles uitklappen" : "Alles inklappen") + '</button>';
+    if (ui.actieView === "categorie") {
+      html += '<button class="filter-btn" data-action="toggle-collapse-all">' + (allCollapsed ? "Alles uitklappen" : "Alles inklappen") + '</button>';
+    }
 
     html += '<span class="toolbar-selects">';
 
@@ -1892,6 +2019,18 @@
       html += '<div class="empty-state group-empty-state">Geen categorieën in deze groep.</div>';
     } else if (dateFilterActief && treffers === 0) {
       html += '<div class="empty-state group-empty-state">Geen acties die aan dit datumfilter voldoen.</div>';
+    }
+
+    if (ui.actieView === "alle") {
+      html += renderAlleActiesHtml(visibleSections, function (t) {
+        var statusOk = ui.filter === "todo" ? !t.done : ui.filter === "done" ? t.done : true;
+        var labelOk = !actieLabelFilter || taskLabels(t).indexOf(actieLabelFilter) !== -1;
+        return statusOk && labelOk && relatieOk(t) && matchesDateFilter(t);
+      });
+      html += '<p class="footnote">Deze lijst is gedeeld: iedereen die deze pagina opent ziet dezelfde acties, en wijzigingen worden bewaard en direct bijgewerkt bij alle geopende vensters.</p>';
+      app.innerHTML = html;
+      attachAutofocus();
+      return;
     }
 
     visibleSections.forEach(function (section) {
@@ -2586,7 +2725,8 @@
       "uitloggen", "stuur-inloglink",
       "toggle-org", "filter-op-relatie", "filter-op-persoon",
       "toon-relatie", "wis-relatiefilter",
-      "set-relatie-view", "toon-organisatie", "set-keuze-filter"
+      "set-relatie-view", "toon-organisatie", "set-keuze-filter",
+      "set-actie-view", "toon-categorie", "set-action-label-filter-knop"
     ];
     if (!magBewerken() && KIJKACTIES.indexOf(action) === -1) return;
 
@@ -2627,6 +2767,19 @@
       var vd = btn.getAttribute("data-soort").split("|");
       if (!window.confirm("\u201c" + vd.slice(1).join("|") + "\u201d verwijderen uit de keuzelijst?")) return;
       verwijderSoort(vd[0], vd.slice(1).join("|"));
+      return;
+    } else if (action === "set-actie-view") {
+      ui.actieView = btn.getAttribute("data-actieview");
+      render();
+      return;
+    } else if (action === "toon-categorie") {
+      ui.actieView = "categorie";
+      ui.collapsed[btn.getAttribute("data-section")] = false;
+      render();
+      return;
+    } else if (action === "set-action-label-filter-knop") {
+      ui.actionLabelFilter = btn.getAttribute("data-label");
+      render();
       return;
     } else if (action === "set-relatie-view") {
       ui.relatieView = btn.getAttribute("data-relatieview");

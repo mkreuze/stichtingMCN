@@ -55,6 +55,18 @@ De **secret** sleutel (`sb_secret_…`, vroeger *service_role*) is iets
 heel anders: die omzeilt alle toegangsregels. Die geef je nooit door,
 zet je nergens in een pagina en mail je niet.
 
+## De actielijst
+
+Twee weergaven:
+
+- **Per categorie** — kaarten die je open- en dichtklapt, met de voortgang
+  per categorie.
+- **Alle acties** — één doorlopende lijst met kolommen: actie, wie, datum,
+  categorie, label en relatie. Verlopen datums kleuren rood.
+
+De filters bovenin werken in beide weergaven. Vanuit de lijst klik je door
+naar de categorie of naar de relatie.
+
 ## De relatielijst
 
 Twee weergaven, met een zoekveld dat op beide werkt:
