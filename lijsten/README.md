@@ -229,3 +229,19 @@ Supabase moet weten waar het inloggen op uitkomt, anders loopt de link
 uit de mail dood. Zet in Supabase onder **Authentication → URL
 Configuration** het adres van Vercel bij **Site URL**, en zet hetzelfde
 adres met `/**` erachter bij **Redirect URLs**.
+
+## Versies
+
+Rechtsboven in de Console staat een **i**. Wijs je die aan (of tik je
+erop), dan zie je het versienummer. Bij elke nieuwe publicatie gaat het
+nummer omhoog: in `index.html` bij het commentaar *Versienummer*, en met
+een regel hieronder.
+
+| Versie | Datum | Wat |
+|---|---|---|
+| 1.0 | 23-09-2026 | Eerste publicatie: acties, besluiten en relaties, inloggen met een link per e-mail. |
+| 1.1 | 25-09-2026 | Naam in voornaam, tussenvoegsel en achternaam, met geslacht; acties gekoppeld aan de eigen mensen. |
+| 1.2 | 25-09-2026 | Rustiger actielijst: witte kaartjes op een mint blok, stipje bij Wie, gedempte labels. |
+| 1.3 | 25-09-2026 | Weergaven Per persoon, Per organisatie en Agenda; een geopende actie blijft een wit kaartje. |
+| 1.4 | 25-09-2026 | Wie is organisatie plus contactpersoon; het veld Relatie en de losse namen vervallen; formulier met kopjes. |
+| 1.5 | 25-09-2026 | Filterbalk met knop Filter en labels; Nieuwe actie vanuit elke weergave; filter op Wie; besluiten en relaties in kaartstijl, relaties in het blauw van het logo; formulieren voor organisatie en contactpersoon met kopjes; versieknopje. |

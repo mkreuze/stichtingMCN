@@ -108,6 +108,25 @@
     gap: 16px;
     margin-bottom: 4px;
   }
+  /* Het i-knopje rechtsboven met het versienummer. Bij aanwijzen of
+     aantikken verschijnt een kaartje. */
+  .versie-houder { position: relative; margin-left: auto; align-self: flex-start; }
+  .versie-knop {
+    width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--line);
+    background: var(--card); color: var(--ink-faint); cursor: pointer;
+    font-family: Georgia, "Times New Roman", serif; font-style: italic; font-weight: 700; font-size: 13px; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center; padding: 0;
+  }
+  .versie-knop:hover, .versie-houder.open .versie-knop { color: var(--accent); border-color: var(--accent); }
+  .versie-info {
+    display: none; position: absolute; right: 0; top: 30px; z-index: 20; white-space: nowrap;
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
+    box-shadow: var(--shadow); padding: 10px 14px; font-size: 12.5px; color: var(--ink-soft);
+  }
+  .versie-info strong { display: block; color: var(--ink); font-size: 13px; margin-bottom: 2px; }
+  .versie-houder:hover .versie-info, .versie-houder:focus-within .versie-info, .versie-houder.open .versie-info { display: block; }
+  @media print { .versie-houder { display: none; } }
+
   .logo-img {
     width: 78px;
     height: 52px;
@@ -188,6 +207,12 @@
   .veld > .followup-hint { margin: 0 0 4px; }
   .veld select, .veld input { width: 100%; }
   .datum-veld { flex: 0 0 150px; }
+  .veld.smal { flex: 0 0 130px; }
+  .veld.breed { flex: 2 1 240px; }
+  .veld textarea { width: 100%; }
+  .soort-holder { display: flex; }
+  .soort-holder > * { flex: 1; min-width: 0; }
+  .filter-row .zoek-veld { flex: 0 1 320px; min-width: 180px; }
   .datum-veld .date-field { flex: none; width: 100%; }
   .form-row.naast-elkaar { align-items: flex-start; }
   .naast-elkaar .veld > .form-row { margin-bottom: 0; }
@@ -836,6 +861,15 @@
         <div class="kicker">Stichting Mobiele Collectie Nederland</div>
         <h1>Mobiel Erfgoed Console</h1>
       </div>
+      <!-- Versienummer: bij elke nieuwe publicatie ophogen, en een regel
+           toevoegen onder "Versies" in lijsten/README.md. -->
+      <div class="versie-houder">
+        <button type="button" class="versie-knop" aria-label="Versie-informatie" aria-expanded="false">i</button>
+        <div class="versie-info" role="tooltip">
+          <strong>Mobiel Erfgoed Console</strong>
+          <span>Versie 1.5 &middot; 25 september 2026</span>
+        </div>
+      </div>
     </div>
     <div id="app"><div class="status-line">Lijst laden…</div></div>
   </div>
@@ -843,6 +877,22 @@
 <script>
 (function () {
   "use strict";
+
+  // Het i-knopje: op een telefoon is er geen aanwijzen, dus ook aantikken.
+  (function () {
+    var houder = document.querySelector(".versie-houder");
+    if (!houder) return;
+    var knop = houder.querySelector(".versie-knop");
+    knop.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var open = houder.classList.toggle("open");
+      knop.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+    document.addEventListener("click", function () {
+      houder.classList.remove("open");
+      knop.setAttribute("aria-expanded", "false");
+    });
+  })();
 
   // ─── Verbinding met de database ───────────────────────────────────
   // Deze twee waarden staan in Supabase onder Settings → API Keys:
@@ -902,6 +952,7 @@
     relatieView: "organisaties", // organisaties | personen
     actieView: "alle",           // categorie | alle | persoon | organisatie | agenda
     nieuweActie: false,          // het formulier "Nieuwe actie" boven de lijst
+    relFilterOpen: false,        // het filterpaneel bij de relaties
     groepDicht: {},              // "weergave|groep" -> true als ingeklapt
     filterOpen: false,           // het filterpaneel onder de knop Filter
     relatieZoek: "",   // zoektekst in de relatielijst
@@ -1694,35 +1745,70 @@
     });
   }
 
+  // Zelfde opbouw als bij de acties: tabbladen, dan zoeken, Filter en
+  // rechts de knoppen; wat er gefilterd wordt staat als label eronder.
   function renderRelatiesHtml() {
     var html = "";
+    var mag = magBewerken();
+    var isOrg = ui.relatieView !== "personen";
 
-    html += '<div class="filter-row">';
-    html += '<span class="seg">';
+    html += '<div class="subtabs">';
     [["organisaties", "Organisaties", organisaties.length],
      ["personen", "Personen", personen.length]].forEach(function (v) {
-      html += '<button class="filter-btn' + (ui.relatieView === v[0] ? " active" : "") + '" data-action="set-relatie-view" data-relatieview="' + v[0] + '">'
+      html += '<button class="subtab' + (ui.relatieView === v[0] ? " active" : "") + '" data-action="set-relatie-view" data-relatieview="' + v[0] + '">'
            + v[1] + ' <span class="seg-telling">' + v[2] + '</span></button>';
     });
-    html += '</span>';
-    html += '<span class="toolbar-selects">';
-    html += '<input type="search" class="txt-input zoek-veld" data-field="relatie-zoek" value="' + escapeHtml(ui.relatieZoek || "") + '" placeholder="Zoeken op naam…" />';
-    [["soort", ui.soortFilter, soorten, "soorten"], ["sector", ui.sectorFilter, sectoren, "sectoren"]].forEach(function (f) {
-      html += '<select class="sort-select' + (f[1] !== "alle" ? " filter-on" : "") + '" data-action="set-keuze-filter" data-keuzeveld="' + f[0] + '">';
-      html += '<option value="alle"' + (f[1] === "alle" ? " selected" : "") + '>Alle ' + f[3] + '</option>';
-      f[2].forEach(function (x) {
-        var n = organisaties.filter(function (o) { return o[f[0]] === x; }).length;
-        html += '<option value="' + escapeHtml(x) + '"' + (f[1] === x ? " selected" : "") + '>' + escapeHtml(x) + ' (' + n + ')</option>';
-      });
-      var zonder = organisaties.filter(function (o) { return !o[f[0]]; }).length;
-      html += '<option value="geen"' + (f[1] === "geen" ? " selected" : "") + '>Nog geen ' + f[0] + ' (' + zonder + ')</option>';
-      html += '</select>';
-    });
-    if (ui.relatieView === "organisaties" && magBewerken()) {
-      html += '<button class="filter-btn' + (ui.soortenBeheer ? " active" : "") + '" data-action="toggle-soorten-beheer">Soorten beheren</button>';
+    html += '</div>';
+
+    var actief = [];
+    if (ui.relatieZoek) actief.push({ soort: "zoek", tekst: "Zoeken: \u201c" + ui.relatieZoek + "\u201d" });
+    if (ui.soortFilter !== "alle") actief.push({ soort: "soort", tekst: "Soort: " + (ui.soortFilter === "geen" ? "nog geen soort" : ui.soortFilter) });
+    if (ui.sectorFilter !== "alle") actief.push({ soort: "sector", tekst: "Sector: " + (ui.sectorFilter === "geen" ? "nog geen sector" : ui.sectorFilter) });
+    var aantalFilters = actief.filter(function (f) { return f.soort !== "zoek"; }).length;
+
+    html += '<div class="filter-row">';
+    html += '<input type="search" class="txt-input zoek-veld" data-field="relatie-zoek" value="' + escapeHtml(ui.relatieZoek || "") + '" placeholder="Zoeken op naam, plaats, e-mail…" />';
+    html += '<button class="filter-btn filter-knop' + (ui.relFilterOpen ? " active" : "") + '" data-action="toggle-relfilter">Filter'
+         + (aantalFilters ? '<span class="filter-aantal">' + aantalFilters + '</span>' : '') + '</button>';
+    html += '<span class="toolbar-rechts">';
+    if (isOrg) {
+      var zicht = zichtbareOrganisaties();
+      var allesDicht = !zicht.some(function (o) { return !!ui.openOrg[o.id]; });
+      if (zicht.length) html += '<button class="filter-btn" data-action="toggle-orgs-alle">' + (allesDicht ? "Alles uitklappen" : "Alles inklappen") + '</button>';
+      if (mag) html += '<button class="filter-btn' + (ui.soortenBeheer ? " active" : "") + '" data-action="toggle-soorten-beheer">Soorten beheren</button>';
+    }
+    if (mag && !ui.nieuweOrg) {
+      html += '<button class="filter-btn nieuwe-actie-knop" data-action="nieuwe-org">' + plusSvg() + 'Nieuwe organisatie</button>';
     }
     html += '</span>';
     html += '</div>';
+
+    if (ui.relFilterOpen) {
+      html += '<div class="filter-paneel">';
+      [["soort", ui.soortFilter, soorten, "Soort", "soorten"], ["sector", ui.sectorFilter, sectoren, "Sector", "sectoren"]].forEach(function (f) {
+        html += '<label class="veld"><span class="followup-hint">' + f[3] + '</span>';
+        html += '<select class="sel-input" data-action="set-keuze-filter" data-keuzeveld="' + f[0] + '">';
+        html += '<option value="alle"' + (f[1] === "alle" ? " selected" : "") + '>Alle ' + f[4] + '</option>';
+        f[2].forEach(function (x) {
+          var n = organisaties.filter(function (o) { return o[f[0]] === x; }).length;
+          html += '<option value="' + escapeHtml(x) + '"' + (f[1] === x ? " selected" : "") + '>' + escapeHtml(x) + ' (' + n + ')</option>';
+        });
+        var zonder = organisaties.filter(function (o) { return !o[f[0]]; }).length;
+        html += '<option value="geen"' + (f[1] === "geen" ? " selected" : "") + '>Nog geen ' + f[0] + ' (' + zonder + ')</option>';
+        html += '</select></label>';
+      });
+      if (actief.length) html += '<button class="link-btn" data-action="wis-relfilters">Filters wissen</button>';
+      html += '</div>';
+    }
+
+    if (actief.length) {
+      html += '<div class="filter-chips">';
+      actief.forEach(function (f) {
+        html += '<span class="filter-chip">' + escapeHtml(f.tekst)
+             + '<button data-action="wis-relfilter" data-filtersoort="' + f.soort + '" title="Filter weghalen" aria-label="Filter weghalen">\u00d7</button></span>';
+      });
+      html += '</div>';
+    }
 
     return html + (ui.relatieView === "personen" ? renderPersonenHtml() : renderOrganisatiesHtml());
   }
@@ -2105,6 +2191,13 @@
       html += '<div class="empty-state group-empty-state">Geen organisaties gevonden voor \u201c' + escapeHtml(ui.relatieZoek) + '\u201d.</div>';
     }
 
+    if (ui.nieuweOrg && mag) {
+      html += '<section class="section-card acties-kaart">';
+      html += '<div class="section-header open"><span class="section-title">Nieuwe organisatie</span></div>';
+      html += '<div class="section-body acties-body">' + renderOrgFormulier(null) + '</div>';
+      html += '</section>';
+    }
+
     zichtbaar.forEach(function (org) {
       var leden = personenBij(org.id);
       var open = !!ui.openOrg[org.id];
@@ -2113,7 +2206,8 @@
       html += '<section class="section-card acties-kaart">';
 
       if (ui.bewerkOrg[org.id]) {
-        html += renderOrgFormulier(org);
+        html += '<div class="section-header open"><span class="section-title">' + escapeHtml(org.naam) + '</span><span class="relatie-meta sans">bewerken</span></div>';
+        html += '<div class="section-body acties-body">' + renderOrgFormulier(org) + '</div>';
         html += '</section>';
         return;
       }
@@ -2176,36 +2270,36 @@
       html += '</section>';
     });
 
-    if (ui.nieuweOrg) {
-      html += '<section class="section-card">' + renderOrgFormulier(null) + '</section>';
-    } else if (mag) {
-      html += '<button class="add-section-btn" data-action="nieuwe-org">' + plusSvg() + 'Organisatie toevoegen</button>';
-    }
     return html;
   }
 
   function renderOrgFormulier(org) {
     var id = org ? org.id : "nieuw";
+    function veld(kop, invoer, klasse) {
+      return '<label class="veld' + (klasse ? " " + klasse : "") + '"><span class="followup-hint">' + kop + '</span>' + invoer + '</label>';
+    }
+    function tekst(naam, waarde, extra) {
+      return '<input type="text" class="txt-input" data-field="' + naam + '" value="' + escapeHtml(waarde || "") + '"' + (extra || "") + ' />';
+    }
     var html = '<div class="add-form" data-form="org" data-org="' + id + '">';
-    html += '<div class="form-row single">';
-    html += '<input type="text" class="txt-input" data-field="org-naam" value="' + escapeHtml(org ? org.naam : "") + '" placeholder="Naam van de organisatie" data-autofocus="1" />';
+    html += '<div class="form-row">' + veld("Naam", tekst("org-naam", org && org.naam, ' data-autofocus="1"')) + '</div>';
+    html += '<div class="form-row">';
+    html += veld("Adres", tekst("org-adres", org && org.adres, ' placeholder="Straat en huisnummer"'), "breed");
+    html += veld("Postcode", tekst("org-postcode", org && org.postcode), "smal");
+    html += veld("Plaats", tekst("org-plaats", org && org.plaats));
     html += '</div>';
     html += '<div class="form-row">';
-    html += '<input type="text" class="txt-input flex1" data-field="org-adres" value="' + escapeHtml(org ? (org.adres || "") : "") + '" placeholder="Straat en huisnummer" />';
-    html += '<input type="text" class="txt-input pc-field" data-field="org-postcode" value="' + escapeHtml(org ? (org.postcode || "") : "") + '" placeholder="Postcode" />';
-    html += '<input type="text" class="txt-input flex1" data-field="org-plaats" value="' + escapeHtml(org ? org.plaats : "") + '" placeholder="Plaats" />';
+    html += '<div class="veld"><span class="followup-hint">Soort</span><span class="soort-holder" data-keuzeveld="soort">' + keuzeVeldLijst("soort", org ? (org.soort || "") : "") + '</span></div>';
+    html += '<div class="veld"><span class="followup-hint">Sector</span><span class="soort-holder" data-keuzeveld="sector">' + keuzeVeldLijst("sector", org ? (org.sector || "") : "") + '</span></div>';
+    html += veld("Website", tekst("org-website", org && org.website, ' placeholder="https://…"'));
     html += '</div>';
     html += '<div class="form-row">';
-    html += renderSoortVeld(org);
-    html += '<input type="text" class="txt-input flex1" data-field="org-website" value="' + escapeHtml(org ? org.website : "") + '" placeholder="https://…" />';
+    html += veld("E-mail algemeen", '<input type="email" class="txt-input" data-field="org-email" value="' + escapeHtml(org ? (org.email || "") : "") + '" />', "breed");
+    html += veld("Telefoon", tekst("org-telefoon", org && org.telefoon));
     html += '</div>';
-    html += '<div class="form-row">';
-    html += '<input type="email" class="txt-input flex1" data-field="org-email" value="' + escapeHtml(org ? (org.email || "") : "") + '" placeholder="Algemeen e-mailadres" />';
-    html += '<input type="text" class="txt-input" data-field="org-telefoon" value="' + escapeHtml(org ? (org.telefoon || "") : "") + '" placeholder="Telefoon" />';
-    html += '</div>';
-    html += '<div class="form-row single"><textarea class="txt-input" rows="2" data-field="org-notitie" placeholder="Toelichting (optioneel)">' + escapeHtml(org ? org.notitie : "") + '</textarea></div>';
+    html += '<div class="form-row">' + veld("Toelichting", '<textarea class="txt-input" rows="2" data-field="org-notitie">' + escapeHtml(org ? org.notitie : "") + '</textarea>') + '</div>';
     html += '<label class="vink-regel"><input type="checkbox" data-field="org-eigen"' + (org && org.eigen ? " checked" : "") + ' /> '
-         + '<span>Dit is onze eigen organisatie<span class="followup-hint">De personen hiervan staan bovenaan bij “wie doet het”.</span></span></label>';
+         + '<span>Dit is onze eigen organisatie<span class="followup-hint">Deze staat standaard voorgeselecteerd bij \u201cWie\u201d.</span></span></label>';
     html += '<div class="form-actions">';
     html += '<button class="save-btn" data-action="bewaar-org" data-org="' + id + '">Opslaan</button>';
     html += '<button class="cancel-btn" data-action="annuleer-org" data-org="' + id + '">Annuleren</button>';
@@ -2245,24 +2339,31 @@
 
   function renderPersoonFormulier(org, pers) {
     var id = pers ? pers.id : "nieuw";
+    function veld(kop, invoer, klasse) {
+      return '<label class="veld' + (klasse ? " " + klasse : "") + '"><span class="followup-hint">' + kop + '</span>' + invoer + '</label>';
+    }
+    function tekst(naam, waarde, extra, type) {
+      return '<input type="' + (type || "text") + '" class="txt-input" data-field="' + naam + '" value="' + escapeHtml(waarde || "") + '"' + (extra || "") + ' />';
+    }
     var html = '<div class="add-form" data-form="persoon" data-persoon="' + id + '" data-org="' + org.id + '">';
     html += '<div class="form-row">';
-    html += '<input type="text" class="txt-input flex1" data-field="p-voornaam" value="' + escapeHtml(pers ? (pers.voornaam || "") : "") + '" placeholder="Voornaam" data-autofocus="1" />';
-    html += '<input type="text" class="txt-input tv-field" data-field="p-tussenvoegsel" value="' + escapeHtml(pers ? (pers.tussenvoegsel || "") : "") + '" placeholder="van der" />';
-    html += '<input type="text" class="txt-input flex1" data-field="p-achternaam" value="' + escapeHtml(pers ? (pers.achternaam || "") : "") + '" placeholder="Achternaam" />';
+    html += veld("Voornaam", tekst("p-voornaam", pers && pers.voornaam, ' data-autofocus="1"'));
+    html += veld("Tussenvoegsel", tekst("p-tussenvoegsel", pers && pers.tussenvoegsel, ' placeholder="van der"'), "smal");
+    html += veld("Achternaam", tekst("p-achternaam", pers && pers.achternaam));
     html += '</div>';
     html += '<div class="form-row">';
-    html += '<select class="sel-input geslacht-veld" data-field="p-geslacht">';
+    var geslacht = '<select class="sel-input" data-field="p-geslacht">';
     GESLACHTEN.forEach(function (g) {
       var gekozen = (pers ? (pers.geslacht || "") : "") === g[0];
-      html += '<option value="' + g[0] + '"' + (gekozen ? " selected" : "") + '>' + (g[0] ? escapeHtml(g[1]) : "— geslacht —") + '</option>';
+      geslacht += '<option value="' + g[0] + '"' + (gekozen ? " selected" : "") + '>' + (g[0] ? escapeHtml(g[1]) : "—") + '</option>';
     });
-    html += '</select>';
-    html += '<input type="text" class="txt-input flex1" data-field="p-functie" value="' + escapeHtml(pers ? pers.functie : "") + '" placeholder="Functie" />';
+    geslacht += '</select>';
+    html += veld("Geslacht", geslacht, "smal");
+    html += veld("Functie", tekst("p-functie", pers && pers.functie), "breed");
     html += '</div>';
     html += '<div class="form-row">';
-    html += '<input type="email" class="txt-input flex1" data-field="p-email" value="' + escapeHtml(pers ? pers.email : "") + '" placeholder="E-mailadres" />';
-    html += '<input type="text" class="txt-input" data-field="p-telefoon" value="' + escapeHtml(pers ? pers.telefoon : "") + '" placeholder="Telefoon" />';
+    html += veld("E-mail", tekst("p-email", pers && pers.email, "", "email"), "breed");
+    html += veld("Telefoon", tekst("p-telefoon", pers && pers.telefoon));
     html += '</div>';
     html += '<div class="form-actions">';
     html += '<button class="save-btn" data-action="bewaar-persoon" data-persoon="' + id + '" data-org="' + org.id + '">Opslaan</button>';
@@ -3328,6 +3429,7 @@
       "toggle-org", "filter-op-relatie", "filter-op-persoon",
       "toon-relatie", "wis-relatiefilter", "toggle-filterpaneel", "wis-filter", "wis-filters",
       "set-relatie-view", "toon-organisatie", "set-keuze-filter",
+      "toggle-relfilter", "wis-relfilter", "wis-relfilters", "toggle-orgs-alle",
       "set-actie-view", "toon-categorie", "set-action-label-filter-knop", "toggle-groep", "toggle-groepen-alle"
     ];
     if (!magBewerken() && KIJKACTIES.indexOf(action) === -1) return;
@@ -3408,7 +3510,23 @@
       render();
       return;
     } else if (action === "nieuwe-org") {
-      ui.nieuweOrg = true; render(); return;
+      ui.nieuweOrg = true; ui.relatieView = "organisaties"; render(); return;
+    } else if (action === "toggle-relfilter") {
+      ui.relFilterOpen = !ui.relFilterOpen; render(); return;
+    } else if (action === "wis-relfilter") {
+      var rf = btn.getAttribute("data-filtersoort");
+      if (rf === "zoek") ui.relatieZoek = "";
+      else if (rf === "soort") ui.soortFilter = "alle";
+      else if (rf === "sector") ui.sectorFilter = "alle";
+      render(); return;
+    } else if (action === "wis-relfilters") {
+      ui.relatieZoek = ""; ui.soortFilter = "alle"; ui.sectorFilter = "alle";
+      render(); return;
+    } else if (action === "toggle-orgs-alle") {
+      var zichtOrgs = zichtbareOrganisaties();
+      var openen = !zichtOrgs.some(function (o) { return !!ui.openOrg[o.id]; });
+      zichtOrgs.forEach(function (o) { ui.openOrg[o.id] = openen; });
+      render(); return;
     } else if (action === "terug-naar-eigenaarlijst") {
       var wieTerug = btn.closest(".eigenaar-houder");
       if (wieTerug) wieTerug.innerHTML = renderEigenaarVeld(null).replace(/^<span[^>]*>|<\/span>$/g, "");
