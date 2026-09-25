@@ -6,14 +6,14 @@
 <title>Mobiel Erfgoed Console — Stichting Mobiele Collectie Nederland</title>
 <style>
   :root {
-    --ink: #232322;
-    --ink-soft: #63635F;
-    --ink-faint: #9A9A95;
-    --paper: #F5F5F4;
+    --ink: #1E2624;
+    --ink-soft: #5C6B66;
+    --ink-faint: #90A19B;
+    --paper: #F3F7F6;
     --card: #FFFFFF;
-    --line: #E3E3E0;
-    --line-soft: #EFEFEC;
-    --header-bg: #EDEDEA;
+    --line: #DCE6E3;
+    --line-soft: #EDF3F1;
+    --header-bg: #EBF3F1;
     --accent: #1D9C8C;
     --accent-soft: #DFF3EF;
     --accent-ink: #0C6358;
@@ -23,7 +23,7 @@
     --mcn-pink: #C46FA0;
     --mcn-blue: #4FA3D6;
     --mcn-grey: #646C79;
-    --shadow: 0 1px 2px rgba(0,0,0,.05), 0 14px 28px -20px rgba(0,0,0,.22);
+    --shadow: 0 1px 2px rgba(24,33,30,.05), 0 14px 28px -20px rgba(24,33,30,.25);
     --r-lg: 16px;
     --r-md: 10px;
     --r-sm: 7px;
@@ -31,14 +31,14 @@
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --ink: #EDEDEA;
-      --ink-soft: #A8A8A3;
-      --ink-faint: #76766F;
-      --paper: #181817;
-      --card: #222221;
-      --line: #353532;
-      --line-soft: #2A2A28;
-      --header-bg: #2B2B29;
+      --ink: #EAF2F1;
+      --ink-soft: #9FB0AE;
+      --ink-faint: #6E7D79;
+      --paper: #14201F;
+      --card: #1C2827;
+      --line: #2C3B39;
+      --line-soft: #23312E;
+      --header-bg: #223130;
       --accent: #4FC9B4;
       --accent-soft: #1E3A34;
       --accent-ink: #8FE0CE;
@@ -52,14 +52,14 @@
     }
   }
   :root[data-theme="dark"] {
-    --ink: #EDEDEA;
-    --ink-soft: #A8A8A3;
-    --ink-faint: #76766F;
-    --paper: #181817;
-    --card: #222221;
-    --line: #353532;
-    --line-soft: #2A2A28;
-    --header-bg: #2B2B29;
+    --ink: #EAF2F1;
+    --ink-soft: #9FB0AE;
+    --ink-faint: #6E7D79;
+    --paper: #14201F;
+    --card: #1C2827;
+    --line: #2C3B39;
+    --line-soft: #23312E;
+    --header-bg: #223130;
     --accent: #4FC9B4;
     --accent-soft: #1E3A34;
     --accent-ink: #8FE0CE;
@@ -649,17 +649,17 @@
     width: 780px;
     background: #ffffff;
     padding: 40px 36px;
-    color: #232322;
+    color: #1E2624;
     font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    --pi: #232322; --pis: #63635F; --pif: #9A9A95;
-    --pl: #E3E3E0; --pls: #EFEFEC;
+    --pi: #1E2624; --pis: #5C6B66; --pif: #90A19B;
+    --pl: #DCE6E3; --pls: #EDF3F1;
     --pa: #1D9C8C; --pas: #DFF3EF; --pai: #0C6358;
   }
   #pdf-export-root .pdf-kicker { font-family: 'Nunito Sans', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 0.01em; color: var(--pa); margin-bottom: 4px; }
   #pdf-export-root .pdf-h1 { font-family: "Baloo 2", sans-serif; font-weight: 800; font-size: 26px; margin: 0 0 2px; color: var(--pi); }
   #pdf-export-root .pdf-scope { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--pif); margin: 0 0 20px; }
   #pdf-export-root .pdf-section-card { border: 1px solid var(--pl); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
-  #pdf-export-root .pdf-section-header { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--pls); background: #FAFAF9; }
+  #pdf-export-root .pdf-section-header { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--pls); background: #FAFCFB; }
   #pdf-export-root .pdf-section-nr { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; color: var(--pif); }
   #pdf-export-root .pdf-section-title { font-family: "Baloo 2", sans-serif; font-weight: 700; font-size: 15px; color: var(--pi); }
   #pdf-export-root .pdf-labels { display: flex; flex-wrap: wrap; gap: 4px; }
