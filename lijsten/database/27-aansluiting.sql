@@ -9,7 +9,7 @@
 --  De vier sectorfederaties worden de eerste keer als aangesloten
 --  aangevinkt: FEHAC, FVEN, Historisch Railvervoer Nederland en de
 --  Nationale Federatie Historische Luchtvaart. Daarna blijft dit
---  bestand eraf, ook als je het opnieuw draait; aan- en uitvinken
+--  bestand eraf, ook als je het opnieuw draait. Aan- en uitvinken
 --  doe je in de Console bij de organisatie.
 --
 --  Je mag dit opnieuw draaien.
