@@ -179,6 +179,14 @@ organisatie met *Anders, namelijk…* alsnog zelf iets invullen.
 Met de keuzelijst ernaast filter je de organisaties op soort; daar staat
 ook *Nog geen soort*, handig om te zien wat nog ingevuld moet worden.
 
+Een organisatie heeft twee vinkjes: *Aangesloten bij MCN* (zoals de
+sectorfederaties) en *Aangesloten als bron* (levert gegevens aan). Ze
+staan als labeltje op de kaart, er is een filter *Aansluiting*, en in de
+Excel-export staan ze als kolommen. De vinkjes komen er met
+`27-aansluiting.sql`, dat de eerste keer FEHAC, FVEN, Historisch
+Railvervoer Nederland en de Nationale Federatie Historische Luchtvaart
+als aangesloten aanvinkt.
+
 Een persoon heeft een veld *notitie* voor wat niet in de vaste velden
 past, zoals een tweede e-mailadres. Het staat klein onder de naam en als
 kolom in de Excel-export. Het veld komt er met
@@ -294,6 +302,16 @@ Rechtsboven, naast de **i**, staat een tandwieltje. Daaronder:
     achter een accent, rekent de Console zelf uit. Met *Terug naar de
     standaardkleuren* haal je alles weg.
 
+  - *Logboek*: wie wat heeft gewijzigd, en wanneer, nieuwste bovenaan,
+    te filteren op persoon en op soort (acties, besluiten, relaties,
+    beheer, bezoeken). De database schrijft het zelf bij via
+    `26-logboek.sql`: elke toevoeging, wijziging en verwijdering in de
+    Console-tabellen, met per gewijzigd veld de oude en nieuwe waarde,
+    en bij een verwijdering de hele regel. Openen van de Console komt er
+    hooguit één keer per uur per persoon in. Alleen de beheerder kan
+    het lezen; niemand kan het aanpassen. Bij *Gebruikers* staat per
+    persoon wanneer die de Console voor het laatst opende (*gezien*) en
+    voor het laatst inlogde (*ingelogd*);
   - *Backup*: alle tabellen (acties, besluiten, categorieën,
     organisaties, personen, soorten, sectoren, gebruikers, instellingen)
     vers uit de database in één bestand. *Downloaden (.json)* is de
@@ -332,3 +350,4 @@ een regel hieronder.
 | 1.10 | 25-09-2026 | Donkere versie antraciet; kaart Huisstijl onder het beheer; bij een nieuwe gebruiker kiezen uit de contactpersonen van MCN. |
 | 1.11 | 25-09-2026 | Huisstijl instelbaar door de beheerder: zeven kleuren per versie, licht en donker, voor iedereen. |
 | 1.12 | 28-09-2026 | Backup van alle gegevens onder het tandwieltje (.json en .xlsx); notitieveld bij personen; SQL 23 met soort en sector voor 44 organisaties en de contactpersonen uit de mail. |
+| 1.13 | 28-09-2026 | Logboek onder het tandwieltje (wie wijzigde wat, en bezoeken); bij Gebruikers laatst gezien en laatst ingelogd; bij organisaties *Aangesloten bij MCN* en *Aangesloten als bron*, met filter. Database: `26-logboek.sql`, `27-aansluiting.sql`. |

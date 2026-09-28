@@ -214,6 +214,15 @@
     color: var(--accent-ink); background: var(--accent-soft); padding: 2px 8px; border-radius: var(--r-pill);
   }
 
+  .aansluit-merk { color: #1F6F5E; background: #E0F3EC; }
+  .bron-merk { color: #7A3E66; background: #F6E6F0; }
+  :root[data-theme="dark"] .aansluit-merk { color: #8FE0CE; background: #1E3A34; }
+  :root[data-theme="dark"] .bron-merk { color: #E6B3D3; background: #3A2432; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .aansluit-merk { color: #8FE0CE; background: #1E3A34; }
+    :root:not([data-theme="light"]) .bron-merk { color: #E6B3D3; background: #3A2432; }
+  }
+
   .eigenaar-houder { display: flex; min-width: 0; }
   .eigenaar-houder > * { flex: 1; min-width: 0; }
   /* Organisatie, Wie en Datum naast elkaar, elk met een kopje erboven. */
@@ -815,6 +824,16 @@
     .lid-regel .ak-knoppen { grid-row: 1 / span 3; grid-column: 2; }
     .lid-regel .ak-veld { grid-column: 1; }
   }
+  .log-balk { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 2px 0 6px; }
+  .log-kop, .actie-regel.log-regel { grid-template-columns: 118px minmax(0, 150px) minmax(0, 1fr); padding-left: 13px; }
+  .log-regel .ak-titel { font-weight: 500; }
+  .log-tijd { font-variant-numeric: tabular-nums; }
+  @media (max-width: 980px) {
+    .actie-regel.log-regel { grid-template-columns: auto 1fr; column-gap: 12px; padding: 10px 13px; }
+    .log-regel .log-tijd { grid-row: 1; grid-column: 1; }
+    .log-regel .ak-veld:not(.log-tijd) { grid-row: 1; grid-column: 2; }
+    .log-regel .ak-titel { grid-row: 2; grid-column: 1 / span 2; }
+  }
   .label-kop, .actie-regel.label-regel { grid-template-columns: minmax(160px, 1fr) minmax(0, 120px) 56px; padding-left: 13px; }
   @media (max-width: 980px) {
     .actie-regel.label-regel { grid-template-columns: 1fr auto; padding: 12px 13px; }
@@ -956,7 +975,7 @@
         <button type="button" class="versie-knop" aria-label="Versie-informatie" aria-expanded="false">i</button>
         <div class="versie-info" role="tooltip">
           <strong>Mobiel Erfgoed Console</strong>
-          <span>Versie 1.12 &middot; 28 september 2026</span>
+          <span>Versie 1.13 &middot; 28 september 2026</span>
         </div>
       </div>
     </div>
@@ -1058,6 +1077,7 @@
     relatieZoek: "",   // zoektekst in de relatielijst
     soortFilter: "alle",   // "alle", een soort, of "geen"
     sectorFilter: "alle",  // idem voor sector
+    aansluitFilter: "alle", // "alle", "aangesloten", "bron" of "geen"
     soortenBeheer: false, // het beheerpaneel voor soorten
     bewerkSoort: {},      // soortnaam -> true
     nieuwSoort: false,
@@ -1704,6 +1724,9 @@
     else if (ui.soortFilter !== "alle") d.push("soort: " + ui.soortFilter);
     if (ui.sectorFilter === "geen") d.push("zonder sector");
     else if (ui.sectorFilter !== "alle") d.push("sector: " + ui.sectorFilter);
+    if (ui.aansluitFilter === "aangesloten") d.push("aangesloten bij MCN");
+    else if (ui.aansluitFilter === "bron") d.push("aangesloten als bron");
+    else if (ui.aansluitFilter === "geen") d.push("niet aangesloten");
     if ((ui.relatieZoek || "").trim()) d.push('zoekterm: "' + ui.relatieZoek.trim() + '"');
     return d.length ? d.join(" \u00b7 ") : "alle relaties";
   }
@@ -1712,11 +1735,13 @@
     var orgs = zichtbareOrganisaties();
     var orgBlad = [["Organisatie", "Soort", "Sector", "Adres", "Postcode", "Plaats",
                     "E-mail algemeen", "Telefoon", "Website", "Toelichting",
+                    "Aangesloten bij MCN", "Aangesloten als bron",
                     "Personen", "Openstaande acties"]];
     orgs.forEach(function (o) {
       orgBlad.push([
         o.naam, o.soort || "", o.sector || "", o.adres || "", o.postcode || "", o.plaats || "",
         o.email || "", o.telefoon || "", o.website || "", o.notitie || "",
+        o.aangesloten ? "ja" : "", o.bron ? "ja" : "",
         personenBij(o.id).length,
         actiesBij(o.id, null).filter(function (x) { return !x.taak.done; }).length
       ]);
@@ -1824,8 +1849,21 @@
     if (waarde === "geen") return !org || !org[veld];
     return !!org && org[veld] === waarde;
   }
+  // Aangesloten bij MCN (zoals de sectorfederaties) en aangesloten als
+  // bron: twee vinkjes bij een organisatie, na 27-aansluiting.sql.
+  function heeftAansluiting() {
+    return organisaties.some(function (o) { return Object.prototype.hasOwnProperty.call(o, "aangesloten"); });
+  }
+  var AANSLUIT_KEUZES = [["aangesloten", "Aangesloten bij MCN"], ["bron", "Aangesloten als bron"], ["geen", "Geen van beide"]];
+  function aansluitOk(org) {
+    var f = ui.aansluitFilter || "alle";
+    if (f === "alle") return true;
+    if (!org) return false;
+    if (f === "geen") return !org.aangesloten && !org.bron;
+    return !!org[f];
+  }
   function soortOk(org) {
-    return keuzeOk(org, ui.soortFilter, "soort") && keuzeOk(org, ui.sectorFilter, "sector");
+    return keuzeOk(org, ui.soortFilter, "soort") && keuzeOk(org, ui.sectorFilter, "sector") && aansluitOk(org);
   }
 
   function zichtbareOrganisaties() {
@@ -1864,6 +1902,10 @@
     if (ui.relatieZoek) actief.push({ soort: "zoek", tekst: "Zoeken: \u201c" + ui.relatieZoek + "\u201d" });
     if (ui.soortFilter !== "alle") actief.push({ soort: "soort", tekst: "Soort: " + (ui.soortFilter === "geen" ? "nog geen soort" : ui.soortFilter) });
     if (ui.sectorFilter !== "alle") actief.push({ soort: "sector", tekst: "Sector: " + (ui.sectorFilter === "geen" ? "nog geen sector" : ui.sectorFilter) });
+    if ((ui.aansluitFilter || "alle") !== "alle") {
+      var ak = AANSLUIT_KEUZES.filter(function (k) { return k[0] === ui.aansluitFilter; })[0];
+      actief.push({ soort: "aansluiting", tekst: ak ? ak[1] : ui.aansluitFilter });
+    }
     var aantalFilters = actief.filter(function (f) { return f.soort !== "zoek"; }).length;
 
     html += '<div class="filter-row">';
@@ -1896,6 +1938,17 @@
         html += '<option value="geen"' + (f[1] === "geen" ? " selected" : "") + '>Nog geen ' + f[0] + ' (' + zonder + ')</option>';
         html += '</select></label>';
       });
+      if (heeftAansluiting()) {
+        var af = ui.aansluitFilter || "alle";
+        html += '<label class="veld"><span class="followup-hint">Aansluiting</span>';
+        html += '<select class="sel-input" data-action="set-aansluit-filter">';
+        html += '<option value="alle"' + (af === "alle" ? " selected" : "") + '>Alle organisaties</option>';
+        AANSLUIT_KEUZES.forEach(function (k) {
+          var n = organisaties.filter(function (o) { return k[0] === "geen" ? (!o.aangesloten && !o.bron) : !!o[k[0]]; }).length;
+          html += '<option value="' + k[0] + '"' + (af === k[0] ? " selected" : "") + '>' + k[1] + ' (' + n + ')</option>';
+        });
+        html += '</select></label>';
+      }
       if (actief.length) html += '<button class="link-btn" data-action="wis-relfilters">Filters wissen</button>';
       html += '</div>';
     }
@@ -2245,7 +2298,7 @@
     else document.documentElement.removeAttribute("data-theme");
   }
 
-  var INSTEL_KAARTEN = ["gebruikers", "categorieen", "soort", "sector", "labels", "huisstijl", "backup"];
+  var INSTEL_KAARTEN = ["gebruikers", "categorieen", "soort", "sector", "labels", "huisstijl", "logboek", "backup"];
   function instelOpen(sleutel) { return !!ui.instelOpen[sleutel]; }
   function instelKop(sleutel, titel, meta, telling) {
     var open = instelOpen(sleutel);
@@ -2287,6 +2340,7 @@
       html += '<div class="relaties-thema">' + renderKeuzelijstBeheer() + '</div>';
       html += renderLabelBeheer();
       html += renderHuisstijl();
+      html += renderLogboek();
       html += renderBackup();
     }
     html += '</div>';
@@ -2470,7 +2524,13 @@
       if (ui.bewerkLid === l.email) { html += renderLidFormulier(l); return; }
       var zelf = isIkZelf(l.email);
       html += '<div class="actie-regel lid-regel" style="--balk:' + (l.rol === "beheerder" ? "var(--accent)" : l.rol === "bewerker" ? "var(--rel-balk, #75C3EA)" : "var(--line)") + ';">';
-      html += '<span class="ak-titel">' + escapeHtml(l.naam || "\u2014") + (zelf ? ' <span class="relatie-meta sans">(jij)</span>' : '') + '</span>';
+      var gezien = [];
+      if (l.laatst_gezien) gezien.push("gezien " + tijdstipNL(l.laatst_gezien));
+      var ingelogd = laatsteLogins[(l.email || "").toLowerCase()];
+      if (ingelogd) gezien.push("ingelogd " + tijdstipNL(ingelogd));
+      else if (Object.keys(laatsteLogins).length) gezien.push("nog nooit ingelogd");
+      html += '<span class="ak-titel">' + escapeHtml(l.naam || "\u2014") + (zelf ? ' <span class="relatie-meta sans">(jij)</span>' : '')
+           + (gezien.length ? '<span class="pk-notitie">' + escapeHtml(gezien.join(" \u00b7 ")) + '</span>' : '') + '</span>';
       html += '<span class="ak-veld" title="' + escapeHtml(l.email) + '">' + escapeHtml(l.email) + '</span>';
       html += '<span class="ak-veld">' + escapeHtml((ROLLEN.filter(function (r) { return r[0] === l.rol; })[0] || [0, l.rol])[1]) + '</span>';
       var sam = rechtenSamenvatting(l);
@@ -2711,6 +2771,154 @@
       render();
     });
   }
+  // ── Logboek (alleen beheerder, na 26-logboek.sql) ──────────────────
+  // De database schrijft zelf bij elke wijziging wie wat deed; hier
+  // lezen we de laatste regels en maken ze leesbaar.
+  var logboek = null, logboekFout = "", logboekLimiet = 200;
+  var laatsteLogins = {};   // e-mailadres (klein) -> laatst ingelogd
+  var LOG_SOORT = { acties: "Actie", besluiten: "Besluit", categorieen: "Categorie", organisaties: "Organisatie",
+    personen: "Persoon", organisatie_soorten: "Soort", organisatie_sectoren: "Sector", leden: "Gebruiker",
+    instellingen: "Instelling", console: "Console" };
+  var LOG_GROEP = { acties: "acties", besluiten: "besluiten", organisaties: "relaties", personen: "relaties",
+    categorieen: "beheer", organisatie_soorten: "beheer", organisatie_sectoren: "beheer", leden: "beheer",
+    instellingen: "beheer", console: "bezoek" };
+  var LOG_VELD = { titel: "titel", tekst: "tekst", eigenaar: "wie", wanneer: "datum", notitie: "toelichting",
+    labels: "labels", gereed: "afgerond", gereed_op: "afgerond op", gereed_notitie: "commentaar bij afronding",
+    volgorde: "volgorde", categorie_id: "categorie", organisatie_id: "organisatie", persoon_id: "persoon",
+    eigenaar_persoon_id: "wie (persoon)", eigenaar_organisatie_id: "wie (organisatie)", naam: "naam",
+    voornaam: "voornaam", tussenvoegsel: "tussenvoegsel", achternaam: "achternaam", geslacht: "geslacht",
+    functie: "functie", email: "e-mail", telefoon: "telefoon", soort: "soort", sector: "sector", plaats: "plaats",
+    adres: "adres", postcode: "postcode", website: "website", rol: "rol", nr: "volgnummer",
+    toegang_acties: "toegang acties", acties_groepen: "groepen", toegang_besluiten: "toegang besluiten",
+    toegang_relaties: "toegang relaties", waarde: "waarde", datum: "datum" };
+
+  function tijdstipNL(iso) {
+    if (!iso) return "";
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    var nu = new Date();
+    var tijd = ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
+    function dag(x) { return new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime(); }
+    var verschil = Math.round((dag(nu) - dag(d)) / 86400000);
+    if (verschil === 0) return "vandaag " + tijd;
+    if (verschil === 1) return "gisteren " + tijd;
+    var MAANDEN = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
+    return d.getDate() + " " + MAANDEN[d.getMonth()] + (d.getFullYear() !== nu.getFullYear() ? " " + d.getFullYear() : "") + " " + tijd;
+  }
+  function naamVanLid(email) {
+    var l = leden.find(function (x) { return (x.email || "").toLowerCase() === (email || "").toLowerCase(); });
+    return l && l.naam ? l.naam : (email || "onbekend");
+  }
+  function meldBezoek() {
+    try { sb.rpc("meld_bezoek").then(function () {}, function () {}); } catch (e) { /* zonder logboek gaat alles gewoon door */ }
+  }
+  function laadLaatsteLogins() {
+    if (mijnRol !== "beheerder") return;
+    try {
+      sb.rpc("laatste_logins").then(function (r) {
+        if (!r || r.error || !r.data) return;
+        laatsteLogins = {};
+        r.data.forEach(function (x) { if (x.email) laatsteLogins[x.email.toLowerCase()] = x.laatst; });
+        if (ui.view === "instellingen") render();
+      }, function () {});
+    } catch (e) { /* functie bestaat pas na SQL 26 */ }
+  }
+  function laadLogboek() {
+    logboekFout = "";
+    sb.from("logboek").select("*").order("wanneer", { ascending: false }).limit(logboekLimiet).then(function (r) {
+      if (r.error) {
+        logboekFout = /does not exist|schema cache|not find/i.test(r.error.message || "") ? "nog-niet" : (r.error.message || "onbekende fout");
+        logboek = [];
+      } else {
+        logboek = r.data || [];
+      }
+      render();
+    }, function (err) {
+      logboekFout = (err && err.message) || String(err);
+      logboek = [];
+      render();
+    });
+  }
+  function logWaarde(veld, w) {
+    if (w === null || w === undefined || w === "") return "leeg";
+    if (typeof w === "boolean") return w ? "ja" : "nee";
+    if (Array.isArray(w)) return w.length ? w.join(", ") : "leeg";
+    if (typeof w === "object") return "…";
+    if (veld === "organisatie_id" || veld === "eigenaar_organisatie_id") { var o = organisatieOp(w); return o ? o.naam : "(verwijderd)"; }
+    if (veld === "persoon_id" || veld === "eigenaar_persoon_id") { var p = persoonOp(w); return p ? volledigeNaam(p) : "(verwijderd)"; }
+    if (veld === "categorie_id") { var c = (currentSections || []).find(function (s) { return s.id === w; }); return c ? c.title : "(verwijderd)"; }
+    var t = String(w);
+    return t.length > 60 ? t.slice(0, 57) + "…" : t;
+  }
+  function logRegelTekst(x) {
+    if (x.actie === "bezoek") return { wat: "Opende de Console", details: "" };
+    var soort = LOG_SOORT[x.tabel] || x.tabel;
+    var wat = soort + " " + x.actie + ": “" + (x.omschrijving || x.rij_id || "") + "”";
+    var details = "";
+    if (x.actie === "gewijzigd" && x.wijziging) {
+      details = (x.velden || []).map(function (v) {
+        var paar = x.wijziging[v] || [];
+        var naam = LOG_VELD[v] || v;
+        if (v === "notitie" || v === "gereed_notitie" || v === "tekst" || v === "waarde") return naam;
+        return naam + ": " + logWaarde(v, paar[0]) + " → " + logWaarde(v, paar[1]);
+      }).join(" · ");
+    }
+    return { wat: wat, details: details };
+  }
+  function renderLogboek() {
+    var html = '<section class="section-card acties-kaart">';
+    html += instelKop("logboek", "Logboek", "wie wat heeft gewijzigd, en wanneer", logboek && !logboekFout ? logboek.length + (logboek.length >= logboekLimiet ? "+" : "") + " regels" : "");
+    if (!instelOpen("logboek")) return html + '</section>';
+    html += '<div class="section-body acties-body logboek-body">';
+    if (logboek === null) {
+      html += '<div class="followup-hint">Logboek laden…</div></div></section>';
+      return html;
+    }
+    if (logboekFout === "nog-niet") {
+      html += '<div class="followup-hint">Het logboek werkt nadat 26-logboek.sql is gedraaid.</div></div></section>';
+      return html;
+    }
+    if (logboekFout) html += '<div class="lid-fout">Logboek laden lukte niet: ' + escapeHtml(logboekFout) + '</div>';
+    var wieLijst = {};
+    logboek.forEach(function (x) { if (x.wie) wieLijst[x.wie.toLowerCase()] = x.wie; });
+    html += '<div class="log-balk">';
+    html += '<select class="sort-select" data-action="set-log-filter" data-log="wie"><option value="">Iedereen</option>';
+    Object.keys(wieLijst).sort(function (a, b) { return naamVanLid(a).localeCompare(naamVanLid(b), "nl"); }).forEach(function (k) {
+      html += '<option value="' + escapeHtml(k) + '"' + (ui.logWie === k ? " selected" : "") + '>' + escapeHtml(naamVanLid(wieLijst[k])) + '</option>';
+    });
+    html += '</select>';
+    html += '<select class="sort-select" data-action="set-log-filter" data-log="soort">';
+    [["", "Alles"], ["acties", "Acties"], ["besluiten", "Besluiten"], ["relaties", "Relaties"], ["beheer", "Beheer"], ["bezoek", "Bezoeken"]].forEach(function (o) {
+      html += '<option value="' + o[0] + '"' + ((ui.logSoort || "") === o[0] ? " selected" : "") + '>' + o[1] + '</option>';
+    });
+    html += '</select>';
+    html += '<button class="filter-btn" data-action="log-vernieuw">Vernieuwen</button>';
+    html += '</div>';
+    var rijen = logboek.filter(function (x) {
+      if (ui.logWie && (x.wie || "").toLowerCase() !== ui.logWie) return false;
+      if (ui.logSoort && LOG_GROEP[x.tabel] !== ui.logSoort) return false;
+      return true;
+    });
+    if (!rijen.length) {
+      html += '<div class="empty-state group-empty-state">Nog niets in het logboek' + (ui.logWie || ui.logSoort ? ' voor deze selectie' : '') + '.</div>';
+    } else {
+      html += '<div class="acties-kop log-kop sans"><span>Wanneer</span><span>Wie</span><span>Wat</span></div>';
+      rijen.forEach(function (x) {
+        var t = logRegelTekst(x);
+        var balk = x.actie === "verwijderd" ? "var(--danger)" : x.actie === "toegevoegd" ? "var(--accent)" : x.actie === "bezoek" ? "var(--line)" : "var(--rel-balk, #75C3EA)";
+        html += '<div class="actie-regel log-regel" style="--balk:' + balk + ';">';
+        html += '<span class="ak-veld log-tijd" title="' + escapeHtml(new Date(x.wanneer).toLocaleString("nl-NL")) + '">' + escapeHtml(tijdstipNL(x.wanneer)) + '</span>';
+        html += '<span class="ak-veld" title="' + escapeHtml(x.wie || "") + '">' + escapeHtml(naamVanLid(x.wie)) + '</span>';
+        html += '<span class="ak-titel log-wat">' + escapeHtml(t.wat) + (t.details ? '<span class="pk-notitie">' + escapeHtml(t.details) + '</span>' : '') + '</span>';
+        html += '</div>';
+      });
+    }
+    if (logboek.length >= logboekLimiet) html += '<button class="add-task-btn" data-action="log-meer">Oudere regels laden</button>';
+    html += '<div class="followup-hint">De database schrijft dit zelf bij; niemand kan het aanpassen. Bij een verwijdering is de hele regel bewaard, zodat die zo nodig terug te zetten is.</div>';
+    html += '</div></section>';
+    return html;
+  }
+
   function renderBackup() {
     var laatst = laatsteBackup();
     var html = '<section class="section-card acties-kaart">';
@@ -2911,6 +3119,8 @@
       html += '<button class="section-header-btn" data-action="toggle-org" data-org="' + org.id + '">';
       html += '<span class="section-title">' + escapeHtml(org.naam) + '</span>';
       if (org.eigen) html += '<span class="eigen-merk sans">onze organisatie</span>';
+      if (org.aangesloten) html += '<span class="eigen-merk aansluit-merk sans" title="Aangesloten bij MCN">aangesloten</span>';
+      if (org.bron) html += '<span class="eigen-merk bron-merk sans" title="Aangesloten als bron">bron</span>';
       html += '<span class="relatie-meta sans">';
       var kenmerken = [org.plaats, org.soort, org.sector].filter(Boolean);
       html += escapeHtml(kenmerken.join(" · "));
@@ -2995,6 +3205,12 @@
     html += '<div class="form-row">' + veld("Toelichting", '<textarea class="txt-input" rows="2" data-field="org-notitie">' + escapeHtml(org ? org.notitie : "") + '</textarea>') + '</div>';
     html += '<label class="vink-regel"><input type="checkbox" data-field="org-eigen"' + (org && org.eigen ? " checked" : "") + ' /> '
          + '<span>Dit is onze eigen organisatie<span class="followup-hint">Deze staat standaard voorgeselecteerd bij \u201cWie\u201d.</span></span></label>';
+    if (heeftAansluiting()) {
+      html += '<label class="vink-regel"><input type="checkbox" data-field="org-aangesloten"' + (org && org.aangesloten ? " checked" : "") + ' /> '
+           + '<span>Aangesloten bij MCN<span class="followup-hint">Bijvoorbeeld een sectorfederatie zoals FVEN.</span></span></label>';
+      html += '<label class="vink-regel"><input type="checkbox" data-field="org-bron"' + (org && org.bron ? " checked" : "") + ' /> '
+           + '<span>Aangesloten als bron<span class="followup-hint">Levert gegevens over de collectie aan.</span></span></label>';
+    }
     html += '<div class="form-actions">';
     html += '<button class="save-btn" data-action="bewaar-org" data-org="' + id + '">Opslaan</button>';
     html += '<button class="cancel-btn" data-action="annuleer-org" data-org="' + id + '">Annuleren</button>';
@@ -4117,7 +4333,7 @@
     // Soorten, sectoren en labels beheren is voor de beheerder.
     var BEHEERACTIES = ["bewerk-label", "annuleer-label", "bewaar-label", "verwijder-label",
       "nieuw-lid", "bewerk-lid", "annuleer-lid", "bewaar-lid", "verwijder-lid",
-      "bewerk-huisstijl", "annuleer-huisstijl", "huisstijl-standaard", "bewaar-huisstijl", "huisstijl-herstel", "maak-backup",
+      "bewerk-huisstijl", "annuleer-huisstijl", "huisstijl-standaard", "bewaar-huisstijl", "huisstijl-herstel", "maak-backup", "log-vernieuw", "log-meer",
       "open-edit-section", "cancel-edit-section", "submit-edit-section", "delete-section",
       "open-add-section", "cancel-add-section", "submit-add-section", "add-label-suggestion",
       "bewerk-soort", "annuleer-soort", "bewaar-soort", "verwijder-soort", "nieuwe-soort"];
@@ -4222,11 +4438,18 @@
       return;
     } else if (action === "toggle-instel") {
       var ik = btn.getAttribute("data-instel");
-      ui.instelOpen[ik] = !ui.instelOpen[ik]; render(); return;
+      ui.instelOpen[ik] = !ui.instelOpen[ik];
+      if (ik === "logboek" && ui.instelOpen.logboek && mijnRol === "beheerder") laadLogboek();
+      render(); return;
     } else if (action === "toggle-instel-alle") {
       var allesOpen = INSTEL_KAARTEN.every(instelOpen);
       INSTEL_KAARTEN.forEach(function (k) { ui.instelOpen[k] = !allesOpen; });
+      if (!allesOpen && mijnRol === "beheerder") laadLogboek();
       render(); return;
+    } else if (action === "log-vernieuw") {
+      laadLogboek(); laadLaatsteLogins(); return;
+    } else if (action === "log-meer") {
+      logboekLimiet += 200; laadLogboek(); return;
     } else if (action === "nieuw-lid") {
       ui.bewerkLid = "nieuw"; ui.lidFout = ""; render(); return;
     } else if (action === "bewerk-lid") {
@@ -4297,9 +4520,10 @@
       if (rf === "zoek") ui.relatieZoek = "";
       else if (rf === "soort") ui.soortFilter = "alle";
       else if (rf === "sector") ui.sectorFilter = "alle";
+      else if (rf === "aansluiting") ui.aansluitFilter = "alle";
       render(); return;
     } else if (action === "wis-relfilters") {
-      ui.relatieZoek = ""; ui.soortFilter = "alle"; ui.sectorFilter = "alle";
+      ui.relatieZoek = ""; ui.soortFilter = "alle"; ui.sectorFilter = "alle"; ui.aansluitFilter = "alle";
       render(); return;
     } else if (action === "toggle-orgs-alle") {
       var zichtOrgs = zichtbareOrganisaties();
@@ -4338,6 +4562,10 @@
         notitie: leesVeld(of, "org-notitie"),
         eigen: !!(of.querySelector('[data-field="org-eigen"]') || {}).checked
       };
+      if (heeftAansluiting()) {
+        rij.aangesloten = !!(of.querySelector('[data-field="org-aangesloten"]') || {}).checked;
+        rij.bron = !!(of.querySelector('[data-field="org-bron"]') || {}).checked;
+      }
       if (orgId === "nieuw") ui.nieuweOrg = false; else delete ui.bewerkOrg[orgId];
       bewaarRelatie("organisaties", rij, organisaties);
       return;
@@ -4679,6 +4907,17 @@
       render();
       return;
     }
+    if (e.target.matches('[data-action="set-aansluit-filter"]')) {
+      ui.aansluitFilter = e.target.value;
+      render();
+      return;
+    }
+    if (e.target.matches('[data-action="set-log-filter"]')) {
+      if (e.target.getAttribute("data-log") === "wie") ui.logWie = e.target.value;
+      else ui.logSoort = e.target.value;
+      render();
+      return;
+    }
     if (e.target.matches('[data-action="set-action-label-filter"]')) {
       ui.actionLabelFilter = e.target.value;
       render();
@@ -4900,6 +5139,8 @@
   function naInloggen() {
     return bepaalRol().then(function () {
       if (!mijnRol) { render(); return; }      // wel ingelogd, geen toegang
+      meldBezoek();
+      laadLaatsteLogins();
       return laadAlles().then(function () {
         render();
         luisterOpWijzigingen();
