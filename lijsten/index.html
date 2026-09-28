@@ -404,6 +404,7 @@
   .pk-veld { color: var(--ink-soft); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .pk-veld .relatie-chip { max-width: 100%; overflow: hidden; text-overflow: ellipsis; display: inline-block; white-space: nowrap; }
   .pk-leeg { color: var(--ink-faint); font-style: italic; }
+  .pk-notitie { display: block; font-weight: 400; font-size: 12.5px; color: var(--ink-faint); line-height: 1.4; margin-top: 2px; white-space: pre-line; overflow-wrap: anywhere; }
   .pk-knoppen { display: flex; align-items: center; gap: 2px; justify-content: flex-end; }
   .persoon-formulier { padding: 4px 0; border-top: 1px solid var(--line-soft); }
 
@@ -769,6 +770,12 @@
   .instel-naam { font-weight: 600; font-size: 14px; }
   .instel-regel .followup-hint { margin: 2px 0 0; }
   .instel-sub .instel-alles { margin-left: auto; }
+  .backup-body { display: flex; flex-direction: column; gap: 8px; }
+  .backup-body .instel-regel { flex-wrap: nowrap; }
+  .backup-body .instel-regel > div { flex: 1; min-width: 0; }
+  .backup-body .instel-regel .filter-btn { flex: none; }
+  @media (max-width: 640px) { .backup-body .instel-regel { flex-wrap: wrap; } }
+  .backup-status { margin: 2px 2px 0; }
   .huis-rij { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
   .huis-paneel { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); padding: 12px 14px; }
   .huis-naam { font-weight: 700; font-size: 14px; margin-bottom: 8px; }
@@ -949,7 +956,7 @@
         <button type="button" class="versie-knop" aria-label="Versie-informatie" aria-expanded="false">i</button>
         <div class="versie-info" role="tooltip">
           <strong>Mobiel Erfgoed Console</strong>
-          <span>Versie 1.11 &middot; 25 september 2026</span>
+          <span>Versie 1.12 &middot; 28 september 2026</span>
         </div>
       </div>
     </div>
@@ -1716,12 +1723,12 @@
     });
 
     var persBlad = [["Voornaam", "Tussenvoegsel", "Achternaam", "Volledige naam", "Geslacht",
-                     "Functie", "Organisatie", "E-mail", "Telefoon", "Openstaande acties"]];
+                     "Functie", "Organisatie", "E-mail", "Telefoon", "Notitie", "Openstaande acties"]];
     zichtbarePersonen().forEach(function (x) {
       var org = organisatieOp(x.organisatie_id);
       persBlad.push([
         x.voornaam || "", x.tussenvoegsel || "", x.achternaam || "", volledigeNaam(x), x.geslacht || "",
-        x.functie || "", org ? org.naam : "", x.email || "", x.telefoon || "",
+        x.functie || "", org ? org.naam : "", x.email || "", x.telefoon || "", x.notitie || "",
         actiesBij(null, x.id).filter(function (y) { return !y.taak.done; }).length
       ]);
     });
@@ -2201,7 +2208,8 @@
   function persoonKaart(pers, org, mag) {
     var eigenActies = actiesBij(null, pers.id).filter(function (x) { return !x.taak.done; }).length;
     var html = '<div class="actie-regel persoon-kaart' + (org ? " met-org" : "") + '" style="--balk:var(--rel-balk);">';
-    html += '<span class="ak-titel">' + escapeHtml(volledigeNaam(pers)) + '</span>';
+    html += '<span class="ak-titel">' + escapeHtml(volledigeNaam(pers))
+         + (pers.notitie ? '<span class="pk-notitie">' + escapeHtml(pers.notitie) + '</span>' : '') + '</span>';
     html += '<span class="ak-veld">' + escapeHtml(pers.functie || "") + '</span>';
     if (org) {
       html += '<span class="ak-veld">' + (org === "geen"
@@ -2237,7 +2245,7 @@
     else document.documentElement.removeAttribute("data-theme");
   }
 
-  var INSTEL_KAARTEN = ["gebruikers", "categorieen", "soort", "sector", "labels", "huisstijl"];
+  var INSTEL_KAARTEN = ["gebruikers", "categorieen", "soort", "sector", "labels", "huisstijl", "backup"];
   function instelOpen(sleutel) { return !!ui.instelOpen[sleutel]; }
   function instelKop(sleutel, titel, meta, telling) {
     var open = instelOpen(sleutel);
@@ -2279,6 +2287,7 @@
       html += '<div class="relaties-thema">' + renderKeuzelijstBeheer() + '</div>';
       html += renderLabelBeheer();
       html += renderHuisstijl();
+      html += renderBackup();
     }
     html += '</div>';
     return html;
@@ -2623,6 +2632,102 @@
     return html;
   }
 
+  // Het veld notitie bij personen komt er met 23-organisaties-en-contacten.sql.
+  // Zolang dat niet gedraaid is, laten we het weg, anders mislukt opslaan.
+  function heeftPersNotitie() {
+    return (personen || []).some(function (x) { return Object.prototype.hasOwnProperty.call(x, "notitie"); });
+  }
+
+  // ── Backup: alle gegevens in één bestand (alleen beheerder) ────────
+  // Haalt elke tabel vers uit de database, dus ook wat een ander net
+  // heeft gewijzigd. Per keer 1000 regels, tot alles binnen is.
+  var BACKUP_TABELLEN = [
+    ["categorieen", "id"], ["acties", "id"], ["besluiten", "id"],
+    ["organisaties", "id"], ["personen", "id"],
+    ["organisatie_soorten", "naam"], ["organisatie_sectoren", "naam"],
+    ["leden", "email"], ["instellingen", "sleutel"]
+  ];
+  function laatsteBackup() {
+    try { return localStorage.getItem("mec-laatste-backup") || ""; } catch (e) { return ""; }
+  }
+  function haalTabel(naam, sleutel) {
+    var rijen = [];
+    function pagina(van) {
+      return sb.from(naam).select("*").order(sleutel).range(van, van + 999).then(function (r) {
+        if (r.error) {
+          if (naam === "instellingen") return rijen;   // bestaat pas na SQL 22
+          throw new Error(naam + ": " + r.error.message);
+        }
+        rijen = rijen.concat(r.data || []);
+        return (r.data || []).length === 1000 ? pagina(van + 1000) : rijen;
+      });
+    }
+    return pagina(0);
+  }
+  function maakBackup(soort) {
+    ui.backupStatus = "Backup maken…";
+    render();
+    var tabellen = {};
+    Promise.all(BACKUP_TABELLEN.map(function (t) {
+      return haalTabel(t[0], t[1]).then(function (r) { tabellen[t[0]] = r; });
+    })).then(function () {
+      var telling = BACKUP_TABELLEN.map(function (t) { return tabellen[t[0]].length; }).reduce(function (a, b) { return a + b; }, 0);
+      var stempel = todayISO();
+      var klaar;
+      if (soort === "excel") {
+        klaar = loadExcelLib().then(function () {
+          var wb = XLSX.utils.book_new();
+          BACKUP_TABELLEN.forEach(function (t) {
+            var rijen = tabellen[t[0]].map(function (r) {
+              var uit = {};
+              Object.keys(r).forEach(function (k) {
+                var v = r[k];
+                uit[k] = (v !== null && typeof v === "object") ? JSON.stringify(v) : v;
+              });
+              return uit;
+            });
+            var blad = rijen.length ? XLSX.utils.json_to_sheet(rijen) : XLSX.utils.aoa_to_sheet([["(leeg)"]]);
+            XLSX.utils.book_append_sheet(wb, blad, t[0].slice(0, 31));
+          });
+          var data = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+          return bewaarBestand(new Blob([data], { type: "application/octet-stream" }), "console-backup-" + stempel + ".xlsx");
+        });
+      } else {
+        var inhoud = {
+          console: "Mobiel Erfgoed Console",
+          gemaakt: new Date().toISOString(),
+          door: sessie.user.email,
+          tabellen: tabellen
+        };
+        klaar = bewaarBestand(new Blob([JSON.stringify(inhoud, null, 1)], { type: "application/json" }), "console-backup-" + stempel + ".json");
+      }
+      return klaar.then(function () { return telling; });
+    }).then(function (telling) {
+      try { localStorage.setItem("mec-laatste-backup", new Date().toISOString()); } catch (e) {}
+      ui.backupStatus = "Gedownload: " + telling + " regels uit " + BACKUP_TABELLEN.length + " tabellen.";
+      render();
+    }).catch(function (err) {
+      ui.backupStatus = "Backup maken lukte niet: " + ((err && err.message) || String(err));
+      render();
+    });
+  }
+  function renderBackup() {
+    var laatst = laatsteBackup();
+    var html = '<section class="section-card acties-kaart">';
+    html += instelKop("backup", "Backup", "alle gegevens in één bestand", laatst ? "laatste " + formatDateNL(laatst.slice(0, 10)) : "");
+    if (!instelOpen("backup")) return html + '</section>';
+    html += '<div class="section-body acties-body backup-body">';
+    html += '<div class="instel-regel"><div><div class="instel-naam">Volledige backup</div>'
+         + '<div class="followup-hint">Alle acties, besluiten, categorieën, organisaties, personen, keuzelijsten, gebruikers en de huisstijl. Hiermee kan alles worden teruggezet. Bewaar het bestand op een veilige plek: er staan e-mailadressen en telefoonnummers in.</div></div>'
+         + '<button class="filter-btn" data-action="maak-backup" data-soort="json">Downloaden (.json)</button></div>';
+    html += '<div class="instel-regel"><div><div class="instel-naam">Om in te kijken</div>'
+         + '<div class="followup-hint">Dezelfde gegevens als Excel-bestand, met een tabblad per tabel.</div></div>'
+         + '<button class="filter-btn" data-action="maak-backup" data-soort="excel">Downloaden (.xlsx)</button></div>';
+    if (ui.backupStatus) html += '<div class="followup-hint backup-status">' + escapeHtml(ui.backupStatus) + '</div>';
+    html += '</div></section>';
+    return html;
+  }
+
   function renderHuisstijl() {
     var bewerk = !!ui.huisConcept;
     var h = bewerk ? ui.huisConcept : huisstijlNu();
@@ -2955,6 +3060,9 @@
     html += veld("E-mail", tekst("p-email", pers && pers.email, "", "email"), "breed");
     html += veld("Telefoon", tekst("p-telefoon", pers && pers.telefoon));
     html += '</div>';
+    if (heeftPersNotitie()) {
+      html += '<div class="form-row">' + veld("Notitie", '<textarea class="txt-input" rows="2" data-field="p-notitie" placeholder="Bijvoorbeeld een tweede e-mailadres">' + escapeHtml(pers ? (pers.notitie || "") : "") + '</textarea>', "breed") + '</div>';
+    }
     html += '<div class="form-actions">';
     html += '<button class="save-btn" data-action="bewaar-persoon" data-persoon="' + id + '" data-org="' + org.id + '">Opslaan</button>';
     html += '<button class="cancel-btn" data-action="annuleer-persoon" data-persoon="' + id + '" data-org="' + org.id + '">Annuleren</button>';
@@ -4009,7 +4117,7 @@
     // Soorten, sectoren en labels beheren is voor de beheerder.
     var BEHEERACTIES = ["bewerk-label", "annuleer-label", "bewaar-label", "verwijder-label",
       "nieuw-lid", "bewerk-lid", "annuleer-lid", "bewaar-lid", "verwijder-lid",
-      "bewerk-huisstijl", "annuleer-huisstijl", "huisstijl-standaard", "bewaar-huisstijl", "huisstijl-herstel",
+      "bewerk-huisstijl", "annuleer-huisstijl", "huisstijl-standaard", "bewaar-huisstijl", "huisstijl-herstel", "maak-backup",
       "open-edit-section", "cancel-edit-section", "submit-edit-section", "delete-section",
       "open-add-section", "cancel-add-section", "submit-add-section", "add-label-suggestion",
       "bewerk-soort", "annuleer-soort", "bewaar-soort", "verwijder-soort", "nieuwe-soort"];
@@ -4104,6 +4212,9 @@
     } else if (action === "bewaar-huisstijl") {
       var isStandaard = huisstijlCss(ui.huisConcept) === "";
       bewaarHuisstijl(isStandaard ? null : ui.huisConcept);
+      return;
+    } else if (action === "maak-backup") {
+      maakBackup(btn.getAttribute("data-soort"));
       return;
     } else if (action === "huisstijl-herstel") {
       if (!window.confirm("De standaardkleuren terugzetten voor iedereen?")) return;
@@ -4265,6 +4376,7 @@
         email: leesVeld(pf, "p-email"),
         telefoon: leesVeld(pf, "p-telefoon")
       };
+      if (heeftPersNotitie()) prij.notitie = leesVeld(pf, "p-notitie");
       if (persoonId === "nieuw") delete ui.nieuwPersoonBij[orgId]; else delete ui.bewerkPersoon[persoonId];
       bewaarRelatie("personen", prij, personen);
       return;

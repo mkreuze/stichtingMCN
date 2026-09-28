@@ -265,6 +265,12 @@ zijn twee aparte lijsten.
 **Opnieuw opbouwen** kan met de bestanden in `lijsten/database/`, op
 nummer. Die documentatie staat in `lijsten/README.md`.
 
+**Backup:** de beheerder downloadt alle gegevens via tandwieltje →
+*Backup*. Het `.json`-bestand is de volledige backup; bewaar het op een
+veilige plek, want er staan e-mailadressen en telefoonnummers in. Maak
+er een voor en na grote wijzigingen, zoals het draaien van een nieuw
+SQL-bestand.
+
 **Let op bij de SQL Editor van Supabase:** die knipt een script in stukken
 bij elke puntkomma en struikelt over meerregelige functies met `$$`.
 Alle bestanden zijn daarom geschreven als korte losse opdrachten. Houd dat
@@ -305,3 +311,4 @@ actie waar het uit voortkwam is intact.
 | 25-09-2026 | Marinus Kreuze | Console versie 1.9–1.10: bij wijzigen verdwijnt de kopregel en schuift het formulier in beeld; donkere versie *antraciet*; kaart *Huisstijl* onder het beheer; nieuwe gebruiker kiezen uit de contactpersonen van MCN. |
 | 25-09-2026 | Marinus Kreuze | Console versie 1.11: de beheerder stelt onder *Huisstijl* zelf de kleuren van de lichte en de donkere versie in; ze gelden voor iedereen. Database: `22-instellingen-huisstijl.sql` (tabel `instellingen`). |
 | 25-09-2026 | Marinus Kreuze | Besluit: de Console blijft voorlopig op Vercel en verhuist later naar TransIP (stichtingmcn.nl/console); stappen staan in hoofdstuk 7. Gebruikers beheren gaat nu via het tandwieltje in de Console. |
+| 28-09-2026 | Marinus Kreuze | Console versie 1.12: backup van alle gegevens onder tandwieltje → *Backup* (.json om terug te zetten, .xlsx om in te kijken); notitieveld bij personen. Database: `23-organisaties-en-contacten.sql` — soort en sector voor 44 organisaties, en de contactpersonen uit `contactpersonen_mail.xlsx`. |

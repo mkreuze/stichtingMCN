@@ -179,6 +179,18 @@ organisatie met *Anders, namelijk…* alsnog zelf iets invullen.
 Met de keuzelijst ernaast filter je de organisaties op soort; daar staat
 ook *Nog geen soort*, handig om te zien wat nog ingevuld moet worden.
 
+Een persoon heeft een veld *notitie* voor wat niet in de vaste velden
+past, zoals een tweede e-mailadres. Het staat klein onder de naam en als
+kolom in de Excel-export. Het veld komt er met
+`23-organisaties-en-contacten.sql`; daarvoor laat het formulier het weg.
+
+`23-organisaties-en-contacten.sql` vult ook soort en sector aan bij de 44
+organisaties die die nog niet hadden, en neemt de contactpersonen uit
+`contactpersonen_mail.xlsx` over (28-09-2026). Wie er al is (zelfde
+e-mailadres of naam; bij MCN ook zelfde voornaam) wordt aangevuld, niet
+dubbel aangemaakt. Algemene adressen (info@, penningmeester@) staan bij
+de organisatie.
+
 ## Wie mag een account aanmaken
 
 Alleen adressen die in de tabel `leden` staan. Dat wordt afgedwongen door
@@ -282,6 +294,15 @@ Rechtsboven, naast de **i**, staat een tandwieltje. Daaronder:
     achter een accent, rekent de Console zelf uit. Met *Terug naar de
     standaardkleuren* haal je alles weg.
 
+  - *Backup*: alle tabellen (acties, besluiten, categorieën,
+    organisaties, personen, soorten, sectoren, gebruikers, instellingen)
+    vers uit de database in één bestand. *Downloaden (.json)* is de
+    volledige backup waarmee alles terug te zetten is; *Downloaden
+    (.xlsx)* is dezelfde inhoud als Excel om in te kijken, met een
+    tabblad per tabel. De kop toont de datum van de laatste backup op
+    dit apparaat. Terugzetten gaat niet vanuit de Console: vraag dat
+    aan wie de database beheert.
+
 Een bewerker of kijker ziet alleen *Weergave*. De Console laat hen ook
 buiten het scherm om geen gebruikers, soorten, sectoren of labels
 beheren, en na `20-beheer-alleen-beheerder.sql` weigert de database het
@@ -310,3 +331,4 @@ een regel hieronder.
 | 1.9 | 25-09-2026 | Bij wijzigen verdwijnt de kopregel en schuift het formulier boven in beeld. |
 | 1.10 | 25-09-2026 | Donkere versie antraciet; kaart Huisstijl onder het beheer; bij een nieuwe gebruiker kiezen uit de contactpersonen van MCN. |
 | 1.11 | 25-09-2026 | Huisstijl instelbaar door de beheerder: zeven kleuren per versie, licht en donker, voor iedereen. |
+| 1.12 | 28-09-2026 | Backup van alle gegevens onder het tandwieltje (.json en .xlsx); notitieveld bij personen; SQL 23 met soort en sector voor 44 organisaties en de contactpersonen uit de mail. |
