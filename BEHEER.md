@@ -50,6 +50,7 @@ Er zijn **geen** analytics, cookies, formulieren of andere externe diensten.
 | `fotos/` | Foto's bij nieuwsberichten; `fotos/partners/` bevat de partnerlogo's. | Ja |
 | `documenten/` | PDF's waar artikelen naar linken (brief aan de Kamercommissie OCW, rapport *Mobile heritage in Europe*). | Ja |
 | `BEHEER.md` | Deze handleiding. | Nee |
+| `lijsten/` | De Mobiel Erfgoed Console, met een eigen handleiding (`lijsten/BEHEER.md`). Staat op Vercel, niet op TransIP. | Nee |
 | `CLAUDE.md` | Werkafspraken voor Claude (AI-assistent): wordt automatisch gelezen als je in deze map met Claude werkt, met welk account ook. | Nee |
 | `tools/preview-server.js` | Kleine lokale testserver: `node tools/preview-server.js . 8001` en open `http://localhost:8001`. Alleen nodig als dubbelklikken op `index.html` niet volstaat. | Nee |
 | `.github/workflows/deploy.yml` | De automatische deploy. | Nee |
@@ -136,7 +137,7 @@ Alleen nodig in bijzondere gevallen:
 **Stap 4 – Proefwijziging (controleert of alles werkt)**
 
 1. Klik in GitHub Desktop bovenin op *Fetch origin* (en daarna *Pull origin* als die knop verschijnt). Controleer dat *Current branch* op **main** staat.
-2. Klik op *Open in Visual Studio Code*. Open `BEHEER.md` en voeg onderaan bij §7 *Beheerlog* een regel toe met de datum en je naam. Sla op (Ctrl+S / Cmd+S).
+2. Klik op *Open in Visual Studio Code*. Open `BEHEER.md` en voeg onderaan bij §8 *Beheerlog* een regel toe met de datum en je naam. Sla op (Ctrl+S / Cmd+S).
 3. Ga terug naar GitHub Desktop. Links zie je `BEHEER.md` met je wijziging.
 4. Typ linksonder bij *Summary* een korte omschrijving, bijvoorbeeld `Beheerlog: nieuwe beheerder`, en klik op **Commit to main**.
 5. Klik bovenin op **Push origin**.
@@ -234,9 +235,21 @@ In volgorde van belang. Geen van deze punten verhindert het dagelijks beheer.
 
 ---
 
-## 7. Beheerlog
+## 7. Mobiel Erfgoed Console
+
+De Console (de interne werklijst met acties, besluiten en relaties) staat
+**los van de website**: andere hosting (Vercel), een eigen database
+(Supabase) en een eigen tak (`mcn-console`). Hij heeft een **eigen
+beheerhandleiding**: [`lijsten/BEHEER.md`](lijsten/BEHEER.md). De
+publicatie van de website heeft er niets mee te maken; de map `lijsten/`
+komt niet op TransIP.
+
+---
+
+## 8. Beheerlog
 
 | Datum | Wie | Wat |
 |---|---|---|
 | 13-09-2026 | Marinus Kreuze | Handleiding opgesteld; opruimronde (dubbele bestanden, GitHub Pages uit, PDF's teruggezet in `documenten/`). |
 | 14-09-2026 | Marinus Kreuze | `CLAUDE.md` en `tools/preview-server.js` toegevoegd; pushen hing door twee GitHub-accounts op één computer, opgelost met `credential.username`. |
+| 01-10-2026 | Marinus Kreuze | Beheerhandleiding gesplitst: dit document gaat alleen nog over de website; de Console heeft een eigen handleiding in `lijsten/BEHEER.md`, met daarin ook het beheerlog van de Console. |
