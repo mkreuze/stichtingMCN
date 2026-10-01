@@ -63,9 +63,11 @@ Vijf weergaven:
   per onderwerp.
 - **Alle acties** — één doorlopende lijst met kolommen: actie, wie, datum,
   onderwerp en label. Verlopen datums kleuren rood. Klik op de kolomkop
-  *Wie*, *Datum* of *Label* om daarop te sorteren; nog een keer klikken
-  sorteert andersom, een derde keer zet de gewone volgorde terug. Lege
-  waarden staan altijd onderaan.
+  *Wie*, *Datum*, *Onderwerp* of *Label* om daarop te sorteren; nog een
+  keer klikken sorteert andersom, een derde keer zet de gewone volgorde
+  terug. Lege waarden staan altijd onderaan. Op een smal scherm, waar de
+  kolomkoppen ontbreken, staat dezelfde keuze als regel *Sorteren:*
+  boven de lijst. De Agenda staat altijd op datum.
 - **Per persoon** — een kaart per actiehouder: eerst de mensen van de eigen
   organisatie, dan personen van buiten, dan losse namen zoals Sectoren.
 - **Per organisatie** — een kaart per organisatie van de actiehouder:
@@ -87,17 +89,22 @@ In de kolom Datum staat bij een afgeronde actie de datum waarop hij is
 afgerond, en bij een openstaande de geplande datum. Sorteren op datum
 gebruikt diezelfde waarde.
 
-Boven de lijst staan de vijf weergaven als tabbladen. Daaronder:
+Bovenaan staat de **groepenbalk**: *Alle groepen*, *Bestuur*,
+*Projectgroep*, met het aantal openstaande acties. Kies je een groep, dan
+zie je in alle weergaven alleen de onderwerpen van die groep. De balk
+staat er alleen als je meer dan één groep ziet. Klikken op het
+groepslabel van een onderwerp doet hetzelfde.
+
+Daaronder staan de vijf weergaven als tabbladen. Daaronder:
 
 - **Te doen / Afgerond / Alle**;
-- **Filter** — klapt een paneel open met *Groep*, *Label* en
+- **Filter** — klapt een paneel open met *Wie*, *Label* en
   *Datum*. Staat er een filter aan, dan staat het aantal op de knop en
   verschijnt eronder een label zoals *Label: Leveranciers ×*; met het
   kruisje haal je dat filter weg, met *Filters wissen* alles tegelijk.
   Ook "alleen acties van deze organisatie" vanuit de relatielijst staat
   daar als label;
-- rechts de **volgorde** (niet bij Agenda, die staat altijd op datum) en
-  bij *Per onderwerp* **Alles inklappen**.
+- rechts **Nieuwe actie** en **Alles inklappen**.
 
 Het filterpaneel heeft ook **Wie**: een persoon, een organisatie (met al
 haar mensen) of een oude losse naam.
@@ -376,3 +383,4 @@ een regel hieronder.
 | 1.12 | 28-09-2026 | Backup van alle gegevens onder het tandwieltje (.json en .xlsx); notitieveld bij personen; SQL 23 met soort en sector voor 44 organisaties en de contactpersonen uit de mail. |
 | 1.13 | 28-09-2026 | Logboek onder het tandwieltje (wie wijzigde wat, en bezoeken); bij Gebruikers laatst gezien en laatst ingelogd; bij organisaties *Aangesloten bij MCN* en *Aangesloten als bron*, met filter. Database: `26-logboek.sql`, `27-aansluiting.sql`. |
 | 1.14 | 01-10-2026 | *Categorie* heet nu *onderwerp* en *categoriegroep* *groep*; nieuwe kaart *Groepen* (zoals Google Groups) met onderwerpen en leden; sorteren door op de kolomkop Wie, Datum of Label te klikken; afronden: commentaar blijft staan bij *Vervolgactie of besluit toevoegen*, vervolgactie met datum en bij dezelfde persoon; overal *actie* in plaats van *taak*. |
+| 1.15 | 01-10-2026 | Groepen in een eigen balk boven de weergaven in plaats van onder Filter; keuzelijst Volgorde weg, sorteren alleen nog met de kolomkoppen, nu ook op Onderwerp (op een smal scherm als regel *Sorteren:*). |
