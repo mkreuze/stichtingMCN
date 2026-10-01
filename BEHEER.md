@@ -50,6 +50,7 @@ Er zijn **geen** analytics, cookies, formulieren of andere externe diensten.
 | `fotos/` | Foto's bij nieuwsberichten; `fotos/partners/` bevat de partnerlogo's. | Ja |
 | `documenten/` | PDF's waar artikelen naar linken (brief aan de Kamercommissie OCW, rapport *Mobile heritage in Europe*). | Ja |
 | `BEHEER.md` | Deze handleiding. | Nee |
+| `lijsten/` | De Mobiel Erfgoed Console, met een eigen handleiding (`lijsten/BEHEER.md`). Staat op Vercel, niet op TransIP. | Nee |
 | `CLAUDE.md` | Werkafspraken voor Claude (AI-assistent): wordt automatisch gelezen als je in deze map met Claude werkt, met welk account ook. | Nee |
 | `tools/preview-server.js` | Kleine lokale testserver: `node tools/preview-server.js . 8001` en open `http://localhost:8001`. Alleen nodig als dubbelklikken op `index.html` niet volstaat. | Nee |
 | `.github/workflows/deploy.yml` | De automatische deploy. | Nee |
@@ -136,7 +137,7 @@ Alleen nodig in bijzondere gevallen:
 **Stap 4 – Proefwijziging (controleert of alles werkt)**
 
 1. Klik in GitHub Desktop bovenin op *Fetch origin* (en daarna *Pull origin* als die knop verschijnt). Controleer dat *Current branch* op **main** staat.
-2. Klik op *Open in Visual Studio Code*. Open `BEHEER.md` en voeg onderaan bij §7 *Beheerlog* een regel toe met de datum en je naam. Sla op (Ctrl+S / Cmd+S).
+2. Klik op *Open in Visual Studio Code*. Open `BEHEER.md` en voeg onderaan bij §8 *Beheerlog* een regel toe met de datum en je naam. Sla op (Ctrl+S / Cmd+S).
 3. Ga terug naar GitHub Desktop. Links zie je `BEHEER.md` met je wijziging.
 4. Typ linksonder bij *Summary* een korte omschrijving, bijvoorbeeld `Beheerlog: nieuwe beheerder`, en klik op **Commit to main**.
 5. Klik bovenin op **Push origin**.
@@ -236,60 +237,12 @@ In volgorde van belang. Geen van deze punten verhindert het dagelijks beheer.
 
 ## 7. Mobiel Erfgoed Console
 
-Dit staat **los van de website**. De site blijft statische HTML op TransIP;
-de Console is een aparte applicatie met een eigen database en een eigen inlog.
-Ze delen alleen de GitHub-repo.
-
-| Wat | Waar |
-|---|---|
-| De pagina | `lijsten/index.html`, één bestand, geen bouwstap |
-| Database en inlog | Supabase, Europese server (Frankfurt) |
-| Publicatie | Vercel, vanaf de tak `mcn-console`, hoofdmap `lijsten` |
-| Adres | https://stichting-mcn.vercel.app |
-
-**Wat erin zit:** acties per categorie met labels en datums, een aparte
-besluitenlijst, en een relatielijst met organisaties en de personen die
-erbij horen. Een actie kan aan een organisatie en/of persoon gekoppeld
-worden. Er is een PDF-download.
-
-**Wie erbij mag** staat in de tabel `leden` in Supabase — dat is de enige
-lijst die telt. Wie er niet in staat kan niet eens een account aanmaken.
-Drie rollen: `kijker` (alleen lezen), `bewerker` (lezen en wijzigen),
-`beheerder` (bepaalt ook wie toegang heeft). Iemand toevoegen of
-verwijderen, en de rechten per gebruiker instellen, doet de beheerder in
-de Console zelf: tandwieltje → *Gebruikers*. Een nieuwe gebruiker kies je
-uit de contactpersonen van MCN; die heeft daarvoor een e-mailadres nodig.
-Let op: contactpersonen (bij Relaties) en gebruikers (wie mag inloggen)
-zijn twee aparte lijsten.
-
-**Opnieuw opbouwen** kan met de bestanden in `lijsten/database/`, op
-nummer. Die documentatie staat in `lijsten/README.md`.
-
-**Backup:** de beheerder downloadt alle gegevens via tandwieltje →
-*Backup*. Het `.json`-bestand is de volledige backup; bewaar het op een
-veilige plek, want er staan e-mailadressen en telefoonnummers in. Maak
-er een voor en na grote wijzigingen, zoals het draaien van een nieuw
-SQL-bestand.
-
-**Let op bij de SQL Editor van Supabase:** die knipt een script in stukken
-bij elke puntkomma en struikelt over meerregelige functies met `$$`.
-Alle bestanden zijn daarom geschreven als korte losse opdrachten. Houd dat
-zo als er iets bij komt. Controleer na het plakken altijd of alles is
-meegekomen — een te lange plak wordt stilzwijgend afgekapt.
-
-**Later verhuizen naar TransIP (besluit 25-09-2026):** zolang de Console
-nog vaak verandert blijft hij op Vercel. Als hij af is, gaat hij naar
-stichtingmcn.nl/console, zodat alles bij één partij zit. Wat er dan moet
-gebeuren: in `.github/workflows/deploy.yml` bij *Voorbereiden upload-map*
-de map `console/` aanmaken en daarin `lijsten/index.html` en
-`lijsten/logo.png` zetten; de tak `mcn-console` samenvoegen met `main`;
-in Supabase (Authentication → URL Configuration) het nieuwe adres
-toevoegen; daarna het Vercel-project opheffen. Daarna gaat elke wijziging
-aan de Console live via `main`, dus steeds met toestemming.
-
-**Herkomst:** de lijst draaide eerst als Claude-artifact. Die is overgezet
-met behoud van alle kenmerken, dus de koppeling tussen een besluit en de
-actie waar het uit voortkwam is intact.
+De Console (de interne werklijst met acties, besluiten en relaties) staat
+**los van de website**: andere hosting (Vercel), een eigen database
+(Supabase) en een eigen tak (`mcn-console`). Hij heeft een **eigen
+beheerhandleiding**: [`lijsten/BEHEER.md`](lijsten/BEHEER.md). De
+publicatie van de website heeft er niets mee te maken; de map `lijsten/`
+komt niet op TransIP.
 
 ---
 
@@ -299,22 +252,4 @@ actie waar het uit voortkwam is intact.
 |---|---|---|
 | 13-09-2026 | Marinus Kreuze | Handleiding opgesteld; opruimronde (dubbele bestanden, GitHub Pages uit, PDF's teruggezet in `documenten/`). |
 | 14-09-2026 | Marinus Kreuze | `CLAUDE.md` en `tools/preview-server.js` toegevoegd; pushen hing door twee GitHub-accounts op één computer, opgelost met `credential.username`. |
-| 22-09-2026 | Marinus Kreuze | Mobiel Erfgoed Console opgezet: eigen Supabase-database (Frankfurt) met toegangsregels per rol, en de actie- en besluitenlijst overgezet uit het Claude-artifact (6 categorieën, 41 acties, 1 besluit). Relatielijst met organisaties en personen toegevoegd. |
-| 23-09-2026 | Marinus Kreuze | Console gepubliceerd op Vercel vanaf de tak `mcn-console`. Aanmelden beperkt tot adressen in de tabel `leden` via het Supabase-haakje *Before User Created*. |
-| 25-09-2026 | Marinus Kreuze | Console: naam van een persoon gesplitst in voornaam, tussenvoegsel en achternaam, met geslacht erbij. Actiehouders gekoppeld aan de personen van de eigen organisatie. Actielijst rustiger gemaakt: gekleurde pillen bij *Wie* en *Label* vervangen door een stipje en gedempte tekst, en afgeronde acties krijgen een eigen vulling. Uitgeklapte categorie: witte kop met een zacht mint blok eronder, ook bij Alle acties. Nieuwe weergaven Per persoon, Per relatie en Agenda. Een geopende actie blijft een wit kaartje tussen de andere. |
-| 25-09-2026 | Marinus Kreuze | Console: bij *Wie* eerst de organisatie (standaard de eigen organisatie), dan de contactpersoon, of de hele organisatie. Het aparte veld *Relatie* is vervallen; oude relaties blijven bewaard in de database. Weergave *Per relatie* heet nu *Per organisatie*. Database: `17-wie-organisatie.sql`. |
-| 25-09-2026 | Marinus Kreuze | Console: losse namen Allen en Marketing omgezet naar de hele organisatie MCN (`18-` en `19-…-naar-mcn.sql`). Filterbalk opgeruimd: weergaven als tabbladen, categoriegroep, label en datum achter één knop *Filter* met labels voor wat er aan staat. |
-| 25-09-2026 | Marinus Kreuze | Console versie 1.5: *Nieuwe actie* vanuit elke weergave, filter op *Wie*, besluiten en relaties in dezelfde kaartstijl als de acties (relaties in het blauw van het logo), filterbalk en formulieren bij de relaties opgeruimd, en een *i* rechtsboven met het versienummer. Versiegeschiedenis staat in `lijsten/README.md`. |
-| 25-09-2026 | Marinus Kreuze | Console versie 1.6: tandwieltje rechtsboven met *Instellingen*. Voor iedereen licht/donker/automatisch; voor de rol *beheerder* het beheer van soorten, sectoren en labels bij acties. De knop *Soorten beheren* bij de relaties is daarheen verhuisd. |
-| 25-09-2026 | Marinus Kreuze | Console versie 1.7: gebruikers (tabel `leden`) beheren onder het tandwieltje; beheerkaarten in- en uitklapbaar. Database: `20-beheer-alleen-beheerder.sql` — soorten en sectoren alleen door de beheerder, en de laatste beheerder kan niet worden verwijderd of teruggezet. |
-| 25-09-2026 | Marinus Kreuze | Console versie 1.8: rechten per gebruiker — acties (alle of bepaalde groepen), besluiten en relaties — in de Console en in de database (`21-rechten-per-gebruiker.sql`). Categorieën beheren alleen nog onder het tandwieltje, door de beheerder. |
-| 25-09-2026 | Marinus Kreuze | Console versie 1.9–1.10: bij wijzigen verdwijnt de kopregel en schuift het formulier in beeld; donkere versie *antraciet*; kaart *Huisstijl* onder het beheer; nieuwe gebruiker kiezen uit de contactpersonen van MCN. |
-| 25-09-2026 | Marinus Kreuze | Console versie 1.11: de beheerder stelt onder *Huisstijl* zelf de kleuren van de lichte en de donkere versie in; ze gelden voor iedereen. Database: `22-instellingen-huisstijl.sql` (tabel `instellingen`). |
-| 25-09-2026 | Marinus Kreuze | Besluit: de Console blijft voorlopig op Vercel en verhuist later naar TransIP (stichtingmcn.nl/console); stappen staan in hoofdstuk 7. Gebruikers beheren gaat nu via het tandwieltje in de Console. |
-| 28-09-2026 | Marinus Kreuze | Console versie 1.12: backup van alle gegevens onder tandwieltje → *Backup* (.json om terug te zetten, .xlsx om in te kijken); notitieveld bij personen. Database: `23-organisaties-en-contacten.sql` — soort en sector voor 44 organisaties, en de contactpersonen uit `contactpersonen_mail.xlsx`. |
-| 28-09-2026 | Marinus Kreuze | `24-fim-samenvoegen.sql`: organisatie *FIM* samengevoegd met *Federatie Instandhouding Monumenten* (personen en acties verhuisd, FIM verwijderd). |
-| 28-09-2026 | Marinus Kreuze | `25-dubbele-organisaties.sql`: *Federatie Historische Automobiel- en Motorfietsclubs* samengevoegd in *FEHAC*, *Federatie Varend Erfgoed Nederland* in *FVEN* en *Rail Hobby* in *Railhobby*; de lange naam staat in de toelichting. |
-| 28-09-2026 | Marinus Kreuze | Oude Claude-artifacts opgeruimd: de artifact-lijst *Stichting MCN — Actie- en besluitenlijst* (inhoud eerst vergeleken: alles stond al in de Console), de oudere *Actielijst MCN* en de ontwerpvoorbeeld-pagina *Regelscheiding Actielijst*. |
-| 28-09-2026 | Marinus Kreuze | Console versie 1.13: *Logboek* onder het tandwieltje (alleen beheerder) en bij *Gebruikers* laatst gezien en laatst ingelogd. Database: `26-logboek.sql` — de database schrijft elke wijziging zelf bij. Bij organisaties de vinkjes *Aangesloten bij MCN* en *Aangesloten als bron*, met filter en labeltjes (`27-aansluiting.sql`; de vier sectorfederaties staan aangevinkt). |
-| 01-10-2026 | Marinus Kreuze | Console versie 1.14: *categorie* heet *onderwerp*, *categoriegroep* heet *groep*; kaart *Groepen* onder het tandwieltje met onderwerpen en leden (zoals Google Groups); sorteren op de kolomkoppen Wie, Datum en Label; fout bij afronden opgelost (commentaar verdween bij *Vervolgactie of besluit toevoegen*, vervolgactie kreeg geen datum); overal *actie* in plaats van *taak*. Geen databasewijziging. |
-| 01-10-2026 | Marinus Kreuze | Console versie 1.15: groepen als eigen balk boven de weergaven (niet meer onder Filter); keuzelijst *Volgorde* vervallen, sorteren met de kolomkoppen Wie, Datum, Onderwerp en Label. |
+| 01-10-2026 | Marinus Kreuze | Beheerhandleiding gesplitst: dit document gaat alleen nog over de website; de Console heeft een eigen handleiding in `lijsten/BEHEER.md`, met daarin ook het beheerlog van de Console. |

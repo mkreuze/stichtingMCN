@@ -2,6 +2,8 @@
 
 Statische website van de Stichting Mobiele Collectie Nederland. **Lees eerst `BEHEER.md`**: daarin staan de opbouw van de site, de systemen, de publicatiestap en de bekende aandachtspunten. Dit bestand bevat alleen wat Claude daarnaast moet weten.
 
+De **Mobiel Erfgoed Console** (map `lijsten/`, tak `mcn-console`, op Vercel) heeft een eigen handleiding: **`lijsten/BEHEER.md`**. Lees die bij werk aan de Console, en houd daar het beheerlog van de Console bij.
+
 Geen build-stap, geen `package.json`/npm, geen test- of lintcommando's: puur statische HTML/JS/CSS. Zoek dus niet naar tooling die er niet is.
 
 ## Communicatie
@@ -41,4 +43,4 @@ Geen build-stap, geen `package.json`/npm, geen test- of lintcommando's: puur sta
 - **De publicatie verwijdert niets** op de server (`lftp mirror` zonder `--delete`). Verwijderen kan eenmalig met `cd $SFTP_TARGET_DIR` en `rm -f <bestand>` na de `mirror`-regel; daarna weer weghalen.
 - **In `nieuws.js`** staat alle artikeltekst binnen één template literal: geen backtick en geen `${` in de tekst.
 - Een nieuwsbericht staat op drie plekken (artikel in `nieuws.js`, overzicht en homepagekaart in `index.html`); houd ze gelijk.
-- Houd `BEHEER.md` bij als de opbouw of werkwijze verandert, en voeg een regel toe aan het *Beheerlog*. De Google Doc "Beheerhandleiding website stichtingmcn.nl" is een kopie; `BEHEER.md` is leidend.
+- Houd `BEHEER.md` (website) of `lijsten/BEHEER.md` (Console) bij als de opbouw of werkwijze verandert, en voeg een regel toe aan het *Beheerlog* van dat document. De Google Doc "Beheerhandleiding website stichtingmcn.nl" is een kopie; `BEHEER.md` is leidend.
