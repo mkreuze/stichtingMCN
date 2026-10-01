@@ -299,6 +299,13 @@
   .groep-verlopen, .section-title.groep-verlopen { color: var(--danger); }
   .groep-link { flex: 0 0 auto; font-size: 12px; }
   .acties-kop { padding: 4px 13px 10px; border-bottom: none; }
+  .kop-sorteer {
+    font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit;
+    background: none; border: none; padding: 0; cursor: pointer; display: inline-flex; align-items: center;
+  }
+  .kop-sorteer:hover { color: var(--accent); }
+  .kop-sorteer.actief { color: var(--accent-ink); font-weight: 700; }
+  .kop-pijl { font-size: 9px; margin-left: 3px; }
   .actie-regel {
     font-size: 13px;
     padding: 11px 13px 11px 10px;
@@ -674,6 +681,11 @@
     background: none; border: none; padding: 2px 0 0; cursor: pointer;
   }
   .completion-extra-toggle:hover { opacity: 0.8; }
+  .vervolg-rij { align-items: flex-end; }
+  .vervolg-rij .vervolg-datum { flex: 0 0 160px; }
+  .vervolg-rij .vervolg-datum .date-field { width: 100%; }
+  .afrond-datum { flex: 0 0 180px; }
+  .afrond-datum .date-field { width: 100%; }
   .completion-extra { margin-top: 2px; padding-top: 4px; border-top: 1px dashed var(--line); }
   .reopen-confirm {
     display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
@@ -823,6 +835,27 @@
     .lid-regel .ak-titel { grid-row: 1; grid-column: 1; }
     .lid-regel .ak-knoppen { grid-row: 1 / span 3; grid-column: 2; }
     .lid-regel .ak-veld { grid-column: 1; }
+  }
+  .groepen-body { display: flex; flex-direction: column; gap: 8px; }
+  .groep-kaart {
+    background: var(--card); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+    border-radius: var(--r-md); padding: 10px 14px 12px 13px;
+  }
+  .groep-kop { display: flex; align-items: center; gap: 12px; }
+  .groep-kop .ak-titel { font-size: 15px; }
+  .groep-kop .ak-knoppen { margin-left: auto; display: flex; gap: 2px; }
+  .groep-regel { display: flex; gap: 10px; align-items: baseline; margin-top: 8px; }
+  .groep-regelkop { flex: 0 0 92px; margin: 0; }
+  .groep-items { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0; }
+  .groep-onderwerp { font-size: 12.5px; color: var(--ink-soft); background: var(--line-soft); border-radius: var(--r-pill); padding: 2px 9px; }
+  .groep-lid { margin: 0; }
+  .groep-lid-auto { opacity: 0.85; }
+  .groep-lid-sub { font-size: 11px; color: var(--ink-faint); margin-left: 3px; }
+  .groep-erbij { padding: 3px 6px; font-size: 12px; }
+  .groep-keuzes { border-left: none; padding-left: 0; margin: 4px 0 8px; }
+  @media (max-width: 640px) {
+    .groep-regel { flex-direction: column; gap: 4px; }
+    .groep-regelkop { flex: none; }
   }
   .log-balk { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 2px 0 6px; }
   .log-kop, .actie-regel.log-regel { grid-template-columns: 118px minmax(0, 150px) minmax(0, 1fr); padding-left: 13px; }
@@ -975,7 +1008,7 @@
         <button type="button" class="versie-knop" aria-label="Versie-informatie" aria-expanded="false">i</button>
         <div class="versie-info" role="tooltip">
           <strong>Mobiel Erfgoed Console</strong>
-          <span>Versie 1.13 &middot; 28 september 2026</span>
+          <span>Versie 1.14 &middot; 1 oktober 2026</span>
         </div>
       </div>
     </div>
@@ -1078,6 +1111,9 @@
     soortFilter: "alle",   // "alle", een soort, of "geen"
     sectorFilter: "alle",  // idem voor sector
     aansluitFilter: "alle", // "alle", "aangesloten", "bron" of "geen"
+    bewerkGroep: null,     // naam van de groep in het formulier, "nieuw", of null
+    groepFout: "",
+    groepConcept: null,    // ingevulde naam en onderwerpen, bewaard bij een foutmelding
     soortenBeheer: false, // het beheerpaneel voor soorten
     bewerkSoort: {},      // soortnaam -> true
     nieuwSoort: false,
@@ -1085,7 +1121,8 @@
     filter: "todo", // todo | done | alle
     labelFilter: "alle", // "alle" of de naam van een label
     actionLabelFilter: "alle", // "alle" of een label dat op acties staat
-    sortMode: "standaard", // standaard | label | datum
+    sortMode: "standaard", // standaard | wie | datum | label
+    sortOm: false,         // true = omgekeerde volgorde (Z-A, laatste datum eerst)
     dateFilter: "alle", // alle | verlopen | week | maand | geen
     editingDecision: {}, // besluit-id -> true
     taskLabelFilter: {}, // sectionId -> label (alleen acties met dat label tonen)
@@ -1093,7 +1130,8 @@
     adding: {},        // sectionId -> true
     customOwner: {},   // sectionId -> true (aan het typen van nieuwe naam)
     completing: {},    // taskId -> true (bezig met afronden)
-    completingExtra: {}, // taskId -> true (vervolgtaak/besluit-velden getoond)
+    completingExtra: {}, // taskId -> true (vervolgactie/besluit-velden getoond)
+    afrondConcept: {},   // taskId -> wat er in het afrondformulier al was ingevuld
     editingCompletion: {}, // taskId -> true (afrondingsgegevens bewerken)
     reopening: {},     // taskId -> true (bevestiging om weer open te zetten)
     editingTask: {},   // taskId -> true (taakgegevens bewerken)
@@ -1411,6 +1449,7 @@
       delete ui.editCustomOwner[t.id];
       delete ui.completing[t.id];
       delete ui.completingExtra[t.id];
+      delete ui.afrondConcept[t.id];
       delete ui.editingCompletion[t.id];
       delete ui.reopening[t.id];
     });
@@ -1442,36 +1481,33 @@
     return true;
   }
 
+  // Onderwerpen staan altijd op hun volgnummer; sorteren gaat over de
+  // acties daarbinnen.
   function sortedSections(sections) {
-    var list = sections.slice();
-    if (ui.sortMode === "label") {
-      list.sort(function (a, b) {
-        var la = sectionLabels(a)[0] || "";
-        var lb = sectionLabels(b)[0] || "";
-        if (la !== lb) {
-          if (!la) return 1;
-          if (!lb) return -1;
-          return la.localeCompare(lb, "nl");
-        }
-        return (a.nr || 0) - (b.nr || 0);
-      });
-    }
-    return list;
+    return sections.slice();
   }
 
-  // Taken zonder echte datum ("week van 17 aug") komen achteraan.
+  // Sorteren op Wie, Datum of Label, oplopend of (sortOm) aflopend.
+  // Wat leeg is (geen wie, geen echte datum zoals "week van 17 aug", geen
+  // label) komt altijd achteraan. Bij gelijke waarde blijft de gewone
+  // volgorde staan.
+  function sorteerSleutel(t) {
+    if (ui.sortMode === "wie") return (eigenaarNaam(t) || "").toLowerCase();
+    if (ui.sortMode === "datum") return parseWhenDate(toonDatum(t)) || "";
+    if (ui.sortMode === "label") return (taskLabels(t).slice().sort(function (a, b) { return a.localeCompare(b, "nl"); })[0] || "").toLowerCase();
+    return "";
+  }
+  function vergelijkActies(ta, tb) {
+    var a = sorteerSleutel(ta), b = sorteerSleutel(tb);
+    if (!a && !b) return 0;
+    if (!a) return 1;
+    if (!b) return -1;
+    var c = ui.sortMode === "datum" ? (a < b ? -1 : a > b ? 1 : 0) : a.localeCompare(b, "nl");
+    return ui.sortOm ? -c : c;
+  }
   function sortedTasks(tasks) {
-    if (ui.sortMode !== "datum") return tasks;
-    var list = tasks.slice();
-    list.sort(function (a, b) {
-      var da = parseWhenDate(a.when);
-      var db = parseWhenDate(b.when);
-      if (da && db) return da < db ? -1 : da > db ? 1 : 0;
-      if (da && !db) return -1;
-      if (!da && db) return 1;
-      return 0;
-    });
-    return list;
+    if (ui.sortMode === "standaard") return tasks;
+    return tasks.slice().sort(vergelijkActies);
   }
 
   function filterSectionsByLabel(sections, labelFilter) {
@@ -1521,7 +1557,7 @@
       html += '</div>';
       html += '<div class="pdf-section-body">';
       if (section.tasks.length === 0) {
-        html += '<div class="pdf-empty">Geen taken.</div>';
+        html += '<div class="pdf-empty">Geen acties.</div>';
       }
       section.tasks.forEach(function (task) {
         html += '<div class="pdf-row' + (task.done ? " done" : "") + '">';
@@ -1550,7 +1586,7 @@
     });
 
     if (visible.length === 0) {
-      html += '<div class="pdf-empty">Geen categorieën met dit label.</div>';
+      html += '<div class="pdf-empty">Geen onderwerpen in deze groep.</div>';
     }
 
     var decisionList = sortedDecisions(decisions);
@@ -2141,9 +2177,9 @@
     });
     if (!formulierOpen) {
     html += '<div class="acties-kop sans">';
-    html += '<span></span><span>Actie</span><span>Wie</span><span>Datum</span>';
-    if (toonCategorie) html += '<span>Categorie</span>';
-    html += '<span>Label</span><span></span>';
+    html += '<span></span><span>Actie</span>' + sorteerKop("wie", "Wie") + sorteerKop("datum", "Datum");
+    if (toonCategorie) html += '<span>Onderwerp</span>';
+    html += sorteerKop("label", "Label") + '<span></span>';
     html += '</div>';
     }
 
@@ -2194,22 +2230,17 @@
 
   // De sortering van de keuzelijst toepassen op de vlakke lijst.
   function sorteerRegels(regels) {
-    if (ui.sortMode === "datum") {
-      return regels.slice().sort(function (a, b) {
-        var da = parseWhenDate(toonDatum(a.taak)), db = parseWhenDate(toonDatum(b.taak));
-        if (da && db) return da < db ? -1 : da > db ? 1 : 0;
-        if (da && !db) return -1;
-        if (!da && db) return 1;
-        return 0;
-      });
-    }
-    if (ui.sortMode === "label") {
-      return regels.slice().sort(function (a, b) {
-        var la = (taskLabels(a.taak)[0] || "\uffff"), lb = (taskLabels(b.taak)[0] || "\uffff");
-        return la.localeCompare(lb, "nl");
-      });
-    }
-    return regels;   // standaard: op categorie en daarbinnen op volgorde
+    if (ui.sortMode === "standaard") return regels;   // op onderwerp en daarbinnen op volgorde
+    return regels.slice().sort(function (a, b) { return vergelijkActies(a.taak, b.taak); });
+  }
+
+  // Een kolomkop waarop je kunt klikken om te sorteren: eerste klik
+  // oplopend, tweede klik aflopend, derde klik terug naar standaard.
+  function sorteerKop(kolom, tekst) {
+    var actief = ui.sortMode === kolom;
+    var pijl = actief ? (ui.sortOm ? " \u25BC" : " \u25B2") : "";
+    var uitleg = !actief ? "Sorteer op " + tekst.toLowerCase() : ui.sortOm ? "Terug naar de standaard volgorde" : "Andersom sorteren";
+    return '<span><button class="kop-sorteer' + (actief ? " actief" : "") + '" data-action="sorteer-kolom" data-kolom="' + kolom + '" title="' + uitleg + '">' + tekst + '<span class="kop-pijl">' + pijl + '</span></button></span>';
   }
 
   // Welke datum staat er in de kolom? Bij een afgeronde actie de datum
@@ -2298,7 +2329,7 @@
     else document.documentElement.removeAttribute("data-theme");
   }
 
-  var INSTEL_KAARTEN = ["gebruikers", "categorieen", "soort", "sector", "labels", "huisstijl", "logboek", "backup"];
+  var INSTEL_KAARTEN = ["gebruikers", "groepen", "categorieen", "soort", "sector", "labels", "huisstijl", "logboek", "backup"];
   function instelOpen(sleutel) { return !!ui.instelOpen[sleutel]; }
   function instelKop(sleutel, titel, meta, telling) {
     var open = instelOpen(sleutel);
@@ -2336,6 +2367,7 @@
       html += '<h3 class="instel-sub">Beheer <span class="relatie-meta sans">alleen voor de beheerder</span>'
            + '<button class="filter-btn instel-alles" data-action="toggle-instel-alle">' + (allesOpen ? "Alles inklappen" : "Alles uitklappen") + '</button></h3>';
       html += renderGebruikersBeheer();
+      html += renderGroepenBeheer();
       html += renderCategorieBeheer();
       html += '<div class="relaties-thema">' + renderKeuzelijstBeheer() + '</div>';
       html += renderLabelBeheer();
@@ -2373,7 +2405,7 @@
       html += '</div>';
     }
     html += '</div>';
-    html += '<div class="followup-hint">De groepen bepalen wie de categorie ziet: een gebruiker die alleen bepaalde groepen mag zien, ziet alleen categorie\u00ebn met een van die groepen.</div>';
+    html += '<div class="followup-hint">De groepen bepalen wie dit onderwerp ziet: alleen de leden van een van deze groepen (en de beheerder). Wie lid is, regel je onder Groepen.</div>';
     html += '<div class="form-actions">';
     if (nieuw) {
       html += '<button class="save-btn" data-action="submit-add-section">Toevoegen</button>';
@@ -2389,7 +2421,7 @@
   function renderCategorieBeheer() {
     var lijst = (currentSections || []).slice().sort(function (a, b) { return (a.nr || 0) - (b.nr || 0); });
     var html = '<section class="section-card acties-kaart">';
-    html += instelKop("categorieen", "Categorie\u00ebn", "naam, volgorde en groepen", lijst.length + (lijst.length === 1 ? " categorie" : " categorie\u00ebn"));
+    html += instelKop("categorieen", "Onderwerpen", "naam, volgorde en groep", lijst.length + (lijst.length === 1 ? " onderwerp" : " onderwerpen"));
     if (!instelOpen("categorieen")) return html + '</section>';
     html += '<div class="section-body acties-body">';
     if (lijst.length) html += '<div class="acties-kop cat-kop sans"><span>Nr</span><span>Naam</span><span>Groepen</span><span>Acties</span><span></span></div>';
@@ -2402,20 +2434,232 @@
       html += '<span class="ak-veld">' + escapeHtml(sectionLabels(sec).join(", ") || "\u2014 geen groep \u2014") + '</span>';
       html += '<span class="ak-veld">' + n + (n === 1 ? " actie" : " acties") + '</span>';
       html += '<span class="ak-knoppen">';
-      html += '<button class="edit-btn" data-action="open-edit-section" data-section="' + sec.id + '" aria-label="Categorie bewerken" title="Naam, volgnummer of groepen wijzigen">' + pencilSvg() + '</button>';
-      if (n === 0) html += '<button class="delete-btn" data-action="delete-section" data-section="' + sec.id + '" aria-label="Lege categorie verwijderen" title="Verwijderen">' + xSvg() + '</button>';
+      html += '<button class="edit-btn" data-action="open-edit-section" data-section="' + sec.id + '" aria-label="Onderwerp bewerken" title="Naam, volgnummer of groepen wijzigen">' + pencilSvg() + '</button>';
+      if (n === 0) html += '<button class="delete-btn" data-action="delete-section" data-section="' + sec.id + '" aria-label="Leeg onderwerp verwijderen" title="Verwijderen">' + xSvg() + '</button>';
       html += '</span></div>';
     });
     if (ui.addingSection) html += categorieFormulier(null);
-    else html += '<button class="add-task-btn" data-action="open-add-section">' + plusSvg() + 'Categorie toevoegen</button>';
+    else html += '<button class="add-task-btn" data-action="open-add-section">' + plusSvg() + 'Onderwerp toevoegen</button>';
     html += '</div></section>';
     return html;
+  }
+
+  // ── Groepen, zoals Google Groups ───────────────────────────────────
+  // Een groep (Bestuur, Projectgroep, …) heeft onderwerpen en leden. De
+  // onderwerpen staan in categorieen.labels, de leden in
+  // leden.acties_groepen (leeg = lid van alle groepen, ook nieuwe).
+  // Een beheerder ziet altijd alles. Een groep bestaat zolang er een
+  // onderwerp in zit.
+  function groepLidStatus(l, g) {
+    if (l.rol === "beheerder") return "beheerder";
+    if (!heeftRechten) return "alle";
+    if (l.toegang_acties === false) return "";
+    var gr = l.acties_groepen || [];
+    if (!gr.length) return "alle";
+    return gr.indexOf(g) !== -1 ? "lid" : "";
+  }
+  function onderwerpenVan(g) {
+    return (currentSections || []).filter(function (s) { return sectionLabels(s).indexOf(g) !== -1; })
+      .sort(function (a, b) { return (a.nr || 0) - (b.nr || 0); });
+  }
+  function lidNaam(l) { return l.naam || l.email; }
+
+  function groepFormulier(g) {
+    var nieuw = !g;
+    var c = ui.groepConcept;   // wat er al was ingevuld, na een foutmelding
+    var html = '<div class="actie-formulier" style="--balk:var(--accent);"><div class="add-form" data-form="groep">';
+    html += '<div class="form-row"><label class="veld breed"><span class="followup-hint">Naam van de groep</span>'
+         + '<input type="text" class="txt-input" data-field="groep-naam" value="' + escapeHtml(c ? c.naam : (g || "")) + '" placeholder="Bijv. Bestuur" data-autofocus="1" /></label></div>';
+    html += '<div class="followup-hint">Onderwerpen in deze groep</div><div class="rechten-groepen groep-keuzes">';
+    (currentSections || []).slice().sort(function (a, b) { return (a.nr || 0) - (b.nr || 0); }).forEach(function (s) {
+      var aan = c ? c.ids.indexOf(s.id) !== -1 : (!nieuw && sectionLabels(s).indexOf(g) !== -1);
+      html += '<label class="rechten-vink"><input type="checkbox" data-field="groep-onderwerp" value="' + escapeHtml(s.id) + '"' + (aan ? " checked" : "") + ' /> ' + escapeHtml(s.title) + '</label>';
+    });
+    html += '</div>';
+    if (!nieuw) html += '<div class="followup-hint">Wijzig je de naam, dan gaan de onderwerpen en de leden mee. Kies je de naam van een bestaande groep, dan worden de twee samengevoegd.</div>';
+    else html += '<div class="followup-hint">Leden voeg je toe nadat de groep is aangemaakt. Wie lid is van alle groepen, ziet ook deze nieuwe groep meteen.</div>';
+    if (ui.groepFout) html += '<div class="lid-fout">' + escapeHtml(ui.groepFout) + '</div>';
+    html += '<div class="form-actions"><button class="save-btn" data-action="bewaar-groep" data-groep="' + escapeHtml(g || "") + '">' + (nieuw ? "Groep aanmaken" : "Opslaan") + '</button>';
+    html += '<button class="cancel-btn" data-action="annuleer-groep">Annuleren</button></div>';
+    html += '</div></div>';
+    return html;
+  }
+
+  function renderGroepenBeheer() {
+    var groepen = alleGroepen();
+    var html = '<section class="section-card acties-kaart">';
+    html += instelKop("groepen", "Groepen", "wie welke onderwerpen ziet", groepen.length + (groepen.length === 1 ? " groep" : " groepen"));
+    if (!instelOpen("groepen")) return html + '</section>';
+    html += '<div class="section-body acties-body groepen-body">';
+    if (!heeftRechten) html += '<div class="followup-hint">Leden per groep kun je instellen nadat 21-rechten-per-gebruiker.sql is gedraaid. Tot dan ziet iedereen alle groepen.</div>';
+    if (ui.groepFout && ui.bewerkGroep === null) html += '<div class="lid-fout">' + escapeHtml(ui.groepFout) + '</div>';
+    var gesorteerd = leden.slice().sort(function (a, b) { return lidNaam(a).localeCompare(lidNaam(b), "nl"); });
+    groepen.forEach(function (g) {
+      if (ui.bewerkGroep === g) { html += groepFormulier(g); return; }
+      var ow = onderwerpenVan(g);
+      var ledenIn = gesorteerd.filter(function (l) { return groepLidStatus(l, g); });
+      var buiten = gesorteerd.filter(function (l) { return !groepLidStatus(l, g); });
+      html += '<div class="groep-kaart" data-groep="' + escapeHtml(g) + '">';
+      html += '<div class="groep-kop"><span class="ak-titel">' + escapeHtml(g) + '</span>';
+      html += '<span class="relatie-meta sans">' + ow.length + (ow.length === 1 ? " onderwerp" : " onderwerpen") + ' · ' + ledenIn.length + (ledenIn.length === 1 ? " lid" : " leden") + '</span>';
+      html += '<span class="ak-knoppen">';
+      html += '<button class="edit-btn" data-action="bewerk-groep" data-groep="' + escapeHtml(g) + '" aria-label="Groep bewerken" title="Naam of onderwerpen wijzigen">' + pencilSvg() + '</button>';
+      html += '<button class="delete-btn" data-action="verwijder-groep" data-groep="' + escapeHtml(g) + '" aria-label="Groep opheffen" title="Groep opheffen">' + xSvg() + '</button>';
+      html += '</span></div>';
+      html += '<div class="groep-regel"><span class="followup-hint groep-regelkop">Onderwerpen</span><span class="groep-items">';
+      ow.forEach(function (s) { html += '<span class="groep-onderwerp">' + escapeHtml(s.title) + '</span>'; });
+      html += '</span></div>';
+      html += '<div class="groep-regel"><span class="followup-hint groep-regelkop">Leden</span><span class="groep-items">';
+      if (!ledenIn.length) html += '<span class="pk-leeg">nog geen leden</span>';
+      ledenIn.forEach(function (l) {
+        var st = groepLidStatus(l, g);
+        var uitleg = st === "beheerder" ? "beheerder, ziet alles" : st === "alle" ? "lid van alle groepen" : "";
+        html += '<span class="filter-chip groep-lid' + (st !== "lid" ? " groep-lid-auto" : "") + '"' + (uitleg ? ' title="' + escapeHtml(uitleg) + '"' : '') + '>'
+             + escapeHtml(lidNaam(l)) + (st === "beheerder" ? ' <span class="groep-lid-sub">beheerder</span>' : st === "alle" ? ' <span class="groep-lid-sub">alle groepen</span>' : '');
+        if (heeftRechten && st !== "beheerder") {
+          html += '<button data-action="groep-lid-weg" data-groep="' + escapeHtml(g) + '" data-lid="' + escapeHtml(l.email) + '" title="Uit deze groep halen" aria-label="Uit deze groep halen">×</button>';
+        }
+        html += '</span>';
+      });
+      if (heeftRechten && buiten.length) {
+        html += '<select class="sort-select groep-erbij" data-action="groep-lid-erbij" data-groep="' + escapeHtml(g) + '"><option value="">+ Lid toevoegen…</option>';
+        buiten.forEach(function (l) { html += '<option value="' + escapeHtml(l.email) + '">' + escapeHtml(lidNaam(l)) + '</option>'; });
+        html += '</select>';
+      }
+      html += '</span></div>';
+      html += '</div>';
+    });
+    if (ui.bewerkGroep === "nieuw") html += groepFormulier(null);
+    else html += '<button class="add-task-btn" data-action="nieuwe-groep">' + plusSvg() + 'Groep toevoegen</button>';
+    html += '<div class="followup-hint">Leden zien alleen de acties van de onderwerpen in hun groepen. Een beheerder ziet alles. Wie lid is van “alle groepen”, ziet ook groepen die er later bij komen.</div>';
+    html += '</div></section>';
+    return html;
+  }
+
+  // Wijzigt een of meer gebruikers na elkaar en werkt de lijst bij.
+  function wijzigLeden(wijzigingen) {
+    if (!wijzigingen.length) return Promise.resolve();
+    var keten = Promise.resolve();
+    wijzigingen.forEach(function (w) {
+      keten = keten.then(function () {
+        return controleer(sb.from("leden").update(w.wijz).eq("email", w.email)).then(function () {
+          var l = leden.filter(function (x) { return x.email === w.email; })[0];
+          if (l) Object.keys(w.wijz).forEach(function (k) { l[k] = w.wijz[k]; });
+        });
+      });
+    });
+    return keten;
+  }
+  // Wat er met een gebruiker gebeurt als groep g voor hem wegvalt.
+  function zonderGroep(l, g, alle) {
+    var lijst = (l.acties_groepen || []).length ? l.acties_groepen : alle;
+    var rest = lijst.filter(function (x) { return x !== g; });
+    return rest.length ? { acties_groepen: rest } : { toegang_acties: false, acties_groepen: [] };
+  }
+  function groepLidWeg(email, g) {
+    var l = leden.filter(function (x) { return x.email === email; })[0];
+    if (!l) return;
+    var wijz = zonderGroep(l, g, alleGroepen());
+    if (wijz.toegang_acties === false && !window.confirm(lidNaam(l) + " zit dan in geen enkele groep meer en ziet geen acties meer. Doorgaan?")) return;
+    ui.groepFout = "";
+    syncing = true; render();
+    wijzigLeden([{ email: email, wijz: wijz }]).catch(function () {
+      ui.groepFout = "Uit de groep halen lukte niet. Probeer het nog eens.";
+    }).then(function () { syncing = false; render(); });
+  }
+  function groepLidErbij(email, g) {
+    var l = leden.filter(function (x) { return x.email === email; })[0];
+    if (!l || groepLidStatus(l, g)) return;
+    var wijz = l.toegang_acties === false ? { toegang_acties: true, acties_groepen: [g] }
+             : { acties_groepen: (l.acties_groepen || []).concat([g]) };
+    ui.groepFout = "";
+    syncing = true; render();
+    wijzigLeden([{ email: email, wijz: wijz }]).catch(function () {
+      ui.groepFout = "Lid toevoegen lukte niet. Probeer het nog eens.";
+    }).then(function () { syncing = false; render(); });
+  }
+  function bewaarGroep(oud, form) {
+    var ruw = form.querySelector('[data-field="groep-naam"]').value || "";
+    var naam = ruw.trim().replace(/,/g, " ").replace(/\s+/g, " ");
+    var ids = Array.prototype.slice.call(form.querySelectorAll('[data-field="groep-onderwerp"]'))
+      .filter(function (x) { return x.checked; }).map(function (x) { return x.value; });
+    ui.groepConcept = { naam: ruw, ids: ids };
+    if (!naam) { ui.groepFout = "Geef de groep een naam."; render(); return; }
+    if (!ids.length) { ui.groepFout = "Kies minstens één onderwerp: een groep bestaat zolang er een onderwerp in zit."; render(); return; }
+    var bestaand = alleGroepen().filter(function (x) { return x.toLowerCase() === naam.toLowerCase() && x !== oud; })[0];
+    if (bestaand) {
+      if (!oud) { ui.groepFout = "De groep “" + bestaand + "” bestaat al."; render(); return; }
+      if (!window.confirm("De groep “" + bestaand + "” bestaat al. “" + oud + "” daarmee samenvoegen?")) return;
+      naam = bestaand;
+    }
+    // onderwerpen
+    var next = cloneSections();
+    var gewijzigd = false;
+    next.forEach(function (s) {
+      var voor = sectionLabels(s).slice();
+      var na = voor.filter(function (x) { return x !== oud && x !== naam; });
+      if (ids.indexOf(s.id) !== -1) na.push(naam);
+      else if (bestaand && voor.indexOf(bestaand) !== -1) na.push(bestaand);   // bij samenvoegen niets kwijt
+      if (na.join("\u0000") !== voor.join("\u0000")) { s.labels = na; delete s.group; gewijzigd = true; }
+    });
+    // leden: bij een nieuwe naam gaan de leden mee
+    var wijzigingen = [];
+    if (oud && naam !== oud && heeftRechten) {
+      leden.forEach(function (l) {
+        var gr = l.acties_groepen || [];
+        if (gr.indexOf(oud) === -1) return;
+        var nieuweLijst = gr.filter(function (x) { return x !== oud && x !== naam; }).concat([naam]);
+        wijzigingen.push({ email: l.email, wijz: { acties_groepen: nieuweLijst } });
+      });
+    }
+    ui.groepFout = "";
+    ui.bewerkGroep = null; ui.groepConcept = null;
+    if (gewijzigd) persist(next); else render();
+    if (wijzigingen.length) {
+      syncing = true; render();
+      wijzigLeden(wijzigingen).catch(function () {
+        ui.groepFout = "De onderwerpen zijn bijgewerkt, maar de leden niet allemaal. Kijk de leden van “" + naam + "” even na.";
+      }).then(function () { syncing = false; render(); });
+    }
+  }
+  function verwijderGroep(g) {
+    var alle = alleGroepen();
+    var wijzigingen = [], kwijt = [];
+    if (heeftRechten) {
+      leden.forEach(function (l) {
+        if (l.rol === "beheerder" || l.toegang_acties === false) return;
+        var gr = l.acties_groepen || [];
+        if (gr.indexOf(g) === -1) return;                // "alle groepen" blijft "alle groepen"
+        var wijz = zonderGroep(l, g, alle);
+        if (wijz.toegang_acties === false) kwijt.push(lidNaam(l));
+        wijzigingen.push({ email: l.email, wijz: wijz });
+      });
+    }
+    var vraag = "Groep “" + g + "” opheffen? De onderwerpen en acties blijven bestaan, maar horen dan niet meer bij deze groep.";
+    if (kwijt.length) vraag += "\n\n" + kwijt.join(", ") + (kwijt.length === 1 ? " zit" : " zitten") + " dan in geen enkele groep meer en " + (kwijt.length === 1 ? "ziet" : "zien") + " geen acties meer.";
+    var zonder = onderwerpenVan(g).filter(function (s) { return sectionLabels(s).length === 1; });
+    if (zonder.length) vraag += "\n\nZonder groep: " + zonder.map(function (s) { return s.title; }).join(", ") + ". Die ziet dan alleen de beheerder en wie lid is van alle groepen.";
+    if (!window.confirm(vraag)) return;
+    var next = cloneSections();
+    next.forEach(function (s) {
+      var voor = sectionLabels(s);
+      if (voor.indexOf(g) !== -1) { s.labels = voor.filter(function (x) { return x !== g; }); delete s.group; }
+    });
+    if (ui.labelFilter === g) ui.labelFilter = "alle";
+    ui.groepFout = "";
+    persist(next);
+    if (wijzigingen.length) {
+      syncing = true; render();
+      wijzigLeden(wijzigingen).catch(function () {
+        ui.groepFout = "De groep is opgeheven, maar niet bij alle leden weggehaald. Kijk de gebruikers even na.";
+      }).then(function () { syncing = false; render(); });
+    }
   }
 
   // ── Gebruikers: wie mag inloggen, met welke rol ─────────────────
   var ROLLEN = [["kijker", "Kijker", "kan lezen, niets wijzigen"],
                 ["bewerker", "Bewerker", "kan lezen en wijzigen"],
-                ["beheerder", "Beheerder", "ziet alles en beheert gebruikers, categorie\u00ebn, soorten, sectoren en labels"]];
+                ["beheerder", "Beheerder", "ziet alles en beheert gebruikers, groepen, onderwerpen, soorten, sectoren en labels"]];
   function isIkZelf(email) { return (email || "").toLowerCase() === (sessie.user.email || "").toLowerCase(); }
 
   function renderLidFormulier(lid) {
@@ -2776,7 +3020,7 @@
   // lezen we de laatste regels en maken ze leesbaar.
   var logboek = null, logboekFout = "", logboekLimiet = 200;
   var laatsteLogins = {};   // e-mailadres (klein) -> laatst ingelogd
-  var LOG_SOORT = { acties: "Actie", besluiten: "Besluit", categorieen: "Categorie", organisaties: "Organisatie",
+  var LOG_SOORT = { acties: "Actie", besluiten: "Besluit", categorieen: "Onderwerp", organisaties: "Organisatie",
     personen: "Persoon", organisatie_soorten: "Soort", organisatie_sectoren: "Sector", leden: "Gebruiker",
     instellingen: "Instelling", console: "Console" };
   var LOG_GROEP = { acties: "acties", besluiten: "besluiten", organisaties: "relaties", personen: "relaties",
@@ -2784,7 +3028,7 @@
     instellingen: "beheer", console: "bezoek" };
   var LOG_VELD = { titel: "titel", tekst: "tekst", eigenaar: "wie", wanneer: "datum", notitie: "toelichting",
     labels: "labels", gereed: "afgerond", gereed_op: "afgerond op", gereed_notitie: "commentaar bij afronding",
-    volgorde: "volgorde", categorie_id: "categorie", organisatie_id: "organisatie", persoon_id: "persoon",
+    volgorde: "volgorde", categorie_id: "onderwerp", organisatie_id: "organisatie", persoon_id: "persoon",
     eigenaar_persoon_id: "wie (persoon)", eigenaar_organisatie_id: "wie (organisatie)", naam: "naam",
     voornaam: "voornaam", tussenvoegsel: "tussenvoegsel", achternaam: "achternaam", geslacht: "geslacht",
     functie: "functie", email: "e-mail", telefoon: "telefoon", soort: "soort", sector: "sector", plaats: "plaats",
@@ -2926,7 +3170,7 @@
     if (!instelOpen("backup")) return html + '</section>';
     html += '<div class="section-body acties-body backup-body">';
     html += '<div class="instel-regel"><div><div class="instel-naam">Volledige backup</div>'
-         + '<div class="followup-hint">Alle acties, besluiten, categorieën, organisaties, personen, keuzelijsten, gebruikers en de huisstijl. Hiermee kan alles worden teruggezet. Bewaar het bestand op een veilige plek: er staan e-mailadressen en telefoonnummers in.</div></div>'
+         + '<div class="followup-hint">Alle acties, besluiten, onderwerpen, groepen, organisaties, personen, keuzelijsten, gebruikers en de huisstijl. Hiermee kan alles worden teruggezet. Bewaar het bestand op een veilige plek: er staan e-mailadressen en telefoonnummers in.</div></div>'
          + '<button class="filter-btn" data-action="maak-backup" data-soort="json">Downloaden (.json)</button></div>';
     html += '<div class="instel-regel"><div><div class="instel-naam">Om in te kijken</div>'
          + '<div class="followup-hint">Dezelfde gegevens als Excel-bestand, met een tabblad per tabel.</div></div>'
@@ -3298,7 +3542,7 @@
     }
     html += '<section class="section-card acties-kaart"><div class="acties-body">';
     var besluitOpen = decisionList.some(function (d) { return ui.editingDecision[d.id]; });
-    if (!besluitOpen) html += '<div class="acties-kop besluit-kop sans"><span>Besluit</span><span>Datum</span><span>Categorie</span><span>Bij actie</span><span></span></div>';
+    if (!besluitOpen) html += '<div class="acties-kop besluit-kop sans"><span>Besluit</span><span>Datum</span><span>Onderwerp</span><span>Bij actie</span><span></span></div>';
     decisionList.forEach(function (d) {
       if (ui.editingDecision[d.id]) {
         html += '<div class="actie-formulier" style="--balk:var(--accent);">';
@@ -3481,7 +3725,7 @@
 
     // ── Weergaven als tabbladen ────────────────────────────────
     html += '<div class="subtabs">';
-    [["categorie", "Per categorie"], ["alle", "Alle acties"], ["persoon", "Per persoon"],
+    [["categorie", "Per onderwerp"], ["alle", "Alle acties"], ["persoon", "Per persoon"],
      ["organisatie", "Per organisatie"], ["agenda", "Agenda"]].forEach(function (v) {
       html += '<button class="subtab' + (ui.actieView === v[0] ? " active" : "") + '" data-action="set-actie-view" data-actieview="' + v[0] + '">' + v[1] + '</button>';
     });
@@ -3493,7 +3737,7 @@
     var DATUMFILTERS = [["alle", "Alle datums"], ["verlopen", "Datum verstreken"], ["week", "Binnen 7 dagen"],
                         ["maand", "Binnen 30 dagen"], ["geen", "Geen vaste datum"]];
     var actieveFilters = [];
-    if (ui.labelFilter !== "alle") actieveFilters.push({ soort: "groep", tekst: "Categoriegroep: " + ui.labelFilter });
+    if (ui.labelFilter !== "alle") actieveFilters.push({ soort: "groep", tekst: "Groep: " + ui.labelFilter });
     if (actieLabelFilter) actieveFilters.push({ soort: "label", tekst: "Label: " + actieLabelFilter });
     if (ui.dateFilter !== "alle") {
       var dfNaam = DATUMFILTERS.filter(function (d) { return d[0] === ui.dateFilter; })[0];
@@ -3528,7 +3772,7 @@
     // De agenda staat altijd op datum; daar heeft een volgorde geen zin.
     if (ui.actieView !== "agenda") {
       html += '<select class="sort-select" data-action="set-sort" title="Volgorde van de lijst">';
-      [["standaard", "Standaard volgorde"], ["datum", "Op datum"], ["label", "Op label"]].forEach(function (o) {
+      [["standaard", "Standaard volgorde"], ["wie", "Op wie"], ["datum", "Op datum"], ["label", "Op label"]].forEach(function (o) {
         html += '<option value="' + o[0] + '"' + (ui.sortMode === o[0] ? " selected" : "") + '>' + o[1] + '</option>';
       });
       html += '</select>';
@@ -3540,9 +3784,9 @@
       html += '<div class="filter-paneel">';
       html += '<label class="veld"><span class="followup-hint">Wie</span>' + wieFilterKeuze() + '</label>';
       if (labelsInUse.length) {
-        html += '<label class="veld"><span class="followup-hint">Categoriegroep</span>';
+        html += '<label class="veld"><span class="followup-hint">Groep</span>';
         html += '<select class="sel-input" data-action="set-label-filter">';
-        html += '<option value="alle"' + (ui.labelFilter === "alle" ? " selected" : "") + '>Alle categoriegroepen</option>';
+        html += '<option value="alle"' + (ui.labelFilter === "alle" ? " selected" : "") + '>Alle groepen</option>';
         labelsInUse.forEach(function (l) {
           html += '<option value="' + escapeHtml(l) + '"' + (ui.labelFilter === l ? " selected" : "") + '>' + escapeHtml(l) + '</option>';
         });
@@ -3585,7 +3829,7 @@
     }
 
     if (visibleSections.length === 0) {
-      html += '<div class="empty-state group-empty-state">Geen categorieën in deze groep.</div>';
+      html += '<div class="empty-state group-empty-state">Geen onderwerpen in deze groep.</div>';
     } else if (dateFilterActief && treffers === 0) {
       html += '<div class="empty-state group-empty-state">Geen acties die aan dit datumfilter voldoen.</div>';
     }
@@ -3648,7 +3892,7 @@
       html += '</button>';
       sectionLabels(section).forEach(function (l) {
         var c = labelColor(l);
-        html += '<button class="label-chip" data-action="set-label-filter" data-label="' + escapeHtml(l) + '" title="Toon alleen categorieën met dit label" style="color:' + c + ';background:' + lightenHex(c, 0.14) + ';">' + escapeHtml(l) + '</button>';
+        html += '<button class="label-chip" data-action="set-label-filter" data-label="' + escapeHtml(l) + '" title="Toon alleen de onderwerpen van deze groep" style="color:' + c + ';background:' + lightenHex(c, 0.14) + ';">' + escapeHtml(l) + '</button>';
       });
       html += '</div>';
 
@@ -3665,7 +3909,7 @@
         }
 
         if (total === 0 && !ui.adding[section.id]) {
-          html += '<div class="empty-state">Nog geen taken in dit onderdeel.</div>';
+          html += '<div class="empty-state">Nog geen acties in dit onderwerp.</div>';
         } else if (total > 0 && visibleTasks.length === 0) {
           html += '<div class="empty-state">' + (ui.filter === "todo" ? "Alles hier is al afgerond." : "Hier staat nog niets afgerond.") + '</div>';
         }
@@ -3692,7 +3936,7 @@
     });
 
 
-    html += '<p class="footnote">Deze lijst is gedeeld: iedereen die deze pagina opent ziet dezelfde taken, en wijzigingen worden bewaard en direct bijgewerkt bij alle geopende vensters.</p>';
+    html += '<p class="footnote">Deze lijst is gedeeld: iedereen die deze pagina opent ziet dezelfde acties, en wijzigingen worden bewaard en direct bijgewerkt bij alle geopende vensters.</p>';
 
     app.innerHTML = html;
     attachAutofocus();
@@ -3733,7 +3977,7 @@
     var color = ownerColor(eigenaarNaam(task));
     var editing = !task.done && ui.editingTask[task.id];
     var html = '<div class="task-row' + (task.done ? " done" : "") + '">';
-    html += '<button class="check-btn" data-action="' + (task.done ? "ask-uncomplete" : "toggle-complete") + '" data-section="' + section.id + '" data-task="' + task.id + '" aria-label="' + (task.done ? "Taak weer openzetten" : "Markeer als afgerond") + '"' + (editing ? " disabled" : "") + '>';
+    html += '<button class="check-btn" data-action="' + (task.done ? "ask-uncomplete" : "toggle-complete") + '" data-section="' + section.id + '" data-task="' + task.id + '" aria-label="' + (task.done ? "Actie weer openzetten" : "Markeer als afgerond") + '"' + (editing ? " disabled" : "") + '>';
     if (task.done) html += checkSvg();
     html += '</button>';
     html += '<div class="task-body">';
@@ -3768,7 +4012,7 @@
 
     if (task.done && ui.reopening[task.id] && !ui.editingCompletion[task.id]) {
       html += '<div class="reopen-confirm">';
-      html += '<span>Deze taak weer op "te doen" zetten? De afrondingsgegevens blijven bewaard.</span>';
+      html += '<span>Deze actie weer op "te doen" zetten? De afrondingsgegevens blijven bewaard.</span>';
       html += '<button class="save-btn" data-action="confirm-uncomplete" data-section="' + section.id + '" data-task="' + task.id + '">Heropenen</button>';
       html += '<button class="cancel-btn" data-action="cancel-uncomplete" data-task="' + task.id + '">Annuleren</button>';
       html += '</div>';
@@ -3785,9 +4029,9 @@
     if (!editing) {
       html += '<span class="owner-tag" style="color:' + color + ';background:color-mix(in srgb, ' + color + ' 12%, var(--card));border-color:color-mix(in srgb, ' + color + ' 30%, var(--card));">' + userSvg() + ' ' + escapeHtml(eigenaarNaam(task)) + '</span>';
       if (!task.done) {
-        html += '<button class="edit-btn" data-action="open-edit-task" data-section="' + section.id + '" data-task="' + task.id + '" aria-label="Bewerk taak">' + pencilSvg() + '</button>';
+        html += '<button class="edit-btn" data-action="open-edit-task" data-section="' + section.id + '" data-task="' + task.id + '" aria-label="Actie bewerken">' + pencilSvg() + '</button>';
       }
-      html += '<button class="delete-btn" data-action="delete-task" data-section="' + section.id + '" data-task="' + task.id + '" aria-label="Verwijder taak">' + xSvg() + '</button>';
+      html += '<button class="delete-btn" data-action="delete-task" data-section="' + section.id + '" data-task="' + task.id + '" aria-label="Actie verwijderen">' + xSvg() + '</button>';
     }
     html += '</div>';
     return html;
@@ -3822,7 +4066,7 @@
     // Label en Categorie naast elkaar.
     html += '<div class="form-row naast-elkaar">';
     html += '<div class="veld">' + renderTaskLabelField(section, taskLabels(task)) + '</div>';
-    html += '<label class="veld"><span class="followup-hint">Categorie</span>';
+    html += '<label class="veld"><span class="followup-hint">Onderwerp</span>';
     html += '<select class="sel-input" data-field="section-target">';
     (currentSections || []).forEach(function (s) {
       html += '<option value="' + escapeHtml(s.id) + '"' + (s.id === section.id ? " selected" : "") + '>' + escapeHtml(s.title) + '</option>';
@@ -3837,24 +4081,28 @@
   }
 
   function renderCompletionForm(section, task, mode) {
-    var date = task.completedDate || todayISO();
-    var note = task.completedNote || "";
+    // Wat er al was ingevuld (bijvoorbeeld voordat je op "Vervolgactie of
+    // besluit toevoegen" klikte) blijft staan.
+    var c = ui.afrondConcept[task.id] || {};
+    var date = c.date !== undefined ? c.date : (task.completedDate || todayISO());
+    var note = c.note !== undefined ? c.note : (task.completedNote || "");
     var existingDecision = findDecisionForTask(task.id);
-    var decisionText = existingDecision ? existingDecision.text : "";
+    var decisionText = c.decision !== undefined ? c.decision : (existingDecision ? existingDecision.text : "");
     var showExtra = !!ui.completingExtra[task.id] || !!decisionText;
     var html = '<div class="complete-form" data-form="complete" data-section="' + section.id + '" data-task="' + task.id + '" data-mode="' + mode + '">';
-    html += '<div class="form-row single"><input type="date" class="txt-input date-field" data-field="date" value="' + escapeHtml(date) + '" /></div>';
-    html += '<div class="form-row single"><textarea class="txt-input" rows="3" data-field="note" placeholder="Commentaar bij afronding (optioneel)" data-autofocus="1">' + escapeHtml(note) + '</textarea></div>';
+    html += '<div class="form-row"><label class="veld datum-veld afrond-datum"><span class="followup-hint">Afgerond op</span><input type="date" class="txt-input date-field" data-field="date" value="' + escapeHtml(date) + '" /></label></div>';
+    html += '<div class="form-row single"><span class="followup-hint">Commentaar bij afronding</span><textarea class="txt-input" rows="3" data-field="note" placeholder="Optioneel"' + (showExtra ? '' : ' data-autofocus="1"') + '>' + escapeHtml(note) + '</textarea></div>';
 
     if (!showExtra) {
-      html += '<button type="button" class="completion-extra-toggle" data-action="toggle-completing-extra" data-task="' + task.id + '">' + plusSvg() + (magBesluiten() ? 'Vervolgtaak of besluit toevoegen' : 'Vervolgtaak toevoegen') + '</button>';
+      html += '<button type="button" class="completion-extra-toggle" data-action="toggle-completing-extra" data-task="' + task.id + '">' + plusSvg() + (magBesluiten() ? 'Vervolgactie of besluit toevoegen' : 'Vervolgactie toevoegen') + '</button>';
       html += '<input type="hidden" data-field="followup-title" value="" />';
+      html += '<input type="hidden" data-field="followup-date" value="" />';
       html += '<input type="hidden" data-field="decision-text" value="" />';
     } else {
       html += '<div class="completion-extra">';
-      html += '<div class="form-row single">';
-      html += '<div class="followup-hint">Vervolgtaak — wordt toegevoegd aan hetzelfde onderdeel</div>';
-      html += '<input type="text" class="txt-input" data-field="followup-title" placeholder="Titel van de vervolgtaak…" />';
+      html += '<div class="form-row vervolg-rij">';
+      html += '<label class="veld flex1"><span class="followup-hint">Vervolgactie \u2014 komt in hetzelfde onderwerp, bij dezelfde persoon</span><input type="text" class="txt-input" data-field="followup-title" placeholder="Wat moet er nu gebeuren?" value="' + escapeHtml(c.followup || "") + '" data-autofocus="1" /></label>';
+      html += '<label class="veld datum-veld vervolg-datum"><span class="followup-hint">Datum</span><input type="date" class="txt-input date-field" data-field="followup-date" value="' + escapeHtml(c.followupDate || "") + '" /></label>';
       html += '</div>';
       if (magBesluiten()) {
         html += '<div class="form-row single">';
@@ -3899,7 +4147,7 @@
     if (los) {
       html += '<div class="form-row naast-elkaar">';
       html += '<div class="veld">' + renderTaskLabelField(section, []) + '</div>';
-      html += '<label class="veld"><span class="followup-hint">Categorie</span>';
+      html += '<label class="veld"><span class="followup-hint">Onderwerp</span>';
       html += '<select class="sel-input" data-field="section-target">';
       (currentSections || []).forEach(function (s) {
         html += '<option value="' + escapeHtml(s.id) + '"' + (s.id === section.id ? " selected" : "") + '>' + escapeHtml(s.title) + '</option>';
@@ -4136,7 +4384,7 @@
     completeTaskWithFollowup(sectionId, taskId, completedDate, completedNote, "", "");
   }
 
-  function completeTaskWithFollowup(sectionId, taskId, completedDate, completedNote, followupTitle, decisionText) {
+  function completeTaskWithFollowup(sectionId, taskId, completedDate, completedNote, followupTitle, decisionText, followupDate) {
     var next = cloneSections();
     var t = findTask(next, sectionId, taskId);
     if (!t) return;
@@ -4149,11 +4397,16 @@
     var s = next.find(function (s) { return s.id === sectionId; });
 
     if (followupTitle && s) {
+      // De vervolgactie gaat naar dezelfde persoon of organisatie, met
+      // dezelfde labels.
       s.tasks.push({
         id: sectionId + "-" + Date.now(),
         title: followupTitle,
         owner: t.owner,
-        when: "",
+        eigenaarPersoonId: t.eigenaarPersoonId || null,
+        eigenaarOrgId: t.eigenaarOrgId || null,
+        labels: taskLabels(t).slice(),
+        when: followupDate || "",
         note: "Vervolg op: " + t.title,
         done: false
       });
@@ -4319,7 +4572,7 @@
     var KIJKACTIES = [
       "set-view", "set-filter", "toggle-collapse", "toggle-collapse-all",
       "set-label-filter", "set-task-label-filter", "clear-task-label-filter",
-      "set-action-label-filter", "set-date-filter", "set-sort",
+      "set-action-label-filter", "set-date-filter", "set-sort", "sorteer-kolom",
       "download-pdf", "download-adressen", "download-mailing",
       "uitloggen", "stuur-inloglink",
       "toggle-org", "filter-op-relatie", "filter-op-persoon",
@@ -4334,6 +4587,7 @@
     var BEHEERACTIES = ["bewerk-label", "annuleer-label", "bewaar-label", "verwijder-label",
       "nieuw-lid", "bewerk-lid", "annuleer-lid", "bewaar-lid", "verwijder-lid",
       "bewerk-huisstijl", "annuleer-huisstijl", "huisstijl-standaard", "bewaar-huisstijl", "huisstijl-herstel", "maak-backup", "log-vernieuw", "log-meer",
+      "nieuwe-groep", "bewerk-groep", "annuleer-groep", "bewaar-groep", "verwijder-groep", "groep-lid-weg",
       "open-edit-section", "cancel-edit-section", "submit-edit-section", "delete-section",
       "open-add-section", "cancel-add-section", "submit-add-section", "add-label-suggestion",
       "bewerk-soort", "annuleer-soort", "bewaar-soort", "verwijder-soort", "nieuwe-soort"];
@@ -4446,6 +4700,24 @@
       INSTEL_KAARTEN.forEach(function (k) { ui.instelOpen[k] = !allesOpen; });
       if (!allesOpen && mijnRol === "beheerder") laadLogboek();
       render(); return;
+    } else if (action === "sorteer-kolom") {
+      var kolom = btn.getAttribute("data-kolom");
+      if (ui.sortMode !== kolom) { ui.sortMode = kolom; ui.sortOm = false; }
+      else if (!ui.sortOm) ui.sortOm = true;
+      else { ui.sortMode = "standaard"; ui.sortOm = false; }
+      render(); return;
+    } else if (action === "nieuwe-groep") {
+      ui.bewerkGroep = "nieuw"; ui.groepFout = ""; ui.groepConcept = null; render(); return;
+    } else if (action === "bewerk-groep") {
+      ui.bewerkGroep = btn.getAttribute("data-groep"); ui.groepFout = ""; ui.groepConcept = null; render(); return;
+    } else if (action === "annuleer-groep") {
+      ui.bewerkGroep = null; ui.groepFout = ""; ui.groepConcept = null; render(); return;
+    } else if (action === "bewaar-groep") {
+      bewaarGroep(btn.getAttribute("data-groep") || null, btn.closest('[data-form="groep"]')); return;
+    } else if (action === "verwijder-groep") {
+      verwijderGroep(btn.getAttribute("data-groep")); return;
+    } else if (action === "groep-lid-weg") {
+      groepLidWeg(btn.getAttribute("data-lid"), btn.getAttribute("data-groep")); return;
     } else if (action === "log-vernieuw") {
       laadLogboek(); laadLaatsteLogins(); return;
     } else if (action === "log-meer") {
@@ -4706,6 +4978,7 @@
       delete ui.customOwner[sectionId];
     } else if (action === "toggle-complete") {
       ui.completing[taskId] = !ui.completing[taskId];
+      delete ui.afrondConcept[taskId];
       if (!ui.completing[taskId]) delete ui.completingExtra[taskId];
       else schuifNaarFormulier = true;
       render();
@@ -4721,14 +4994,21 @@
       uncompleteTask(sectionId, taskId);
     } else if (action === "edit-completion") {
       ui.editingCompletion[taskId] = true;
+      delete ui.afrondConcept[taskId];
       schuifNaarFormulier = true;
       render();
     } else if (action === "cancel-complete") {
       delete ui.completing[taskId];
       delete ui.editingCompletion[taskId];
       delete ui.completingExtra[taskId];
+      delete ui.afrondConcept[taskId];
       render();
     } else if (action === "toggle-completing-extra") {
+      var xform = btn.closest('[data-form="complete"]');
+      if (xform) ui.afrondConcept[taskId] = {
+        date: xform.querySelector('[data-field="date"]').value,
+        note: xform.querySelector('[data-field="note"]').value
+      };
       ui.completingExtra[taskId] = true;
       render();
     } else if (action === "submit-complete") {
@@ -4736,9 +5016,11 @@
       var date = cform.querySelector('[data-field="date"]').value || todayISO();
       var cnote = cform.querySelector('[data-field="note"]').value.trim();
       var followupTitle = cform.querySelector('[data-field="followup-title"]').value.trim();
+      var followupDate = (cform.querySelector('[data-field="followup-date"]') || {}).value || "";
       var decisionText = cform.querySelector('[data-field="decision-text"]').value.trim();
       delete ui.completingExtra[taskId];
-      completeTaskWithFollowup(sectionId, taskId, date, cnote, followupTitle, decisionText);
+      delete ui.afrondConcept[taskId];
+      completeTaskWithFollowup(sectionId, taskId, date, cnote, followupTitle, decisionText, followupDate);
     } else if (action === "delete-task") {
       deleteTask(sectionId, taskId);
     } else if (action === "delete-decision") {
@@ -4898,6 +5180,7 @@
   document.getElementById("app").addEventListener("change", function (e) {
     if (e.target.matches('[data-action="set-sort"]')) {
       ui.sortMode = e.target.value;
+      ui.sortOm = false;
       render();
       return;
     }
@@ -4905,6 +5188,10 @@
       if (e.target.getAttribute("data-keuzeveld") === "sector") ui.sectorFilter = e.target.value;
       else ui.soortFilter = e.target.value;
       render();
+      return;
+    }
+    if (e.target.matches('[data-action="groep-lid-erbij"]')) {
+      if (mijnRol === "beheerder" && e.target.value) groepLidErbij(e.target.value, e.target.getAttribute("data-groep"));
       return;
     }
     if (e.target.matches('[data-action="set-aansluit-filter"]')) {

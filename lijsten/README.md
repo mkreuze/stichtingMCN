@@ -59,10 +59,13 @@ zet je nergens in een pagina en mail je niet.
 
 Vijf weergaven:
 
-- **Per categorie** — kaarten die je open- en dichtklapt, met de voortgang
-  per categorie.
+- **Per onderwerp** — kaarten die je open- en dichtklapt, met de voortgang
+  per onderwerp.
 - **Alle acties** — één doorlopende lijst met kolommen: actie, wie, datum,
-  categorie en label. Verlopen datums kleuren rood.
+  onderwerp en label. Verlopen datums kleuren rood. Klik op de kolomkop
+  *Wie*, *Datum* of *Label* om daarop te sorteren; nog een keer klikken
+  sorteert andersom, een derde keer zet de gewone volgorde terug. Lege
+  waarden staan altijd onderaan.
 - **Per persoon** — een kaart per actiehouder: eerst de mensen van de eigen
   organisatie, dan personen van buiten, dan losse namen zoals Sectoren.
 - **Per organisatie** — een kaart per organisatie van de actiehouder:
@@ -87,20 +90,33 @@ gebruikt diezelfde waarde.
 Boven de lijst staan de vijf weergaven als tabbladen. Daaronder:
 
 - **Te doen / Afgerond / Alle**;
-- **Filter** — klapt een paneel open met *Categoriegroep*, *Label* en
+- **Filter** — klapt een paneel open met *Groep*, *Label* en
   *Datum*. Staat er een filter aan, dan staat het aantal op de knop en
   verschijnt eronder een label zoals *Label: Leveranciers ×*; met het
   kruisje haal je dat filter weg, met *Filters wissen* alles tegelijk.
   Ook "alleen acties van deze organisatie" vanuit de relatielijst staat
   daar als label;
 - rechts de **volgorde** (niet bij Agenda, die staat altijd op datum) en
-  bij *Per categorie* **Alles inklappen**.
+  bij *Per onderwerp* **Alles inklappen**.
 
 Het filterpaneel heeft ook **Wie**: een persoon, een organisatie (met al
 haar mensen) of een oude losse naam.
 
 Filters gelden in alle weergaven. Klik je in een regel op een label, dan
-wordt dat het filter. Vanuit de lijst klik je door naar de categorie.
+wordt dat het filter. Vanuit de lijst klik je door naar het onderwerp.
+
+**Woorden.** Een *actie* is iets wat er moet gebeuren (het woord *taak*
+wordt niet meer gebruikt). Acties staan in een *onderwerp* (Bestuurzaken,
+Financiën, …). Een *groep* (Bestuur, Projectgroep) is een verzameling
+onderwerpen met leden, zoals bij Google Groups: leden zien alleen de
+acties van de onderwerpen in hun groepen. In de database heten
+onderwerpen nog `categorieen` en groepen `labels` van een categorie.
+
+**Afronden.** Bij het afronden vul je de datum en eventueel commentaar
+in. Met *Vervolgactie of besluit toevoegen* komen er velden bij voor een
+vervolgactie (met datum; die komt in hetzelfde onderwerp, bij dezelfde
+persoon of organisatie en met dezelfde labels) en een besluit. Wat je al
+had ingevuld, blijft staan.
 
 De Console opent op **Alle acties**. Met **+ Nieuwe actie** rechts in de
 balk voeg je vanuit elke weergave een actie toe; je kiest daar ook de
@@ -279,11 +295,19 @@ Rechtsboven, naast de **i**, staat een tandwieltje. Daaronder:
     *Besluiten* en *Relaties*. De rol bepaalt of iemand mag wijzigen,
     de toegang wat iemand ziet. Wie de relaties niet ziet, ziet bij
     acties wel de namen van organisaties en personen maar geen adres,
-    e-mail of telefoon. Een categorie zonder groep is alleen zichtbaar
+    e-mail of telefoon. Een onderwerp zonder groep is alleen zichtbaar
     voor wie alle groepen ziet. Een beheerder ziet altijd alles;
-  - *Categorieën*: naam, volgnummer en groepen (bijvoorbeeld Bestuur,
-    Projectgroep). Toevoegen, en verwijderen als er geen acties meer in
-    staan. Dit gebeurt alleen nog hier, niet meer in de actielijst;
+  - *Groepen*: zoals Google Groups. Per groep de onderwerpen en de leden.
+    Leden toevoegen met *+ Lid toevoegen…*, weghalen met het kruisje.
+    Wie "alle groepen" heeft, zit automatisch in elke groep, ook in
+    nieuwe; haal je zo iemand uit één groep, dan houdt hij de andere.
+    Een groep aanmaken, hernoemen (onderwerpen en leden gaan mee; een
+    bestaande naam voegt samen) of opheffen. Een groep bestaat zolang er
+    een onderwerp in zit. Wie door een wijziging in geen enkele groep
+    meer zit, ziet geen acties meer; daar vraagt de Console eerst naar;
+  - *Onderwerpen*: naam, volgnummer en groepen. Toevoegen, en
+    verwijderen als er geen acties meer in staan. Dit gebeurt alleen nog
+    hier, niet meer in de actielijst;
   - *Soorten organisaties* en *Sectoren*: toevoegen, hernoemen (de
     organisaties gaan mee) en verwijderen als er geen organisatie meer
     bij hoort;
@@ -312,7 +336,7 @@ Rechtsboven, naast de **i**, staat een tandwieltje. Daaronder:
     het lezen; niemand kan het aanpassen. Bij *Gebruikers* staat per
     persoon wanneer die de Console voor het laatst opende (*gezien*) en
     voor het laatst inlogde (*ingelogd*);
-  - *Backup*: alle tabellen (acties, besluiten, categorieën,
+  - *Backup*: alle tabellen (acties, besluiten, onderwerpen,
     organisaties, personen, soorten, sectoren, gebruikers, instellingen)
     vers uit de database in één bestand. *Downloaden (.json)* is de
     volledige backup waarmee alles terug te zetten is; *Downloaden
@@ -351,3 +375,4 @@ een regel hieronder.
 | 1.11 | 25-09-2026 | Huisstijl instelbaar door de beheerder: zeven kleuren per versie, licht en donker, voor iedereen. |
 | 1.12 | 28-09-2026 | Backup van alle gegevens onder het tandwieltje (.json en .xlsx); notitieveld bij personen; SQL 23 met soort en sector voor 44 organisaties en de contactpersonen uit de mail. |
 | 1.13 | 28-09-2026 | Logboek onder het tandwieltje (wie wijzigde wat, en bezoeken); bij Gebruikers laatst gezien en laatst ingelogd; bij organisaties *Aangesloten bij MCN* en *Aangesloten als bron*, met filter. Database: `26-logboek.sql`, `27-aansluiting.sql`. |
+| 1.14 | 01-10-2026 | *Categorie* heet nu *onderwerp* en *categoriegroep* *groep*; nieuwe kaart *Groepen* (zoals Google Groups) met onderwerpen en leden; sorteren door op de kolomkop Wie, Datum of Label te klikken; afronden: commentaar blijft staan bij *Vervolgactie of besluit toevoegen*, vervolgactie met datum en bij dezelfde persoon; overal *actie* in plaats van *taak*. |
